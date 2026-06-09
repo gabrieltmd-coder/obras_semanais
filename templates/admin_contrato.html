@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Admin — {{ contrato.contratada }}{% endblock %}
+{% block page_icon %}<i class="bi bi-sliders"></i>{% endblock %}
+{% block page_title %}Configurar Contrato{% endblock %}
+{% block breadcrumb %}Admin › {{ contrato.contratada }}{% endblock %}
+
+{% block content %}
+<style>
+.sec-title {
+    font-family:'Montserrat',sans-serif; font-size:.72rem; font-weight:800;
+    text-transform:uppercase; letter-spacing:.10em; color:var(--tms-dark);
+    display:flex; align-items:center; gap:.45rem;
+    border-bottom:2px solid var(--tms-border); padding-bottom:.55rem; margin-bottom:1rem;
+}
+.sec-title i { color:var(--tms-cyan); font-size:1rem; }
+.adm-table { width:100%; border-collapse:collapse; }
+.adm-table th {
+    font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--tms-muted); padding:.4rem .6rem; background:var(--tms-bg);
+    border-bottom:1px solid var(--tms-border); text-align:left;
+}
+.adm-table td { padding:.35rem .5rem; vertical-align:middle; }
+.adm-table tr:not(:last-child) td { border-bottom:1px solid #f0f4f8; }
+.adm-input {
+    width:100%; border:1px solid var(--tms-border); border-radius:7px;
+    padding:.35rem .65rem; font-size:.8rem; color:var(--tms-text);
+    background:#fff; transition:border-color .15s;
+}
+.adm-input:focus { outline:none; border-color:var(--tms-cyan); box-shadow:0 0 0 3px rgba(0,174,239,.12); }
+.adm-select {
+    width:100%; border:1px solid var(--tms-border); border-radius:7px;
+    padding:.35rem .65rem; font-size:.8rem; color:var(--tms-text);
+    background:#fff; cursor:pointer;
+}
+.adm-select:focus { outline:none; border-color:var(--tms-cyan); }
+.btn-add-row {
+    background: none; border:1px dashed var(--tms-cyan); color:var(--tms-cyan);
+    border-radius:7px; padding:.3rem .9rem; font-size:.72rem; font-weight:700;
+    cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:.3rem;
+}
+.btn-add-row:hover { background:rgba(0,174,239,.08); }
+.btn-del-row {
+    background:none; border:none; color:#dc3545; cursor:pointer;
+    font-size:.95rem; padding:.15rem .3rem; border-radius:5px; transition:background .15s;
+}
+.btn-del-row:hover { background:rgba(220,53,69,.08); }
+.dia-label {
+    font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--tms-dark); margin-bottom:.4rem; display:flex; align-items:center; gap:.4rem;
+}
+.dia-label .badge-dia {
+    background:rgba(0,174,239,.12); color:var(--tms-cyan);
+    border-radius:5px; padding:.15rem .5rem; font-size:.65rem;
+}
+.dia-block { border:1px solid var(--tms-border); border-radius:10px; padding:1rem 1.1rem; margin-bottom:.9rem; background:#fff; }
+.dia-block.fim-semana { background:#fafbfc; border-color:#e8ecf0; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <span style="font-size:.82rem; color:var(--tms-muted);">
+            <i class="bi bi-building me-1"></i><strong style="color:var(--tms-dark);">{{ contrato.contratada }}</strong>
+            <span class="mx-2" style="color:var(--tms-border);">|</span>
+            {{ contrato.contrato }}
+        </span>
+    </div>
+    <a href="{{ url_for('admin') }}" class="btn btn-secondary-rumo btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+<form method="post">
+    <input type="hidden" name="contratada" value="{{ contrato.contratada }}">
+    <input type="hidden" name="contrato"   value="{{ contrato.contrato }}">
+
+    <!-- ── VALOR DO CONTRATO ── -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-currency-dollar"></i>Valor do Contrato</div>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">
+                        Valor Total (R$)
+                    </label>
+                    <input type="text" name="valor_contrato" class="adm-input"
+                           placeholder="0,00"
+                           value="{{ '%.2f'|format(contrato.get('valor_contrato', 0) or 0)|replace('.', ',') }}"
+                           id="inputValorContrato">
+                    <small style="color:var(--tms-muted); font-size:.68rem;">Use vírgula como separador decimal.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── LINHA BASE FINANCEIRA ── -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-graph-up-arrow"></i>Linha de Base Financeira por Mês</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Valor planejado acumulado mês a mês. Usado na Curva S Financeira.
+            </p>
+            <table class="adm-table" id="tblFin">
+                <thead>
+                    <tr>
+                        <th style="width:180px;">Mês</th>
+                        <th>Valor Planejado (R$)</th>
+                        <th style="width:40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="bodyFin">
+                    {% for item in contrato.get('linha_base_financeira', []) %}
+                    <tr>
+                        <td><input type="month" name="fin_mes[]" class="adm-input" value="{{ item.mes }}" required></td>
+                        <td><input type="text"  name="fin_valor[]" class="adm-input" value="{{ '%.2f'|format(item.valor)|replace('.', ',') }}" placeholder="0,00"></td>
+                        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFin','fin')">
+                <i class="bi bi-plus-lg"></i>Adicionar Mês
+            </button>
+        </div>
+    </div>
+
+    <!-- ── LINHA BASE FÍSICA ── -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-bar-chart-line"></i>Linha de Base Física por Mês</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Percentual de avanço físico planejado mês a mês. Usado na Curva S Física.
+            </p>
+            <table class="adm-table" id="tblFis">
+                <thead>
+                    <tr>
+                        <th style="width:180px;">Mês</th>
+                        <th>Avanço Planejado (%)</th>
+                        <th style="width:40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="bodyFis">
+                    {% for item in contrato.get('linha_base_fisica', []) %}
+                    <tr>
+                        <td><input type="month" name="fis_mes[]" class="adm-input" value="{{ item.mes }}" required></td>
+                        <td><input type="number" name="fis_perc[]" class="adm-input" value="{{ item.percentual }}" placeholder="0.00" min="0" max="100" step="0.01"></td>
+                        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFis','fis')">
+                <i class="bi bi-plus-lg"></i>Adicionar Mês
+            </button>
+        </div>
+    </div>
+
+    <!-- ── HISTOGRAMA SEMANAL ── -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-people"></i>Histograma de Mão de Obra — Planejamento Semanal</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1.2rem;">
+                Defina os cargos e quantidades de profissionais planejados para cada dia da semana.
+            </p>
+
+            {% for dia_key, dia_label in dias_semana %}
+            {% set is_weekend = loop.index0 >= 5 %}
+            <div class="dia-block {% if is_weekend %}fim-semana{% endif %}">
+                <div class="dia-label">
+                    <span>{{ dia_label }}</span>
+                    {% if is_weekend %}<span class="badge-dia">Fim de semana</span>{% endif %}
+                </div>
+                <table class="adm-table">
+                    <thead>
+                        <tr>
+                            <th>Cargo / Função</th>
+                            <th style="width:120px;">Quantidade</th>
+                            <th style="width:40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyHist_{{ dia_key }}">
+                        {% for item in contrato.get('histograma_semanal', {}).get(dia_key, []) %}
+                        <tr>
+                            <td><input type="text" name="hist_{{ dia_key }}_cargo[]" class="adm-input" value="{{ item.cargo }}" placeholder="Ex: Pedreiro"></td>
+                            <td><input type="number" name="hist_{{ dia_key }}_qtd[]" class="adm-input" value="{{ item.quantidade }}" placeholder="0" min="0" step="1"></td>
+                            <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="button" class="btn-add-row mt-2" onclick="addHistRow('{{ dia_key }}')">
+                    <i class="bi bi-plus-lg"></i>Adicionar Cargo
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- SAVE -->
+    <div class="d-flex justify-content-end gap-2 mb-4">
+        <a href="{{ url_for('admin') }}" class="btn btn-secondary-rumo">Cancelar</a>
+        <button type="submit" class="btn btn-primary-rumo">
+            <i class="bi bi-floppy me-1"></i>Salvar Configuração
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function delRow(btn) {
+    btn.closest('tr').remove();
+}
+
+function addRow(bodyId, prefix) {
+    const tbody = document.getElementById(bodyId);
+    const tr = document.createElement('tr');
+    if (prefix === 'fin') {
+        tr.innerHTML = `
+          <td><input type="month" name="fin_mes[]" class="adm-input" required></td>
+          <td><input type="text"  name="fin_valor[]" class="adm-input" placeholder="0,00"></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
+    } else {
+        tr.innerHTML = `
+          <td><input type="month" name="fis_mes[]" class="adm-input" required></td>
+          <td><input type="number" name="fis_perc[]" class="adm-input" placeholder="0.00" min="0" max="100" step="0.01"></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
+    }
+    tbody.appendChild(tr);
+    tr.querySelector('input,select').focus();
+}
+
+function addHistRow(diaKey) {
+    const tbody = document.getElementById('bodyHist_' + diaKey);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" name="hist_${diaKey}_cargo[]" class="adm-input" placeholder="Ex: Pedreiro"></td>
+      <td><input type="number" name="hist_${diaKey}_qtd[]" class="adm-input" placeholder="0" min="0" step="1"></td>
+      <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('input').focus();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,532 @@
+{% extends "base.html" %}
+
+{% block title %}{% if modo == 'editar' %}Editar Registro{% else %}Novo Registro{% endif %}{% endblock %}
+{% block page_icon %}<i class="bi bi-{% if modo == 'editar' %}pencil-square{% else %}plus-circle{% endif %}"></i>{% endblock %}
+{% block page_title %}{% if modo == 'editar' %}Editar Registro{% else %}Novo Registro{% endif %}{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('index') }}" style="color:rgba(255,255,255,.65);">Registros</a> › {% if modo == 'editar' %}Editar{% else %}Novo{% endif %}{% endblock %}
+
+{% block content %}
+
+<form method="post" id="mainForm" autocomplete="off">
+<div class="row g-4">
+
+    <!-- COLUNA PRINCIPAL -->
+    <div class="col-lg-8">
+
+        <!-- IDENTIFICAÇÃO -->
+        <div class="card-rumo mb-4">
+            <div class="card-header">
+                <i class="bi bi-card-text"></i>Identificação do Registro
+            </div>
+            <div class="p-4">
+                <div class="row g-3">
+
+                    <!-- Contratada (dropdown da ADM) -->
+                    <div class="col-md-6">
+                        <label class="form-label" for="contratadaSelect">
+                            <i class="bi bi-building me-1" style="color:var(--rumo-cyan)"></i>Contratada *
+                        </label>
+                        <select class="form-select" id="contratadaSelect" name="contratada"
+                                onchange="onContratadaChange(this)" required>
+                            <option value="">Selecione...</option>
+                            {% for nome in contratos_data.keys()|sort %}
+                                <option value="{{ nome }}"
+                                    {% if form_data.get('contratada') == nome %}selected{% endif %}>
+                                    {{ nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if not contratos_data %}
+                        <small class="text-warning" style="font-size:.7rem;">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Nenhum contrato cadastrado na <a href="{{ url_for('admin') }}">Administração</a>.
+                        </small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Contrato (dropdown dinâmico por contratada) -->
+                    <div class="col-md-6">
+                        <label class="form-label" for="contratoSelect">
+                            <i class="bi bi-file-earmark-text me-1" style="color:var(--rumo-cyan)"></i>Contrato *
+                        </label>
+                        <select class="form-select" id="contratoSelect" name="contrato" required>
+                            <option value="">Selecione a contratada primeiro...</option>
+                        </select>
+                    </div>
+
+                    <!-- Linha: Semana | Valor Medido | Avanço Físico -->
+                    <div class="col-md-4">
+                        <label class="form-label" for="semana_referencia">
+                            <i class="bi bi-calendar-week me-1" style="color:var(--rumo-cyan)"></i>Semana de Referência *
+                        </label>
+                        <input type="date" class="form-control" id="semana_referencia"
+                               name="semana_referencia"
+                               value="{{ form_data.get('semana_referencia', '') }}"
+                               onchange="ajustarSegunda(this)" required>
+                        <small class="text-muted" style="font-size:.7rem;">
+                            <i class="bi bi-info-circle me-1"></i>Ajustada para segunda-feira
+                        </small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label" for="valor_medido">
+                            <i class="bi bi-currency-dollar me-1" style="color:var(--rumo-cyan)"></i>Valor Medido da Semana (R$)
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="font-size:.8rem; background:var(--rumo-cyan-light); border-color:var(--rumo-gray-border); color:var(--rumo-dark); font-weight:700;">R$</span>
+                            <input type="number" class="form-control" id="valor_medido"
+                                   name="valor_medido" step="0.01" min="0"
+                                   placeholder="0,00" required
+                                   value="{{ form_data.get('valor_medido', '') }}">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label" for="avanco_fisico">
+                            <i class="bi bi-bar-chart-line me-1" style="color:var(--rumo-cyan)"></i>Avanço Físico (%)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="avanco_fisico"
+                                   name="avanco_fisico" step="0.01" min="0" max="100"
+                                   placeholder="0,00" required
+                                   value="{{ form_data.get('avanco_fisico', '') }}">
+                            <span class="input-group-text" style="font-size:.8rem; background:var(--rumo-cyan-light); border-color:var(--rumo-gray-border); color:var(--rumo-dark); font-weight:700;">%</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- PLUVIOMETRIA DA SEMANA -->
+        <div class="card-rumo mb-4">
+            <div class="card-header">
+                <i class="bi bi-cloud-rain"></i>Pluviometria da Semana
+            </div>
+            <div class="pluv-list">
+                {% for dia_key, dia_label in dias_semana %}
+                <div class="pluv-row {% if loop.index0 >= 5 %}pluv-weekend{% endif %}">
+                    <span class="pluv-chip">{{ dia_label }}</span>
+                    <select class="form-select form-select-sm" name="pluv_{{ dia_key }}" required>
+                        <option value="">— Não informado —</option>
+                        {% for op in pluviometria_opcoes %}
+                            <option value="{{ op }}"
+                                {% if pluviometria_data.get(dia_key) == op %}selected{% endif %}>
+                                {{ op }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- TRABALHOS NOTÁVEIS + PONTOS DE ATENÇÃO -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card-rumo h-100">
+                    <div class="card-header">
+                        <i class="bi bi-tools"></i>Trabalhos Notáveis da Semana
+                    </div>
+                    <div class="p-3">
+                        <textarea class="form-control" id="trabalhos_notaveis" name="trabalhos_notaveis"
+                                  rows="6" required placeholder="Descreva as atividades mais relevantes executadas na semana...">{{ form_data.get('trabalhos_notaveis', '') }}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card-rumo h-100">
+                    <div class="card-header">
+                        <i class="bi bi-exclamation-triangle"></i>Pontos de Atenção
+                    </div>
+                    <div class="p-3">
+                        <textarea class="form-control" id="pontos_atencao" name="pontos_atencao"
+                                  rows="6" required placeholder="Registre pendências, interferências, riscos de segurança ou qualquer ponto que requeira atenção...">{{ form_data.get('pontos_atencao', '') }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- COLUNA LATERAL -->
+    <div class="col-lg-4">
+
+        <!-- HISTOGRAMA (leitura da ADM + checkbox) -->
+        <div class="card-rumo mb-3">
+            <div class="card-header">
+                <i class="bi bi-bar-chart-steps"></i>Histograma de Mão de Obra
+            </div>
+            <div class="p-3">
+
+                <!-- Estado vazio -->
+                <div id="hist-vazio" style="text-align:center; padding:1.2rem .5rem; color:#b0bece; font-size:.78rem;">
+                    <i class="bi bi-arrow-up-circle" style="font-size:1.4rem; display:block; margin-bottom:.4rem;"></i>
+                    Selecione a contratada e o contrato para ver o histograma planejado.
+                </div>
+
+                <!-- Conteúdo do histograma -->
+                <div id="hist-content" style="display:none;">
+                    <div id="hist-dias"></div>
+
+                    <!-- Checkbox de confirmação -->
+                    <div class="mt-3 p-3" style="background:#f0f8ff; border-radius:8px; border:1px solid #c8dff0;">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="histograma_respeitado" id="histogramaRespeitado"
+                                   {% if form_data.get('histograma_respeitado') %}checked{% endif %}>
+                            <label class="form-check-label" for="histogramaRespeitado"
+                                   style="font-size:.82rem; font-weight:600; color:#1a5c00; cursor:pointer;">
+                                <i class="bi bi-check2-circle me-1"></i>
+                                O histograma planejado foi respeitado nesta semana
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sem histograma configurado -->
+                <div id="hist-sem-config" style="display:none; text-align:center; padding:.8rem .5rem; color:#b0bece; font-size:.78rem;">
+                    <i class="bi bi-exclamation-circle" style="font-size:1.2rem; display:block; margin-bottom:.3rem; color:#f0a500;"></i>
+                    Nenhum histograma configurado para este contrato.<br>
+                    <a href="{{ url_for('admin') }}" style="color:var(--rumo-cyan); font-size:.72rem;">Configurar na ADM</a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- EQUIPAMENTOS -->
+        <div class="card-rumo mb-3">
+            <div class="card-header">
+                <i class="bi bi-truck"></i>Equipamentos
+            </div>
+            <div class="p-3">
+                <div class="table-responsive">
+                    <table class="table efetivo-table mb-0" id="equip-table">
+                        <thead>
+                            <tr>
+                                <th>Equipamento</th>
+                                <th style="width:80px; text-align:center;">Qtd</th>
+                                <th style="width:32px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="equip-body">
+                            {% if equipamentos %}
+                                {% for eq in equipamentos %}
+                                <tr class="equip-row">
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm"
+                                               name="equip_descricao[]"
+                                               list="equip-list"
+                                               value="{{ eq.descricao }}"
+                                               placeholder="Descrição">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm"
+                                               name="equip_quantidade[]"
+                                               value="{{ eq.quantidade }}" min="0">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn-remove-row" onclick="removeEquipRow(this)">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <datalist id="equip-list">
+                    <option value="Escavadeira Hidráulica">
+                    <option value="Retroescavadeira">
+                    <option value="Motoniveladora (Patrol)">
+                    <option value="Trator de Esteiras (Bulldozer)">
+                    <option value="Pá Carregadeira">
+                    <option value="Minicarregadeira (Bob Cat)">
+                    <option value="Caminhão Basculante">
+                    <option value="Caminhão Betoneira">
+                    <option value="Caminhão Munck">
+                    <option value="Caminhão Pipa">
+                    <option value="Rolo Compactador Liso">
+                    <option value="Rolo Compactador Pé de Carneiro">
+                    <option value="Rolo Vibratório">
+                    <option value="Compactador de Placa">
+                    <option value="Soquete Vibratório">
+                    <option value="Grua (Torre)">
+                    <option value="Guindaste Telescópico">
+                    <option value="Guindaste sobre Esteiras">
+                    <option value="Plataforma Elevatória (Manlift)">
+                    <option value="Plataforma Tesoura (Scissor Lift)">
+                    <option value="Betoneira">
+                    <option value="Bomba de Concreto">
+                    <option value="Vibrador de Imersão">
+                    <option value="Gerador de Energia">
+                    <option value="Compressor de Ar">
+                    <option value="Andaime Metálico Tubular">
+                    <option value="Andaime Fachadeiro">
+                    <option value="Escoramento Metálico">
+                    <option value="Forma Deslizante">
+                    <option value="Perfuratriz (Crawler Drill)">
+                    <option value="Conjunto Moto-Bomba">
+                    <option value="Bomba d'Água Submersível">
+                    <option value="Martelete Pneumático">
+                    <option value="Serra de Disco">
+                    <option value="Serra de Corte de Concreto">
+                    <option value="Empilhadeira">
+                    <option value="Draga">
+                    <option value="Carro de Inspeção">
+                    <option value="Veículo de Apoio">
+                </datalist>
+
+                <button type="button" class="btn-add-row w-100 mt-2" onclick="addEquipRow()">
+                    <i class="bi bi-plus-lg me-1"></i>Adicionar Equipamento
+                </button>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary-rumo" style="padding:.7rem 2rem;">
+                <i class="bi bi-check-lg me-2"></i>
+                {% if modo == 'editar' %}SALVAR ALTERAÇÕES{% else %}SALVAR REGISTRO{% endif %}
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary-rumo text-center">
+                <i class="bi bi-arrow-left me-1"></i>Cancelar
+            </a>
+        </div>
+
+        {% if modo == 'editar' and registro %}
+        <div class="mt-3 p-3" style="background:var(--rumo-gray-bg); border-radius:4px; font-size:.7rem; color:#8a9aaa;">
+            <div><i class="bi bi-clock me-1"></i>Criado: {{ registro.criado_em[:16].replace('T', ' ') if registro.criado_em else '-' }}</div>
+            <div class="mt-1"><i class="bi bi-pencil me-1"></i>Alterado em: {{ registro.alterado_em[:16].replace('T', ' ') if registro.get('alterado_em') else '—' }}</div>
+            <div class="mt-1"><i class="bi bi-hash me-1"></i>ID: {{ registro.id[:8] }}...</div>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CONTRATOS_DATA = {{ contratos_data_json|safe }};
+const DIAS_ORDER = ['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
+const DIAS_LABELS = {
+    segunda:'Segunda', terca:'Terça', quarta:'Quarta',
+    quinta:'Quinta', sexta:'Sexta', sabado:'Sábado', domingo:'Domingo'
+};
+
+function onContratadaChange(sel) {
+    const contratada = sel.value;
+    const contratoSel = document.getElementById('contratoSelect');
+    contratoSel.innerHTML = '<option value="">Selecione o contrato...</option>';
+    if (!contratada || !CONTRATOS_DATA[contratada]) {
+        renderHistograma(null);
+        return;
+    }
+    CONTRATOS_DATA[contratada].forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.contrato;
+        opt.textContent = c.contrato;
+        contratoSel.appendChild(opt);
+    });
+    if (CONTRATOS_DATA[contratada].length === 1) {
+        contratoSel.value = CONTRATOS_DATA[contratada][0].contrato;
+        onContratoChange(contratoSel);
+    } else {
+        renderHistograma(null);
+    }
+}
+
+function onContratoChange(sel) {
+    const contratada = document.getElementById('contratadaSelect').value;
+    const contrato = sel.value;
+    if (!contratada || !contrato) { renderHistograma(null); return; }
+    const list = CONTRATOS_DATA[contratada] || [];
+    const found = list.find(c => c.contrato === contrato);
+    renderHistograma(found ? found.histograma_semanal : null);
+}
+
+function renderHistograma(hist) {
+    const elVazio   = document.getElementById('hist-vazio');
+    const elContent = document.getElementById('hist-content');
+    const elSemCfg  = document.getElementById('hist-sem-config');
+    const elDias    = document.getElementById('hist-dias');
+
+    if (hist === null) {
+        elVazio.style.display   = '';
+        elContent.style.display = 'none';
+        elSemCfg.style.display  = 'none';
+        return;
+    }
+
+    const temDados = DIAS_ORDER.some(d => (hist[d] || []).length > 0);
+    if (!temDados) {
+        elVazio.style.display   = 'none';
+        elContent.style.display = 'none';
+        elSemCfg.style.display  = '';
+        return;
+    }
+
+    elVazio.style.display   = 'none';
+    elSemCfg.style.display  = 'none';
+    elContent.style.display = '';
+    elDias.innerHTML = '';
+
+    DIAS_ORDER.forEach(diaKey => {
+        const items = hist[diaKey] || [];
+        if (!items.length) return;
+
+        const isWeekend = diaKey === 'sabado' || diaKey === 'domingo';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'mb-2';
+
+        const rows = items.map(i => `
+            <tr>
+                <td style="font-size:.78rem; padding:.22rem .5rem;">${i.cargo}</td>
+                <td style="font-size:.78rem; padding:.22rem .5rem; text-align:center; font-weight:700; color:var(--rumo-dark);">${i.quantidade}</td>
+            </tr>`).join('');
+
+        wrapper.innerHTML = `
+            <div style="font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em;
+                        color:${isWeekend ? '#8a9aaa' : 'var(--rumo-dark)'}; margin-bottom:.25rem;">
+                ${DIAS_LABELS[diaKey]}${isWeekend ? ' <span style="font-size:.6rem; color:#aaa;">(fim de semana)</span>' : ''}
+            </div>
+            <table style="width:100%; border-collapse:collapse; background:#fff; border-radius:7px;
+                          overflow:hidden; border:1px solid #e8ecf0; margin-bottom:.1rem;">
+                <thead>
+                    <tr style="background:#f7f9fb;">
+                        <th style="font-size:.62rem; padding:.2rem .5rem; text-align:left; color:#8a9aaa; font-weight:700; text-transform:uppercase; letter-spacing:.05em;">Cargo</th>
+                        <th style="font-size:.62rem; padding:.2rem .5rem; text-align:center; color:#8a9aaa; font-weight:700; text-transform:uppercase; letter-spacing:.05em; width:55px;">Qtd</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        elDias.appendChild(wrapper);
+    });
+}
+
+function ajustarSegunda(input) {
+    if (!input.value) return;
+    const d = new Date(input.value + 'T00:00:00');
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    const hoje = new Date();
+    hoje.setHours(23, 59, 59, 999);
+    if (d > hoje) {
+        alert('Não é permitido selecionar uma data futura.');
+        input.value = '';
+        return;
+    }
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    input.value = `${yyyy}-${mm}-${dd}`;
+}
+
+function addEquipRow() {
+    const tbody = document.getElementById('equip-body');
+    const tr = document.createElement('tr');
+    tr.className = 'equip-row';
+    tr.innerHTML = `
+        <td><input type="text" class="form-control form-control-sm"
+                   name="equip_descricao[]" list="equip-list" placeholder="Descrição"></td>
+        <td><input type="number" class="form-control form-control-sm"
+                   name="equip_quantidade[]" value="1" min="0"></td>
+        <td><button type="button" class="btn-remove-row" onclick="removeEquipRow(this)">
+            <i class="bi bi-x-lg"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+    tr.querySelector('input[name="equip_descricao[]"]').focus();
+}
+
+function removeEquipRow(btn) {
+    btn.closest('tr').remove();
+}
+
+function updatePluvStyle(sel) {
+    if (!sel.value) {
+        sel.style.color           = '#b0bece';
+        sel.style.backgroundColor = '#f7f9fb';
+        sel.style.borderColor     = '#dde8f0';
+        sel.style.fontStyle       = 'italic';
+    } else {
+        sel.style.color           = '';
+        sel.style.backgroundColor = '';
+        sel.style.borderColor     = '';
+        sel.style.fontStyle       = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Pluviometria styles
+    document.querySelectorAll('[name^="pluv_"]').forEach(sel => {
+        updatePluvStyle(sel);
+        sel.addEventListener('change', () => updatePluvStyle(sel));
+    });
+
+    // Semana: ajustar max e valor padrão
+    const today = new Date().toISOString().split('T')[0];
+    const semanaInput = document.getElementById('semana_referencia');
+    semanaInput.setAttribute('max', today);
+    if (!semanaInput.value) {
+        semanaInput.value = today;
+        ajustarSegunda(semanaInput);
+    }
+
+    // Inicializar dropdowns e histograma no modo editar
+    const initContratada = {{ form_data.get('contratada', '')|tojson }};
+    const initContrato   = {{ form_data.get('contrato', '')|tojson }};
+    const contratadaSel  = document.getElementById('contratadaSelect');
+    const contratoSel    = document.getElementById('contratoSelect');
+
+    if (initContratada && CONTRATOS_DATA[initContratada]) {
+        contratoSel.innerHTML = '<option value="">Selecione o contrato...</option>';
+        CONTRATOS_DATA[initContratada].forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.contrato;
+            opt.textContent = c.contrato;
+            if (c.contrato === initContrato) opt.selected = true;
+            contratoSel.appendChild(opt);
+        });
+        if (initContrato) {
+            const found = CONTRATOS_DATA[initContratada].find(c => c.contrato === initContrato);
+            renderHistograma(found ? found.histograma_semanal : null);
+        }
+    }
+
+    // Attach onchange ao contratoSelect
+    contratoSel.addEventListener('change', function() { onContratoChange(this); });
+
+    // Validação no submit
+    document.getElementById('mainForm').addEventListener('submit', function(e) {
+        const contratada = document.getElementById('contratadaSelect')?.value;
+        const contrato   = document.getElementById('contratoSelect')?.value;
+        const semana     = document.getElementById('semana_referencia')?.value;
+        const trabalhos  = document.getElementById('trabalhos_notaveis')?.value;
+        const pontos     = document.getElementById('pontos_atencao')?.value;
+        const valor      = document.getElementById('valor_medido')?.value;
+        const avanco     = document.getElementById('avanco_fisico')?.value;
+
+        const erros = [];
+        if (!contratada) erros.push('Selecione uma contratada.');
+        if (!contrato)   erros.push('Selecione um contrato.');
+        if (!semana)     erros.push('Informe a semana de referência.');
+        if (!valor)      erros.push('Informe o valor medido da semana.');
+        if (avanco === '' || avanco === null) erros.push('Informe o avanço físico (%).');
+        if (!trabalhos?.trim()) erros.push('Descreva os trabalhos notáveis.');
+        if (!pontos?.trim())    erros.push('Descreva os pontos de atenção.');
+
+        if (erros.length) {
+            e.preventDefault();
+            alert('Campos obrigatórios:\n\n' + erros.join('\n'));
+        }
+    });
+});
+</script>
+{% endblock %}

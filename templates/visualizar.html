@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Visualizar — {{ r.contratada }}{% endblock %}
+{% block page_icon %}<i class="bi bi-eye"></i>{% endblock %}
+{% block page_title %}Visualizar Registro{% endblock %}
+{% block breadcrumb %}Registros › {{ r.semana_referencia|date_br }}{% endblock %}
+
+{% block content %}
+<style>
+.vis-section { margin-bottom:1.25rem; }
+.vis-label {
+    font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+    color:var(--tms-muted); margin-bottom:.25rem;
+}
+.vis-value {
+    font-size:.88rem; font-weight:600; color:var(--tms-text);
+}
+.vis-table { width:100%; border-collapse:collapse; }
+.vis-table th {
+    font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--tms-muted); padding:.45rem .75rem;
+    background:var(--tms-bg); border-bottom:1px solid var(--tms-border); text-align:left;
+}
+.vis-table td {
+    padding:.42rem .75rem; font-size:.82rem; color:var(--tms-text);
+    border-bottom:1px solid #f0f4f8;
+}
+.vis-table tr:last-child td { border-bottom:none; }
+.pluv-badge {
+    display:inline-block; padding:.2rem .55rem; border-radius:5px;
+    font-size:.7rem; font-weight:700;
+}
+.pluv-bom    { background:#edf7e0; color:#4a7c1a; }
+.pluv-chuva  { background:rgba(0,174,239,.1); color:#0070a0; }
+.pluv-sem    { background:#f5f5f5; color:#888; }
+.badge-d { background:rgba(141,198,63,.15); color:#4a7c1a; border-radius:5px; padding:.15rem .45rem; font-size:.7rem; font-weight:700; }
+.badge-i { background:rgba(0,174,239,.12); color:#005f8a; border-radius:5px; padding:.15rem .45rem; font-size:.7rem; font-weight:700; }
+.badge-c { background:rgba(240,165,0,.12); color:#b37d00; border-radius:5px; padding:.15rem .45rem; font-size:.7rem; font-weight:700; }
+</style>
+
+<!-- HEADER BAR -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div style="font-size:.82rem; color:var(--tms-muted);">
+        <i class="bi bi-calendar-week me-1"></i>
+        Semana de <strong style="color:var(--tms-dark);">{{ r.semana_referencia|date_br }}</strong>
+        {% if r.get('criado_em') %}
+        &nbsp;·&nbsp; Criado em {{ r.criado_em[:16].replace('T',' ') }}
+        {% endif %}
+        {% if r.get('alterado_em') %}
+        &nbsp;·&nbsp; Editado em {{ r.alterado_em[:16].replace('T',' ') }}
+        {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('editar', id=r.id) }}" class="btn btn-secondary-rumo btn-sm">
+            <i class="bi bi-pencil me-1"></i>Editar
+        </a>
+        <button onclick="window.print()" class="btn btn-secondary-rumo btn-sm">
+            <i class="bi bi-printer me-1"></i>Imprimir
+        </button>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary-rumo btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<!-- IDENTIFICAÇÃO -->
+<div class="card-rumo mb-3">
+    <div class="card-header"><i class="bi bi-building"></i>Identificação</div>
+    <div style="padding:1.1rem 1.4rem;">
+        <div class="row g-3">
+            <div class="col-md-4 vis-section">
+                <div class="vis-label">Contratada</div>
+                <div class="vis-value">{{ r.contratada }}</div>
+            </div>
+            <div class="col-md-4 vis-section">
+                <div class="vis-label">Contrato</div>
+                <div class="vis-value">{{ r.contrato }}</div>
+            </div>
+            <div class="col-md-2 vis-section">
+                <div class="vis-label">Avanço Físico</div>
+                <div class="vis-value" style="color:var(--tms-cyan);">{{ r.get('avanco_fisico', 0) }}%</div>
+            </div>
+            <div class="col-md-2 vis-section">
+                <div class="vis-label">Valor Medido</div>
+                <div class="vis-value" style="color:#1a5c00;">{{ r.get('valor_medido', 0)|currency }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TRABALHOS / PONTOS -->
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <div class="card-rumo h-100">
+            <div class="card-header"><i class="bi bi-hammer"></i>Trabalhos Notáveis</div>
+            <div style="padding:1rem 1.4rem; font-size:.85rem; color:var(--tms-text); white-space:pre-wrap; line-height:1.65;">{{ r.get('trabalhos_notaveis', '') or '—' }}</div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-rumo h-100">
+            <div class="card-header"><i class="bi bi-exclamation-triangle"></i>Pontos de Atenção</div>
+            <div style="padding:1rem 1.4rem; font-size:.85rem; color:var(--tms-text); white-space:pre-wrap; line-height:1.65;">{{ r.get('pontos_atencao', '') or '—' }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- PLUVIOMETRIA -->
+<div class="card-rumo mb-3">
+    <div class="card-header"><i class="bi bi-cloud-rain"></i>Pluviometria da Semana</div>
+    <div style="padding:.75rem 1.4rem;">
+        {% set pluv = r.get('pluviometria', {}) %}
+        {% set dias = [('segunda','Segunda'),('terca','Terça'),('quarta','Quarta'),('quinta','Quinta'),('sexta','Sexta'),('sabado','Sábado'),('domingo','Domingo')] %}
+        <div class="d-flex flex-wrap gap-3">
+            {% for key, nome in dias %}
+            {% set val = pluv.get(key, '') %}
+            <div style="min-width:90px;">
+                <div class="vis-label">{{ nome }}</div>
+                <div>
+                    {% if val %}
+                    <span class="pluv-badge {% if 'Bom' in val %}pluv-bom{% elif 'Sem' in val %}pluv-sem{% else %}pluv-chuva{% endif %}">
+                        {{ val }}
+                    </span>
+                    {% else %}
+                    <span style="color:#ccc; font-size:.78rem;">—</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- EFETIVO -->
+{% set ef = r.get('efetivo', []) %}
+{% if ef %}
+<div class="card-rumo mb-3">
+    <div class="card-header">
+        <i class="bi bi-people"></i>
+        Efetivo &nbsp;
+        <span style="font-size:.7rem; font-weight:400; color:rgba(255,255,255,.6);">
+            Direto: {{ r.get('total_direto',0) }} &nbsp;|&nbsp; Indireto: {{ r.get('total_indireto',0) }}
+        </span>
+    </div>
+    <div class="table-responsive">
+        <table class="vis-table">
+            <thead>
+                <tr>
+                    <th>Função</th>
+                    <th class="text-center">Quantidade</th>
+                    <th>Tipo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in ef %}
+                <tr>
+                    <td>{{ e.funcao }}</td>
+                    <td class="text-center" style="font-weight:700;">{{ e.quantidade }}</td>
+                    <td>
+                        {% if e.tipo == 'direto' %}
+                        <span class="badge-d">Direto</span>
+                        {% elif e.tipo == 'indireto' %}
+                        <span class="badge-i">Indireto</span>
+                        {% else %}
+                        <span class="badge-c">A Classificar</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- EQUIPAMENTOS -->
+{% set equip = r.get('equipamentos', []) %}
+{% if equip %}
+<div class="card-rumo mb-3">
+    <div class="card-header"><i class="bi bi-truck"></i>Equipamentos</div>
+    <div class="table-responsive">
+        <table class="vis-table">
+            <thead>
+                <tr>
+                    <th>Descrição</th>
+                    <th class="text-center">Quantidade</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for eq in equip %}
+                <tr>
+                    <td>{{ eq.get('descricao', '') }}</td>
+                    <td class="text-center" style="font-weight:700;">{{ eq.get('quantidade', '') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="mb-4"></div>
+{% endblock %}
