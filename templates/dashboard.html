@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_icon %}<i class="bi bi-speedometer2"></i>{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Visão Geral{% endblock %}
+
+{% block content %}
+<style>
+/* ── DARK THEME OVERRIDE ── */
+body { background: #0b1828 !important; }
+.page-header { background: linear-gradient(135deg,#040c18 0%,#0b1828 100%) !important; padding:1rem 0 .85rem !important; margin-bottom:.85rem !important; }
+.app-footer  { background: #040c18 !important; margin-top:0 !important; padding:.6rem !important; }
+
+/* ── GLASS CARD ── */
+.gc {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 16px;
+    padding: .85rem 1rem;
+    backdrop-filter: blur(10px);
+}
+.gc-title {
+    font-size: .6rem; font-weight:800; text-transform:uppercase;
+    letter-spacing:.10em; color:rgba(255,255,255,.4);
+    margin-bottom: .6rem;
+    display:flex; align-items:center; justify-content:space-between;
+}
+.gc-title i { color:#00AEEF; margin-right:.3rem; }
+.gc-sub { font-size:.58rem; color:rgba(255,255,255,.25); }
+
+/* ── FILTER BAR ── */
+.d-filter {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px;
+    padding: .5rem .9rem;
+    margin-bottom: .7rem;
+    display: flex; align-items: flex-end; gap: .85rem; flex-wrap: wrap;
+}
+.d-filter .filter-label { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.35); margin-bottom:.18rem; }
+.d-filter .form-control,
+.d-filter .form-select {
+    background: rgba(255,255,255,.07) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    color: #fff !important; border-radius: 8px !important;
+    font-size:.76rem !important; padding:.28rem .65rem !important; height:30px !important;
+}
+.d-filter .form-select option { background:#0b1828; }
+.d-filter .btn { height:30px; border-radius:8px; font-size:.68rem; padding:.28rem .75rem; display:inline-flex; align-items:center; gap:.3rem; }
+.d-filter .btn-f { background:rgba(0,174,239,.18); border:1px solid rgba(0,174,239,.35); color:#00d4ff; }
+.d-filter .btn-x { background:rgba(220,53,69,.15); border:1px solid rgba(220,53,69,.25); color:#ff6b7a; }
+
+/* ── KPI STRIP ── */
+.kpi-strip { display:flex; gap:.55rem; margin-bottom:.7rem; }
+.kpi-mini {
+    background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09);
+    border-radius:12px; padding:.55rem .8rem; flex:1; min-width:0;
+    border-left:3px solid rgba(255,255,255,.15);
+}
+.kpi-mini.c  { border-left-color:#00AEEF; }
+.kpi-mini.g  { border-left-color:#8DC63F; }
+.kpi-mini.nd { border-left-color:rgba(255,255,255,.12); }
+.kpi-ml { font-size:.56rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.38); margin-bottom:.18rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kpi-mv { font-family:'Montserrat',sans-serif; font-size:.95rem; font-weight:800; color:#fff; line-height:1; }
+.kpi-mv.sm { font-size:.75rem; }
+.kpi-mv.nd { color:rgba(255,255,255,.2); font-size:.8rem; }
+
+/* ── METRIC CARDS (middle column) ── */
+.met-card {
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
+    border-radius:12px; padding:.55rem .8rem;
+    display:flex; align-items:center; gap:.65rem;
+}
+.met-ico { width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0; }
+.met-lbl { font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.35); }
+.met-val { font-family:'Montserrat',sans-serif;font-size:.9rem;font-weight:800;color:#fff; }
+.met-val.sm { font-size:.74rem; }
+
+/* ── DONUT LEGEND ── */
+.leg { display:flex;align-items:center;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.06); }
+.leg:last-child { border-bottom:none; }
+.leg-dot { width:9px;height:9px;border-radius:3px;flex-shrink:0; }
+.leg-name { font-size:.72rem;color:rgba(255,255,255,.65);font-weight:500;flex:1;margin-left:.45rem; }
+.leg-val { font-family:'Montserrat',sans-serif;font-size:.82rem;font-weight:800; }
+</style>
+
+<div style="color:#fff;">
+
+{% if not kpis %}
+<div class="gc text-center py-4">
+    <i class="bi bi-bar-chart" style="font-size:2rem;color:rgba(255,255,255,.15);display:block;margin-bottom:.5rem;"></i>
+    <p style="color:rgba(255,255,255,.35);font-size:.82rem;margin:0;">Nenhum registro. <a href="{{ url_for('novo') }}" style="color:#00AEEF;">Criar registro</a>.</p>
+</div>
+
+{% else %}
+
+<!-- FILTROS -->
+<form method="get" class="d-filter">
+    <div>
+        <div class="filter-label">Contratada</div>
+        <select name="contratada" class="form-select" style="min-width:160px;">
+            <option value="">Todas</option>
+            {% for c in contratadas %}<option value="{{ c }}" {% if filtro_contratada==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+    </div>
+    <div>
+        <div class="filter-label">De</div>
+        <input type="date" name="de" class="form-control" value="{{ filtro_de }}" style="width:130px;">
+    </div>
+    <div>
+        <div class="filter-label">Até</div>
+        <input type="date" name="ate" class="form-control" value="{{ filtro_ate }}" style="width:130px;">
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-f"><i class="bi bi-funnel"></i>Filtrar</button>
+        {% if filtro_contratada or filtro_de or filtro_ate %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-x"><i class="bi bi-x-lg"></i></a>
+        {% endif %}
+    </div>
+</form>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+    <div class="kpi-mini c">
+        <div class="kpi-ml">Contratos</div>
+        <div class="kpi-mv">{{ kpis.total_contratos }}</div>
+    </div>
+    <div class="kpi-mini g">
+        <div class="kpi-ml">Total Medido</div>
+        <div class="kpi-mv sm">{{ kpis.total_medido|currency }}</div>
+    </div>
+    <div class="kpi-mini nd">
+        <div class="kpi-ml">Saldo</div>
+        <div class="kpi-mv nd">—</div>
+    </div>
+    <div class="kpi-mini c">
+        <div class="kpi-ml">AF Semana</div>
+        <div class="kpi-mv">{{ kpis.af_semana }}%</div>
+    </div>
+    <div class="kpi-mini c">
+        <div class="kpi-ml">AF Acumulado</div>
+        <div class="kpi-mv">{{ kpis.af_acumulado }}%</div>
+    </div>
+    <div class="kpi-mini g">
+        <div class="kpi-ml">Val. Semana</div>
+        <div class="kpi-mv sm">{{ kpis.valor_semana|currency }}</div>
+    </div>
+    <div class="kpi-mini g">
+        <div class="kpi-ml">Val. Acumulado</div>
+        <div class="kpi-mv sm">{{ kpis.valor_acumulado|currency }}</div>
+    </div>
+</div>
+
+<!-- ROW 1: Curva S Fin | Métricas | Donut -->
+<div class="row g-2 mb-2">
+
+    <div class="col-lg-5">
+        <div class="gc h-100">
+            <div class="gc-title"><span><i class="bi bi-currency-dollar"></i>Curva S Financeira</span><span class="gc-sub">R$ Acumulado</span></div>
+            <canvas id="chartFinanceiro" height="120"></canvas>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="d-flex flex-column gap-2 h-100">
+            <div class="met-card">
+                <div class="met-ico" style="background:rgba(0,174,239,.15);color:#00d4ff;"><i class="bi bi-file-earmark-text"></i></div>
+                <div><div class="met-lbl">Total Contratos</div><div class="met-val">{{ kpis.total_contratos }}</div></div>
+            </div>
+            <div class="met-card">
+                <div class="met-ico" style="background:rgba(141,198,63,.15);color:#7dda24;"><i class="bi bi-bar-chart-line"></i></div>
+                <div><div class="met-lbl">AF — Semana</div><div class="met-val">{{ kpis.af_semana }}%</div></div>
+            </div>
+            <div class="met-card">
+                <div class="met-ico" style="background:rgba(141,198,63,.15);color:#7dda24;"><i class="bi bi-graph-up-arrow"></i></div>
+                <div><div class="met-lbl">AF Acumulado</div><div class="met-val">{{ kpis.af_acumulado }}%</div></div>
+            </div>
+            <div class="met-card">
+                <div class="met-ico" style="background:rgba(0,174,239,.15);color:#00d4ff;"><i class="bi bi-cash-stack"></i></div>
+                <div><div class="met-lbl">Valor Semana</div><div class="met-val sm">{{ kpis.valor_semana|currency }}</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="gc h-100">
+            <div class="gc-title"><span><i class="bi bi-pie-chart"></i>Composição do Efetivo</span></div>
+            {% if hist_list %}
+            <div class="d-flex align-items-center gap-3">
+                <canvas id="chartPie" width="110" height="110" style="max-width:110px;flex-shrink:0;"></canvas>
+                <div style="flex:1;min-width:0;">
+                    <div class="leg">
+                        <div class="leg-dot" style="background:#7dda24;"></div>
+                        <span class="leg-name">Direto</span>
+                        <span class="leg-val" style="color:#7dda24;">{{ total_direto }}</span>
+                    </div>
+                    <div class="leg">
+                        <div class="leg-dot" style="background:#00d4ff;"></div>
+                        <span class="leg-name">Indireto</span>
+                        <span class="leg-val" style="color:#00d4ff;">{{ total_indireto }}</span>
+                    </div>
+                    <div class="leg">
+                        <div class="leg-dot" style="background:#fbb040;"></div>
+                        <span class="leg-name">A Classificar</span>
+                        <span class="leg-val" style="color:#fbb040;">{{ total_classificar }}</span>
+                    </div>
+                    <div style="border-top:1px solid rgba(255,255,255,.08);margin-top:.4rem;padding-top:.4rem;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:.58rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;">Total</span>
+                        <span style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.05rem;">{{ total_direto+total_indireto+total_classificar }}</span>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.25);font-size:.8rem;">Sem dados de efetivo.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- ROW 2: Curva S Física | Histograma -->
+<div class="row g-2">
+
+    <div class="col-lg-6">
+        <div class="gc">
+            <div class="gc-title"><span><i class="bi bi-bar-chart-line"></i>Curva S Física</span><span class="gc-sub">% Avanço</span></div>
+            <canvas id="chartFisico" height="100"></canvas>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="gc">
+            <div class="gc-title"><span><i class="bi bi-people"></i>Efetivo por Função</span><span class="gc-sub">Top {{ hist_list|length }}</span></div>
+            {% if hist_list %}
+            <canvas id="chartHistograma" height="100"></canvas>
+            {% else %}
+            <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.25);font-size:.8rem;">Sem dados.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const LABELS   = {{ chart_labels|safe }};
+const FIN_ACUM = {{ curva_fin_acum|safe }};
+const FIS_REAL = {{ curva_fis_real|safe }};
+const HIST_LABELS = {{ hist_labels|safe }};
+const HIST_QTD    = {{ hist_qtd|safe }};
+const HIST_COLORS = {{ hist_colors|safe }};
+const PIE_DATA    = {{ pie_data|safe }};
+const PIE_COLORS  = ['rgba(125,218,36,.9)','rgba(0,212,255,.9)','rgba(251,176,64,.9)'];
+const PIE_LABELS  = {{ pie_labels|safe }};
+
+const GRID  = 'rgba(255,255,255,.05)';
+const TICK  = { color:'rgba(255,255,255,.35)', font:{ size:10, family:"'Inter',sans-serif" } };
+
+Chart.defaults.color = 'rgba(255,255,255,.35)';
+Chart.defaults.font.family = "'Inter',system-ui,sans-serif";
+
+// ── Curva S Financeira ──
+if (document.getElementById('chartFinanceiro') && LABELS.length) {
+    new Chart(document.getElementById('chartFinanceiro'), {
+        type: 'line',
+        data: {
+            labels: LABELS,
+            datasets: [{
+                label: 'Realizado (R$)',
+                data: FIN_ACUM,
+                borderColor: '#00d4ff',
+                backgroundColor: 'rgba(0,212,255,.08)',
+                borderWidth: 2,
+                pointRadius: 3, pointBackgroundColor: '#00d4ff',
+                fill: true, tension: 0.45,
+            },{
+                label: 'Linha de Base',
+                data: [], borderColor: '#8DC63F',
+                borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
+            }]
+        },
+        options: {
+            responsive:true, animation:{ duration:600 },
+            plugins:{
+                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
+                tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }}
+            },
+            scales:{
+                x:{ grid:{color:GRID}, ticks:TICK },
+                y:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>'R$'+(v/1000).toLocaleString('pt-BR')+'k' }}
+            }
+        }
+    });
+}
+
+// ── Curva S Física ──
+if (document.getElementById('chartFisico') && LABELS.length) {
+    new Chart(document.getElementById('chartFisico'), {
+        type: 'line',
+        data: {
+            labels: LABELS,
+            datasets: [{
+                label: 'Avanço Real (%)',
+                data: FIS_REAL,
+                borderColor: '#7dda24',
+                backgroundColor: 'rgba(125,218,36,.08)',
+                borderWidth: 2,
+                pointRadius: 3, pointBackgroundColor: '#7dda24',
+                fill: true, tension: 0.45,
+            },{
+                label: 'Linha de Base',
+                data: [], borderColor: '#00d4ff',
+                borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false,
+            }]
+        },
+        options: {
+            responsive:true, animation:{ duration:600 },
+            plugins:{
+                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
+                tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':` ${ctx.parsed.y}%` }}
+            },
+            scales:{
+                x:{ grid:{color:GRID}, ticks:TICK },
+                y:{ min:0, max:100, grid:{color:GRID}, ticks:{ ...TICK, callback: v=>v+'%' }}
+            }
+        }
+    });
+}
+
+// ── Histograma ──
+if (document.getElementById('chartHistograma') && HIST_LABELS.length) {
+    new Chart(document.getElementById('chartHistograma'), {
+        type: 'bar',
+        data: {
+            labels: HIST_LABELS,
+            datasets:[{ label:'Trabalhadores', data:HIST_QTD, backgroundColor:HIST_COLORS, borderRadius:4, borderSkipped:false }]
+        },
+        options: {
+            indexAxis:'y', responsive:true, animation:{ duration:600 },
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>` ${ctx.parsed.x} trabalhadores` }} },
+            scales:{
+                x:{ grid:{color:GRID}, ticks:{ ...TICK, stepSize:1 }},
+                y:{ grid:{display:false}, ticks:TICK }
+            }
+        }
+    });
+}
+
+// ── Donut ──
+if (document.getElementById('chartPie') && PIE_DATA.some(v=>v>0)) {
+    new Chart(document.getElementById('chartPie'), {
+        type:'doughnut',
+        data:{ labels:PIE_LABELS, datasets:[{ data:PIE_DATA, backgroundColor:PIE_COLORS, borderWidth:2, borderColor:'rgba(255,255,255,.05)', hoverOffset:4 }]},
+        options:{
+            responsive:false, cutout:'65%', animation:{ duration:600 },
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>` ${ctx.label}: ${ctx.parsed}` }}}
+        }
+    });
+}
+</script>
+{% endblock %}
