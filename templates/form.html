@@ -21,40 +21,40 @@
             <div class="p-4">
                 <div class="row g-3">
 
-                    <!-- Contratada (dropdown da ADM) -->
                     <div class="col-md-6">
-                        <label class="form-label" for="contratadaSelect">
+                        <label class="form-label" for="contratada">
                             <i class="bi bi-building me-1" style="color:var(--rumo-cyan)"></i>Contratada *
                         </label>
                         <select class="form-select" id="contratadaSelect" name="contratada"
-                                onchange="onContratadaChange(this)" required>
+                                onchange="toggleCustomContratada(this)" required>
                             <option value="">Selecione...</option>
-                            {% for nome in contratos_data.keys()|sort %}
-                                <option value="{{ nome }}"
-                                    {% if form_data.get('contratada') == nome %}selected{% endif %}>
-                                    {{ nome }}
+                            {% for c in contratadas %}
+                                <option value="{{ c }}"
+                                    {% if form_data.get('contratada') == c %}selected{% endif %}>
+                                    {{ c }}
                                 </option>
                             {% endfor %}
+                            <option value="__outro__"
+                                {% if form_data.get('contratada') and form_data.get('contratada') not in contratadas %}selected{% endif %}>
+                                Outra (digitar)
+                            </option>
                         </select>
-                        {% if not contratos_data %}
-                        <small class="text-warning" style="font-size:.7rem;">
-                            <i class="bi bi-exclamation-triangle me-1"></i>
-                            Nenhum contrato cadastrado na <a href="{{ url_for('admin') }}">Administração</a>.
-                        </small>
-                        {% endif %}
+                        <input type="text" class="form-control mt-2" id="contratada_custom"
+                               name="contratada_custom" placeholder="Nome da contratada"
+                               style="display:none"
+                               value="{{ form_data.get('contratada') if form_data.get('contratada') and form_data.get('contratada') not in contratadas else '' }}">
                     </div>
 
-                    <!-- Contrato (dropdown dinâmico por contratada) -->
                     <div class="col-md-6">
-                        <label class="form-label" for="contratoSelect">
+                        <label class="form-label" for="contrato">
                             <i class="bi bi-file-earmark-text me-1" style="color:var(--rumo-cyan)"></i>Contrato *
                         </label>
-                        <select class="form-select" id="contratoSelect" name="contrato" required>
-                            <option value="">Selecione a contratada primeiro...</option>
-                        </select>
+                        <input type="text" class="form-control" id="contrato" name="contrato"
+                               placeholder="Ex: CW64087" required
+                               value="{{ form_data.get('contrato', '') }}">
                     </div>
 
-                    <!-- Linha: Semana | Valor Medido | Avanço Físico -->
+                    <!-- Linha: Semana (menor) | Valor Medido | Avanço Físico -->
                     <div class="col-md-4">
                         <label class="form-label" for="semana_referencia">
                             <i class="bi bi-calendar-week me-1" style="color:var(--rumo-cyan)"></i>Semana de Referência *
@@ -152,45 +152,58 @@
     <!-- COLUNA LATERAL -->
     <div class="col-lg-4">
 
-        <!-- HISTOGRAMA (leitura da ADM + checkbox) -->
+        <!-- HISTOGRAMA -->
         <div class="card-rumo mb-3">
             <div class="card-header">
-                <i class="bi bi-bar-chart-steps"></i>Histograma de Mão de Obra
+                <i class="bi bi-bar-chart-steps"></i>Histograma
             </div>
             <div class="p-3">
-
-                <!-- Estado vazio -->
-                <div id="hist-vazio" style="text-align:center; padding:1.2rem .5rem; color:#b0bece; font-size:.78rem;">
-                    <i class="bi bi-arrow-up-circle" style="font-size:1.4rem; display:block; margin-bottom:.4rem;"></i>
-                    Selecione a contratada e o contrato para ver o histograma planejado.
+                <div class="table-responsive">
+                    <table class="table efetivo-table mb-0" id="efetivo-table">
+                        <thead>
+                            <tr>
+                                <th>Função</th>
+                                <th style="width:80px; text-align:center;">Qtd</th>
+                                <th style="width:32px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="efetivo-body">
+                            {% if efetivo %}
+                                {% for ef in efetivo %}
+                                <tr class="efetivo-row">
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm"
+                                               name="efetivo_funcao[]"
+                                               list="funcoes-list"
+                                               value="{{ ef.funcao }}"
+                                               placeholder="Função">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm"
+                                               name="efetivo_quantidade[]"
+                                               value="{{ ef.quantidade }}" min="0">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn-remove-row" onclick="removeRow(this)">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
                 </div>
 
-                <!-- Conteúdo do histograma -->
-                <div id="hist-content" style="display:none;">
-                    <div id="hist-dias"></div>
+                <datalist id="funcoes-list">
+                    {% for f in funcoes %}
+                        <option value="{{ f }}">
+                    {% endfor %}
+                </datalist>
 
-                    <!-- Checkbox de confirmação -->
-                    <div class="mt-3 p-3" style="background:#f0f8ff; border-radius:8px; border:1px solid #c8dff0;">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                   name="histograma_respeitado" id="histogramaRespeitado"
-                                   {% if form_data.get('histograma_respeitado') %}checked{% endif %}>
-                            <label class="form-check-label" for="histogramaRespeitado"
-                                   style="font-size:.82rem; font-weight:600; color:#1a5c00; cursor:pointer;">
-                                <i class="bi bi-check2-circle me-1"></i>
-                                O histograma planejado foi respeitado nesta semana
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sem histograma configurado -->
-                <div id="hist-sem-config" style="display:none; text-align:center; padding:.8rem .5rem; color:#b0bece; font-size:.78rem;">
-                    <i class="bi bi-exclamation-circle" style="font-size:1.2rem; display:block; margin-bottom:.3rem; color:#f0a500;"></i>
-                    Nenhum histograma configurado para este contrato.<br>
-                    <a href="{{ url_for('admin') }}" style="color:var(--rumo-cyan); font-size:.72rem;">Configurar na ADM</a>
-                </div>
-
+                <button type="button" class="btn-add-row w-100 mt-2" onclick="addRow()">
+                    <i class="bi bi-plus-lg me-1"></i>Adicionar Função
+                </button>
             </div>
         </div>
 
@@ -313,101 +326,10 @@
 
 {% block scripts %}
 <script>
-const CONTRATOS_DATA = {{ contratos_data_json|safe }};
-const DIAS_ORDER = ['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
-const DIAS_LABELS = {
-    segunda:'Segunda', terca:'Terça', quarta:'Quarta',
-    quinta:'Quinta', sexta:'Sexta', sabado:'Sábado', domingo:'Domingo'
-};
-
-function onContratadaChange(sel) {
-    const contratada = sel.value;
-    const contratoSel = document.getElementById('contratoSelect');
-    contratoSel.innerHTML = '<option value="">Selecione o contrato...</option>';
-    if (!contratada || !CONTRATOS_DATA[contratada]) {
-        renderHistograma(null);
-        return;
-    }
-    CONTRATOS_DATA[contratada].forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.contrato;
-        opt.textContent = c.contrato;
-        contratoSel.appendChild(opt);
-    });
-    if (CONTRATOS_DATA[contratada].length === 1) {
-        contratoSel.value = CONTRATOS_DATA[contratada][0].contrato;
-        onContratoChange(contratoSel);
-    } else {
-        renderHistograma(null);
-    }
-}
-
-function onContratoChange(sel) {
-    const contratada = document.getElementById('contratadaSelect').value;
-    const contrato = sel.value;
-    if (!contratada || !contrato) { renderHistograma(null); return; }
-    const list = CONTRATOS_DATA[contratada] || [];
-    const found = list.find(c => c.contrato === contrato);
-    renderHistograma(found ? found.histograma_semanal : null);
-}
-
-function renderHistograma(hist) {
-    const elVazio   = document.getElementById('hist-vazio');
-    const elContent = document.getElementById('hist-content');
-    const elSemCfg  = document.getElementById('hist-sem-config');
-    const elDias    = document.getElementById('hist-dias');
-
-    if (hist === null) {
-        elVazio.style.display   = '';
-        elContent.style.display = 'none';
-        elSemCfg.style.display  = 'none';
-        return;
-    }
-
-    const temDados = DIAS_ORDER.some(d => (hist[d] || []).length > 0);
-    if (!temDados) {
-        elVazio.style.display   = 'none';
-        elContent.style.display = 'none';
-        elSemCfg.style.display  = '';
-        return;
-    }
-
-    elVazio.style.display   = 'none';
-    elSemCfg.style.display  = 'none';
-    elContent.style.display = '';
-    elDias.innerHTML = '';
-
-    DIAS_ORDER.forEach(diaKey => {
-        const items = hist[diaKey] || [];
-        if (!items.length) return;
-
-        const isWeekend = diaKey === 'sabado' || diaKey === 'domingo';
-        const wrapper = document.createElement('div');
-        wrapper.className = 'mb-2';
-
-        const rows = items.map(i => `
-            <tr>
-                <td style="font-size:.78rem; padding:.22rem .5rem;">${i.cargo}</td>
-                <td style="font-size:.78rem; padding:.22rem .5rem; text-align:center; font-weight:700; color:var(--rumo-dark);">${i.quantidade}</td>
-            </tr>`).join('');
-
-        wrapper.innerHTML = `
-            <div style="font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em;
-                        color:${isWeekend ? '#8a9aaa' : 'var(--rumo-dark)'}; margin-bottom:.25rem;">
-                ${DIAS_LABELS[diaKey]}${isWeekend ? ' <span style="font-size:.6rem; color:#aaa;">(fim de semana)</span>' : ''}
-            </div>
-            <table style="width:100%; border-collapse:collapse; background:#fff; border-radius:7px;
-                          overflow:hidden; border:1px solid #e8ecf0; margin-bottom:.1rem;">
-                <thead>
-                    <tr style="background:#f7f9fb;">
-                        <th style="font-size:.62rem; padding:.2rem .5rem; text-align:left; color:#8a9aaa; font-weight:700; text-transform:uppercase; letter-spacing:.05em;">Cargo</th>
-                        <th style="font-size:.62rem; padding:.2rem .5rem; text-align:center; color:#8a9aaa; font-weight:700; text-transform:uppercase; letter-spacing:.05em; width:55px;">Qtd</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>`;
-        elDias.appendChild(wrapper);
-    });
+function toggleCustomContratada(sel) {
+    const custom = document.getElementById('contratada_custom');
+    custom.style.display = sel.value === '__outro__' ? 'block' : 'none';
+    if (sel.value === '__outro__') custom.focus();
 }
 
 function ajustarSegunda(input) {
@@ -427,6 +349,26 @@ function ajustarSegunda(input) {
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     input.value = `${yyyy}-${mm}-${dd}`;
+}
+
+function addRow() {
+    const tbody = document.getElementById('efetivo-body');
+    const tr = document.createElement('tr');
+    tr.className = 'efetivo-row';
+    tr.innerHTML = `
+        <td><input type="text" class="form-control form-control-sm"
+                   name="efetivo_funcao[]" list="funcoes-list" placeholder="Função"></td>
+        <td><input type="number" class="form-control form-control-sm"
+                   name="efetivo_quantidade[]" value="1" min="0"></td>
+        <td><button type="button" class="btn-remove-row" onclick="removeRow(this)">
+            <i class="bi bi-x-lg"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+    tr.querySelector('input[name="efetivo_funcao[]"]').focus();
+}
+
+function removeRow(btn) {
+    btn.closest('tr').remove();
 }
 
 function addEquipRow() {
@@ -464,13 +406,15 @@ function updatePluvStyle(sel) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Pluviometria styles
     document.querySelectorAll('[name^="pluv_"]').forEach(sel => {
         updatePluvStyle(sel);
         sel.addEventListener('change', () => updatePluvStyle(sel));
     });
+    const sel = document.getElementById('contratadaSelect');
+    if (sel && sel.value === '__outro__') {
+        document.getElementById('contratada_custom').style.display = 'block';
+    }
 
-    // Semana: ajustar max e valor padrão
     const today = new Date().toISOString().split('T')[0];
     const semanaInput = document.getElementById('semana_referencia');
     semanaInput.setAttribute('max', today);
@@ -479,48 +423,25 @@ document.addEventListener('DOMContentLoaded', () => {
         ajustarSegunda(semanaInput);
     }
 
-    // Inicializar dropdowns e histograma no modo editar
-    const initContratada = {{ form_data.get('contratada', '')|tojson }};
-    const initContrato   = {{ form_data.get('contrato', '')|tojson }};
-    const contratadaSel  = document.getElementById('contratadaSelect');
-    const contratoSel    = document.getElementById('contratoSelect');
-
-    if (initContratada && CONTRATOS_DATA[initContratada]) {
-        contratoSel.innerHTML = '<option value="">Selecione o contrato...</option>';
-        CONTRATOS_DATA[initContratada].forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.contrato;
-            opt.textContent = c.contrato;
-            if (c.contrato === initContrato) opt.selected = true;
-            contratoSel.appendChild(opt);
-        });
-        if (initContrato) {
-            const found = CONTRATOS_DATA[initContratada].find(c => c.contrato === initContrato);
-            renderHistograma(found ? found.histograma_semanal : null);
-        }
-    }
-
-    // Attach onchange ao contratoSelect
-    contratoSel.addEventListener('change', function() { onContratoChange(this); });
-
-    // Validação no submit
     document.getElementById('mainForm').addEventListener('submit', function(e) {
         const contratada = document.getElementById('contratadaSelect')?.value;
-        const contrato   = document.getElementById('contratoSelect')?.value;
-        const semana     = document.getElementById('semana_referencia')?.value;
-        const trabalhos  = document.getElementById('trabalhos_notaveis')?.value;
-        const pontos     = document.getElementById('pontos_atencao')?.value;
-        const valor      = document.getElementById('valor_medido')?.value;
-        const avanco     = document.getElementById('avanco_fisico')?.value;
+        const semana = document.getElementById('semana_referencia')?.value;
+        const contrato = document.getElementById('contrato')?.value;
+        const trabalhos = document.getElementById('trabalhos_notaveis')?.value;
+        const pontos = document.getElementById('pontos_atencao')?.value;
+        const valor = document.getElementById('valor_medido')?.value;
+        const avanco = document.getElementById('avanco_fisico')?.value;
 
         const erros = [];
-        if (!contratada) erros.push('Selecione uma contratada.');
-        if (!contrato)   erros.push('Selecione um contrato.');
-        if (!semana)     erros.push('Informe a semana de referência.');
-        if (!valor)      erros.push('Informe o valor medido da semana.');
+        if (!contratada || contratada === '') erros.push('Selecione uma contratada.');
+        if (contratada === '__outro__' && !document.getElementById('contratada_custom')?.value.trim())
+            erros.push('Digite o nome da contratada.');
+        if (!semana) erros.push('Informe a semana de referência.');
+        if (!contrato.trim()) erros.push('Informe o contrato.');
+        if (!valor) erros.push('Informe o valor medido da semana.');
         if (avanco === '' || avanco === null) erros.push('Informe o avanço físico (%).');
-        if (!trabalhos?.trim()) erros.push('Descreva os trabalhos notáveis.');
-        if (!pontos?.trim())    erros.push('Descreva os pontos de atenção.');
+        if (!trabalhos.trim()) erros.push('Descreva os trabalhos notáveis.');
+        if (!pontos.trim()) erros.push('Descreva os pontos de atenção.');
 
         if (erros.length) {
             e.preventDefault();

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "e278aac5-2e07-4291-8ede-9b7b52483a73",
+    "contrato": "45645",
+    "contratada": "Engenharia Beta",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "cvdc",
+    "efetivo": [],
+    "total_direto": 0,
+    "total_indireto": 0,
+    "equipamentos": [],
+    "pontos_atencao": "bvfg",
+    "valor_medido": 64.0,
+    "avanco_fisico": 43.0,
+    "pluviometria": {
+      "segunda": "Chuva Produtiva",
+      "terca": "Chuva Produtiva",
+      "quarta": "Incidência de Raio",
+      "quinta": "Chuva Parcial",
+      "sexta": "Chuva Parcial",
+      "sabado": "",
+      "domingo": ""
+    },
+    "criado_em": "2026-06-09T12:19:24.372226",
+    "atualizado_em": "2026-06-09T12:19:24.372236"
+  }
+]

@@ -45,16 +45,8 @@
     font-size:.95rem; padding:.15rem .3rem; border-radius:5px; transition:background .15s;
 }
 .btn-del-row:hover { background:rgba(220,53,69,.08); }
-.dia-label {
-    font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em;
-    color:var(--tms-dark); margin-bottom:.4rem; display:flex; align-items:center; gap:.4rem;
-}
-.dia-label .badge-dia {
-    background:rgba(0,174,239,.12); color:var(--tms-cyan);
-    border-radius:5px; padding:.15rem .5rem; font-size:.65rem;
-}
-.dia-block { border:1px solid var(--tms-border); border-radius:10px; padding:1rem 1.1rem; margin-bottom:.9rem; background:#fff; }
-.dia-block.fim-semana { background:#fafbfc; border-color:#e8ecf0; }
+.badge-tipo-d { background:rgba(141,198,63,.15); color:#4a7c1a; border-radius:5px; padding:.15rem .45rem; font-size:.68rem; font-weight:700; }
+.badge-tipo-i { background:rgba(0,174,239,.13); color:#005f8a; border-radius:5px; padding:.15rem .45rem; font-size:.68rem; font-weight:700; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -93,106 +85,215 @@
         </div>
     </div>
 
-    <!-- ── LINHA BASE FINANCEIRA ── -->
-    <div class="card-rumo mb-3">
-        <div style="padding:1.25rem 1.4rem;">
-            <div class="sec-title"><i class="bi bi-graph-up-arrow"></i>Linha de Base Financeira por Mês</div>
-            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
-                Valor planejado acumulado mês a mês. Usado na Curva S Financeira.
-            </p>
-            <table class="adm-table" id="tblFin">
-                <thead>
-                    <tr>
-                        <th style="width:180px;">Mês</th>
-                        <th>Valor Planejado (R$)</th>
-                        <th style="width:40px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="bodyFin">
-                    {% for item in contrato.get('linha_base_financeira', []) %}
-                    <tr>
-                        <td><input type="month" name="fin_mes[]" class="adm-input" value="{{ item.mes }}" required></td>
-                        <td><input type="text"  name="fin_valor[]" class="adm-input" value="{{ '%.2f'|format(item.valor)|replace('.', ',') }}" placeholder="0,00"></td>
-                        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFin','fin')">
-                <i class="bi bi-plus-lg"></i>Adicionar Mês
-            </button>
-        </div>
-    </div>
-
-    <!-- ── LINHA BASE FÍSICA ── -->
-    <div class="card-rumo mb-3">
-        <div style="padding:1.25rem 1.4rem;">
-            <div class="sec-title"><i class="bi bi-bar-chart-line"></i>Linha de Base Física por Mês</div>
-            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
-                Percentual de avanço físico planejado mês a mês. Usado na Curva S Física.
-            </p>
-            <table class="adm-table" id="tblFis">
-                <thead>
-                    <tr>
-                        <th style="width:180px;">Mês</th>
-                        <th>Avanço Planejado (%)</th>
-                        <th style="width:40px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="bodyFis">
-                    {% for item in contrato.get('linha_base_fisica', []) %}
-                    <tr>
-                        <td><input type="month" name="fis_mes[]" class="adm-input" value="{{ item.mes }}" required></td>
-                        <td><input type="number" name="fis_perc[]" class="adm-input" value="{{ item.percentual }}" placeholder="0.00" min="0" max="100" step="0.01"></td>
-                        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFis','fis')">
-                <i class="bi bi-plus-lg"></i>Adicionar Mês
-            </button>
-        </div>
-    </div>
-
-    <!-- ── HISTOGRAMA SEMANAL ── -->
-    <div class="card-rumo mb-3">
-        <div style="padding:1.25rem 1.4rem;">
-            <div class="sec-title"><i class="bi bi-people"></i>Histograma de Mão de Obra — Planejamento Semanal</div>
-            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1.2rem;">
-                Defina os cargos e quantidades de profissionais planejados para cada dia da semana.
-            </p>
-
-            {% for dia_key, dia_label in dias_semana %}
-            {% set is_weekend = loop.index0 >= 5 %}
-            <div class="dia-block {% if is_weekend %}fim-semana{% endif %}">
-                <div class="dia-label">
-                    <span>{{ dia_label }}</span>
-                    {% if is_weekend %}<span class="badge-dia">Fim de semana</span>{% endif %}
+    <!-- ── LINHAS BASE FINANCEIRA + FÍSICA (lado a lado) ── -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="card-rumo" style="height:100%;">
+                <div style="padding:1.25rem 1.4rem;">
+                    <div class="sec-title"><i class="bi bi-graph-up-arrow"></i>Linha de Base Financeira por Semana</div>
+                    <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                        Valor planejado semana a semana. Usado na Curva S Financeira.
+                    </p>
+                    <table class="adm-table" id="tblFin">
+                        <thead>
+                            <tr>
+                                <th style="width:160px;">Semana</th>
+                                <th>Valor Planejado (R$)</th>
+                                <th style="width:40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyFin">
+                            {% for item in contrato.get('linha_base_financeira', []) %}
+                            <tr>
+                                <td><input type="week" name="fin_semana[]" class="adm-input" value="{{ item.semana }}" required></td>
+                                <td><input type="text" name="fin_valor[]" class="adm-input" value="{{ '%.2f'|format(item.valor)|replace('.', ',') }}" placeholder="0,00"></td>
+                                <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFin','fin')">
+                        <i class="bi bi-plus-lg"></i>Adicionar Semana
+                    </button>
                 </div>
-                <table class="adm-table">
-                    <thead>
-                        <tr>
-                            <th>Cargo / Função</th>
-                            <th style="width:120px;">Quantidade</th>
-                            <th style="width:40px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="bodyHist_{{ dia_key }}">
-                        {% for item in contrato.get('histograma_semanal', {}).get(dia_key, []) %}
-                        <tr>
-                            <td><input type="text" name="hist_{{ dia_key }}_cargo[]" class="adm-input" value="{{ item.cargo }}" placeholder="Ex: Pedreiro"></td>
-                            <td><input type="number" name="hist_{{ dia_key }}_qtd[]" class="adm-input" value="{{ item.quantidade }}" placeholder="0" min="0" step="1"></td>
-                            <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <button type="button" class="btn-add-row mt-2" onclick="addHistRow('{{ dia_key }}')">
-                    <i class="bi bi-plus-lg"></i>Adicionar Cargo
-                </button>
             </div>
-            {% endfor %}
+        </div>
+        <div class="col-md-6">
+            <div class="card-rumo" style="height:100%;">
+                <div style="padding:1.25rem 1.4rem;">
+                    <div class="sec-title"><i class="bi bi-bar-chart-line"></i>Linha de Base Física por Semana</div>
+                    <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                        Percentual de avanço físico planejado semana a semana. Usado na Curva S Física.
+                    </p>
+                    <table class="adm-table" id="tblFis">
+                        <thead>
+                            <tr>
+                                <th style="width:160px;">Semana</th>
+                                <th>Avanço Planejado (%)</th>
+                                <th style="width:40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyFis">
+                            {% for item in contrato.get('linha_base_fisica', []) %}
+                            <tr>
+                                <td><input type="week" name="fis_semana[]" class="adm-input" value="{{ item.semana }}" required></td>
+                                <td><input type="number" name="fis_perc[]" class="adm-input" value="{{ item.percentual }}" placeholder="0.00" min="0" max="100" step="0.01"></td>
+                                <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFis','fis')">
+                        <i class="bi bi-plus-lg"></i>Adicionar Semana
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── LINHA BASE HISTOGRAMA ── -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-people"></i>Histograma de Mão de Obra</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Efetivo planejado por função, com classificação Direto / Indireto. Usado no histograma do Dashboard.
+            </p>
+            <table class="adm-table" id="tblHist">
+                <thead>
+                    <tr>
+                        <th>Função / Cargo</th>
+                        <th style="width:110px;">Qtd. Planejada</th>
+                        <th style="width:130px;">Categoria</th>
+                        <th style="width:40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="bodyHist">
+                    {% for item in contrato.get('linha_base_histograma', []) %}
+                    <tr>
+                        <td><input type="text" name="hist_funcao[]" class="adm-input" value="{{ item.funcao }}" placeholder="Ex: Operador de Máquinas" required></td>
+                        <td><input type="number" name="hist_qtd[]" class="adm-input" value="{{ item.quantidade }}" placeholder="0" min="0" step="1"></td>
+                        <td>
+                            <select name="hist_tipo[]" class="adm-select">
+                                <option value="direto"   {% if item.tipo=='direto'   %}selected{% endif %}>Direto</option>
+                                <option value="indireto" {% if item.tipo=='indireto' %}selected{% endif %}>Indireto</option>
+                            </select>
+                        </td>
+                        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyHist','hist')">
+                <i class="bi bi-plus-lg"></i>Adicionar Função
+            </button>
+        </div>
+    </div>
+
+    <!-- ── IMPORT BASELINE TEMPORAL ── -->
+    <div class="card-rumo mb-3" id="sect-import-hist">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-cloud-upload"></i>Importar Baseline Temporal — Histograma</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Faça o upload de uma planilha <strong>.xlsx</strong> com o histograma de mão de obra por período semanal.
+                O arquivo deve conter colunas fixas (Empresa, Descrição, Regime, Local) e colunas de período,
+                com linhas identificadas como <em>Baseline</em> e <em>Real / Tendência</em>.
+            </p>
+
+            {% if contrato.get('linha_base_histograma_temporal') %}
+            {% set lbt = contrato['linha_base_histograma_temporal'] %}
+            <div class="alert alert-warning mb-3" style="font-size:.78rem;">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Já existe uma baseline importada em <strong>{{ lbt.importado_em[:10] }}</strong>
+                ({{ lbt.n_funcoes }} funções · {{ lbt.n_periodos }} períodos).
+                Confirmar uma nova importação irá <strong>substituí-la</strong>.
+            </div>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('upload_histograma', key=key) }}" enctype="multipart/form-data">
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <label class="btn btn-secondary-rumo" style="cursor:pointer; margin:0; padding:.48rem 1.1rem;">
+                        <i class="bi bi-file-earmark-spreadsheet me-1"></i>Selecionar .xlsx
+                        <input type="file" name="file_histograma" accept=".xlsx" style="display:none;"
+                               id="fileHistograma"
+                               onchange="document.getElementById('lbFileName').textContent = this.files[0]?.name || 'Nenhum arquivo';">
+                    </label>
+                    <span id="lbFileName" style="font-size:.78rem; color:var(--tms-muted); font-style:italic; flex:1;">Nenhum arquivo selecionado</span>
+                    <button type="submit" class="btn btn-primary-rumo" style="padding:.48rem 1.2rem;">
+                        <i class="bi bi-upload me-1"></i>Processar Planilha
+                    </button>
+                </div>
+            </form>
+
+            {% if hist_temp %}
+            <div class="mt-4" id="hist-preview-block">
+                <div style="background:var(--tms-green-light); border:1px solid rgba(141,198,63,.4); border-radius:10px; padding:.9rem 1.1rem; margin-bottom:1rem; display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;">
+                    <div>
+                        <div style="font-size:.65rem; font-weight:700; color:#4a7c1a; text-transform:uppercase; letter-spacing:.09em; margin-bottom:.2rem;">
+                            Arquivo processado — aguardando confirmação
+                        </div>
+                        <div style="font-family:'Montserrat',sans-serif; font-size:1.3rem; font-weight:800; color:#3a6010; line-height:1;">
+                            {{ hist_temp.n_funcoes }}&nbsp;<span style="font-size:.8rem; font-weight:600;">funções</span>
+                            &nbsp;×&nbsp;
+                            {{ hist_temp.n_periodos }}&nbsp;<span style="font-size:.8rem; font-weight:600;">períodos</span>
+                        </div>
+                    </div>
+                    <div style="font-size:.72rem; color:var(--tms-muted); margin-left:auto;">
+                        Processado em {{ hist_temp.importado_em[:16]|replace('T', ' ') }}
+                    </div>
+                </div>
+
+                <div style="overflow:auto; max-height:300px; border:1px solid var(--tms-border); border-radius:8px; margin-bottom:1rem;">
+                    <table class="adm-table" style="min-width:520px;">
+                        <thead style="position:sticky; top:0; background:#f8fafc; z-index:2;">
+                            <tr>
+                                <th>Empresa</th>
+                                <th>Função</th>
+                                <th>Regime</th>
+                                <th>Local</th>
+                                <th>Tipo</th>
+                                <th style="text-align:center;">Períodos</th>
+                                <th style="text-align:right;">Total H</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rec in hist_temp.registros %}
+                            <tr>
+                                <td style="font-size:.75rem;">{{ rec.empresa or '—' }}</td>
+                                <td style="font-size:.8rem; font-weight:600; color:var(--tms-dark);">{{ rec.funcao }}</td>
+                                <td style="font-size:.72rem; color:var(--tms-muted);">{{ rec.regime_trabalho or '—' }}</td>
+                                <td style="font-size:.72rem; color:var(--tms-muted);">{{ rec.local or '—' }}</td>
+                                <td>
+                                    {% if rec.tipo == 'direto' %}<span class="badge-tipo-d">Direto</span>
+                                    {% elif rec.tipo == 'indireto' %}<span class="badge-tipo-i">Indireto</span>
+                                    {% else %}<span style="font-size:.72rem; color:#b0bece;">—</span>{% endif %}
+                                </td>
+                                <td style="text-align:center; font-size:.78rem; color:var(--tms-muted);">{{ rec.periodos|length }}</td>
+                                <td style="text-align:right; font-weight:700; color:var(--tms-dark);">
+                                    {{ rec.periodos|sum(attribute='quantidade') }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <form method="post" action="{{ url_for('confirmar_histograma', key=key) }}">
+                        <button type="submit" class="btn btn-primary-rumo"
+                            {% if contrato.get('linha_base_histograma_temporal') %}
+                            onclick="return confirm('Já existe uma baseline importada. Deseja substituí-la pelos novos dados?');"
+                            {% endif %}>
+                            <i class="bi bi-check-circle me-1"></i>Confirmar Importação
+                        </button>
+                    </form>
+                    <form method="post" action="{{ url_for('cancelar_histograma', key=key) }}">
+                        <button type="submit" class="btn btn-danger-rumo">
+                            <i class="bi bi-x-circle me-1"></i>Descartar
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -208,6 +309,12 @@
 
 {% block scripts %}
 <script>
+{% if hist_temp %}
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('sect-import-hist').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+{% endif %}
+
 function delRow(btn) {
     btn.closest('tr').remove();
 }
@@ -215,30 +322,31 @@ function delRow(btn) {
 function addRow(bodyId, prefix) {
     const tbody = document.getElementById(bodyId);
     const tr = document.createElement('tr');
+
     if (prefix === 'fin') {
         tr.innerHTML = `
-          <td><input type="month" name="fin_mes[]" class="adm-input" required></td>
-          <td><input type="text"  name="fin_valor[]" class="adm-input" placeholder="0,00"></td>
+          <td><input type="week" name="fin_semana[]" class="adm-input" required></td>
+          <td><input type="text" name="fin_valor[]" class="adm-input" placeholder="0,00"></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
+    } else if (prefix === 'fis') {
+        tr.innerHTML = `
+          <td><input type="week" name="fis_semana[]" class="adm-input" required></td>
+          <td><input type="number" name="fis_perc[]" class="adm-input" placeholder="0.00" min="0" max="100" step="0.01"></td>
           <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
     } else {
         tr.innerHTML = `
-          <td><input type="month" name="fis_mes[]" class="adm-input" required></td>
-          <td><input type="number" name="fis_perc[]" class="adm-input" placeholder="0.00" min="0" max="100" step="0.01"></td>
+          <td><input type="text" name="hist_funcao[]" class="adm-input" placeholder="Ex: Operador de Máquinas" required></td>
+          <td><input type="number" name="hist_qtd[]" class="adm-input" placeholder="0" min="0" step="1"></td>
+          <td>
+            <select name="hist_tipo[]" class="adm-select">
+              <option value="direto">Direto</option>
+              <option value="indireto">Indireto</option>
+            </select>
+          </td>
           <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
     }
     tbody.appendChild(tr);
     tr.querySelector('input,select').focus();
-}
-
-function addHistRow(diaKey) {
-    const tbody = document.getElementById('bodyHist_' + diaKey);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="text" name="hist_${diaKey}_cargo[]" class="adm-input" placeholder="Ex: Pedreiro"></td>
-      <td><input type="number" name="hist_${diaKey}_qtd[]" class="adm-input" placeholder="0" min="0" step="1"></td>
-      <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
-    tbody.appendChild(tr);
-    tr.querySelector('input').focus();
 }
 </script>
 {% endblock %}
