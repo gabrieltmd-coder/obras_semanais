@@ -10,7 +10,7 @@
     "total_indireto": 0,
     "equipamentos": [],
     "pontos_atencao": "bvfg",
-    "valor_medido": 64.0,
+    "valor_medido": 65.0,
     "avanco_fisico": 43.0,
     "pluviometria": {
       "segunda": "Chuva Produtiva",
@@ -18,10 +18,56 @@
       "quarta": "Incidência de Raio",
       "quinta": "Chuva Parcial",
       "sexta": "Chuva Parcial",
-      "sabado": "",
-      "domingo": ""
+      "sabado": "Chuva Parcial",
+      "domingo": "Chuva Produtiva"
     },
     "criado_em": "2026-06-09T12:19:24.372226",
-    "atualizado_em": "2026-06-09T12:19:24.372236"
+    "atualizado_em": "2026-06-10T15:37:28.703812",
+    "alterado_em": "2026-06-10T15:37:28.703825"
+  },
+  {
+    "id": "00f1a29c-b150-41a0-a15a-9be1ef321b59",
+    "contrato": "y6456",
+    "contratada": "gabriel",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "rsthesth",
+    "efetivo": [
+      {
+        "funcao": "Mestre de Obras",
+        "quantidade": 1,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Eletricista",
+        "quantidade": 1,
+        "tipo": "direto"
+      }
+    ],
+    "total_direto": 2,
+    "total_indireto": 0,
+    "equipamentos": [
+      {
+        "descricao": "Guindaste sobre Esteiras",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Rolo Compactador Pé de Carneiro",
+        "quantidade": 1
+      }
+    ],
+    "pontos_atencao": "etyesty",
+    "valor_medido": 5454.0,
+    "avanco_fisico": 34.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-10T16:11:59.193053",
+    "atualizado_em": "2026-06-10T16:11:59.193068"
   }
 ]
