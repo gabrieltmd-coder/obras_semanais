@@ -195,34 +195,38 @@ body { background: #0b1828 !important; }
 
     <div class="col-lg-4">
         <div class="gc h-100">
-            <div class="gc-title"><span><i class="bi bi-pie-chart"></i>Composição do Efetivo</span></div>
-            {% if hist_list %}
-            <div class="d-flex align-items-center gap-3">
-                <canvas id="chartPie" width="110" height="110" style="max-width:110px;flex-shrink:0;"></canvas>
+            <div class="gc-title"><span><i class="bi bi-pie-chart"></i>Efetivo Previsto — Composição</span></div>
+            {% if prev_direto > 0 or prev_indireto > 0 %}
+            <!-- Donut Direto/Indireto (previsto) -->
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <canvas id="chartPrevDonut" width="90" height="90" style="max-width:90px;flex-shrink:0;"></canvas>
                 <div style="flex:1;min-width:0;">
                     <div class="leg">
-                        <div class="leg-dot" style="background:#7dda24;"></div>
+                        <div class="leg-dot" style="background:rgba(141,198,63,.85);"></div>
                         <span class="leg-name">Direto</span>
-                        <span class="leg-val" style="color:#7dda24;">{{ total_direto }}</span>
+                        <span class="leg-val" style="color:#8DC63F;">{{ prev_direto }}</span>
                     </div>
                     <div class="leg">
-                        <div class="leg-dot" style="background:#00d4ff;"></div>
+                        <div class="leg-dot" style="background:rgba(0,174,239,.85);"></div>
                         <span class="leg-name">Indireto</span>
-                        <span class="leg-val" style="color:#00d4ff;">{{ total_indireto }}</span>
-                    </div>
-                    <div class="leg">
-                        <div class="leg-dot" style="background:#fbb040;"></div>
-                        <span class="leg-name">A Classificar</span>
-                        <span class="leg-val" style="color:#fbb040;">{{ total_classificar }}</span>
+                        <span class="leg-val" style="color:#00AEEF;">{{ prev_indireto }}</span>
                     </div>
                     <div style="border-top:1px solid rgba(255,255,255,.08);margin-top:.4rem;padding-top:.4rem;display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:.58rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;">Total</span>
-                        <span style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.05rem;">{{ total_direto+total_indireto+total_classificar }}</span>
+                        <span style="font-size:.58rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;">Total H·H</span>
+                        <span style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.05rem;">{{ prev_direto + prev_indireto }}</span>
                     </div>
                 </div>
             </div>
+            <!-- Bar top funções previsto -->
+            <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:.55rem;">
+                <div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.28);margin-bottom:.45rem;">Top Funções</div>
+                <canvas id="chartPrevBar" height="110"></canvas>
+            </div>
             {% else %}
-            <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.25);font-size:.8rem;">Sem dados de efetivo.</div>
+            <div style="text-align:center;padding:1.5rem;color:rgba(255,255,255,.25);font-size:.8rem;">
+                <i class="bi bi-people" style="font-size:1.8rem;display:block;margin-bottom:.4rem;color:rgba(255,255,255,.15);"></i>
+                Sem dados de histograma previsto.<br>Configure o histograma na área Admin.
+            </div>
             {% endif %}
         </div>
     </div>
@@ -265,9 +269,11 @@ const FIS_REAL = {{ curva_fis_real|safe }};
 const HIST_LABELS = {{ hist_labels|safe }};
 const HIST_QTD    = {{ hist_qtd|safe }};
 const HIST_COLORS = {{ hist_colors|safe }};
-const PIE_DATA    = {{ pie_data|safe }};
-const PIE_COLORS  = ['rgba(125,218,36,.9)','rgba(0,212,255,.9)','rgba(251,176,64,.9)'];
-const PIE_LABELS  = {{ pie_labels|safe }};
+const PREV_LABELS   = {{ prev_labels|safe }};
+const PREV_QTD      = {{ prev_qtd|safe }};
+const PREV_COLORS   = {{ prev_colors|safe }};
+const PREV_DIRETO   = {{ prev_direto }};
+const PREV_INDIRETO = {{ prev_indireto }};
 
 const GRID  = 'rgba(255,255,255,.05)';
 const TICK  = { color:'rgba(255,255,255,.35)', font:{ size:10, family:"'Inter',sans-serif" } };
@@ -362,14 +368,38 @@ if (document.getElementById('chartHistograma') && HIST_LABELS.length) {
     });
 }
 
-// ── Donut ──
-if (document.getElementById('chartPie') && PIE_DATA.some(v=>v>0)) {
-    new Chart(document.getElementById('chartPie'), {
+// ── Donut previsto (Direto/Indireto) ──
+if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRETO > 0)) {
+    new Chart(document.getElementById('chartPrevDonut'), {
         type:'doughnut',
-        data:{ labels:PIE_LABELS, datasets:[{ data:PIE_DATA, backgroundColor:PIE_COLORS, borderWidth:2, borderColor:'rgba(255,255,255,.05)', hoverOffset:4 }]},
+        data:{
+            labels:['Direto','Indireto'],
+            datasets:[{ data:[PREV_DIRETO, PREV_INDIRETO],
+                backgroundColor:['rgba(141,198,63,.85)','rgba(0,174,239,.85)'],
+                borderWidth:2, borderColor:'rgba(255,255,255,.05)', hoverOffset:4 }]
+        },
         options:{
             responsive:false, cutout:'65%', animation:{ duration:600 },
             plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>` ${ctx.label}: ${ctx.parsed}` }}}
+        }
+    });
+}
+
+// ── Bar previsto — top funções ──
+if (document.getElementById('chartPrevBar') && PREV_LABELS.length) {
+    new Chart(document.getElementById('chartPrevBar'), {
+        type:'bar',
+        data:{
+            labels: PREV_LABELS,
+            datasets:[{ label:'H·H Planejado', data:PREV_QTD, backgroundColor:PREV_COLORS, borderRadius:4, borderSkipped:false }]
+        },
+        options:{
+            indexAxis:'y', responsive:true, animation:{ duration:600 },
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>` ${ctx.parsed.x} H·H` }}},
+            scales:{
+                x:{ grid:{color:GRID}, ticks:{ ...TICK, stepSize:1 }},
+                y:{ grid:{display:false}, ticks:{ ...TICK, font:{size:9} }}
+            }
         }
     });
 }

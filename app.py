@@ -1,7 +1,6 @@
 import json
 import uuid
 import os
-import re
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify, session
 from openpyxl import Workbook, load_workbook
@@ -105,14 +104,27 @@ def inject_now():
     return {'now': datetime.now()}
 
 
-CONTRATADAS = [
-    "TÜV Rheinland",
-    "Construtora Alpha",
-    "Engenharia Beta",
-    "Obras Gamma",
-    "Infraestrutura Delta",
-    "Serviços Epsilon",
-]
+def get_contratadas():
+    """Retorna lista ordenada de contratadas cadastradas no Admin (contratos_config.json)."""
+    cfg = load_contratos_config()
+    return sorted({v.get('contratada', '') for v in cfg.values() if v.get('contratada')})
+
+
+def get_funcoes_list():
+    """Carrega lista de cargos/tipos do Excel a cada chamada (reflete atualizações sem restart)."""
+    result = []
+    try:
+        wb = load_workbook(TIPO_MAO_OBRA_FILE, data_only=True)
+        ws = wb.active
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row[0]:
+                cargo    = str(row[0]).strip()
+                tipo_raw = str(row[1]).strip().lower() if row[1] else ''
+                tipo     = 'direto' if 'diret' in tipo_raw else 'indireto'
+                result.append({'cargo': cargo, 'tipo': tipo})
+    except Exception:
+        pass
+    return result
 
 FUNCOES = [
     "Engenheiro Civil",
@@ -155,167 +167,6 @@ DIAS_ABREV = {
     'sabado':  'Sáb',
     'domingo': 'Dom',
 }
-
-
-def safe_temp_key(key):
-    return ''.join(c if c.isalnum() else '_' for c in key)
-
-
-def hist_temp_path(key):
-    return os.path.join('data', f'_hist_temp_{safe_temp_key(key)}.json')
-
-
-_MONTH_ABBR = {'jan','fev','feb','mar','abr','apr','mai','may','jun',
-               'jul','ago','aug','set','sep','out','oct','nov','dez','dec'}
-
-_SKIP_FUNCAO_CONTAINS = ('mão de obra', 'total geral', 'subtotal')
-_SKIP_FUNCAO_EXACT    = {'total', 'direto', 'indireto', ''}
-
-
-def parse_histograma_excel(filepath):
-    """
-    Parses a wide-format Excel (Baseline/Real rows per function).
-    Returns (records, period_labels, error_msg).
-    """
-    try:
-        from openpyxl import load_workbook as _lw
-        wb = _lw(filepath, data_only=True)
-    except Exception as e:
-        return None, None, f'Erro ao abrir arquivo: {e}'
-
-    ws = wb.active
-    rows = [list(row) for row in ws.iter_rows(values_only=True)]
-
-    if not rows:
-        return None, None, 'Arquivo vazio.'
-
-    # Localiza a primeira célula com "Baseline" (determina tipo_col)
-    tipo_col = None
-    first_baseline_row = None
-    for ri, row in enumerate(rows):
-        for ci, cell in enumerate(row):
-            if cell is not None and str(cell).strip().lower() == 'baseline':
-                tipo_col = ci
-                first_baseline_row = ri
-                break
-        if tipo_col is not None:
-            break
-
-    if tipo_col is None:
-        return None, None, "Coluna 'Baseline' não encontrada. Verifique se o arquivo segue o formato esperado."
-
-    data_col_start = tipo_col + 1
-
-    # Papéis das colunas fixas à esquerda de tipo_col
-    empresa_col = 0 if tipo_col > 0 else None
-    funcao_col  = 1 if tipo_col > 1 else (0 if tipo_col > 0 else None)
-    regime_col  = 2 if tipo_col > 2 else None
-    local_col   = 3 if tipo_col > 3 else None
-
-    # Lê rótulos de período a partir das linhas de cabeçalho
-    period_inicio = []
-    period_fim    = []
-    month_per_col = {}
-
-    for ri, row in enumerate(rows[:first_baseline_row]):
-        row_lower = [str(c).lower().strip() if c else '' for c in row]
-
-        # Linha com nomes de mês (ex: FEV, MAR, ABR…)
-        if any(t in _MONTH_ABBR for t in row_lower):
-            cur_month = ''
-            for ci in range(data_col_start, len(row)):
-                v = row[ci]
-                if v is not None:
-                    cur_month = str(v).strip()
-                month_per_col[ci] = cur_month
-            continue
-
-        # Linha INÍCIO PERÍODO
-        if any('início' in t or 'inicio' in t for t in row_lower):
-            for ci in range(data_col_start, len(row)):
-                period_inicio.append(str(row[ci]).strip() if row[ci] is not None else '')
-            continue
-
-        # Linha TÉRMINO PERÍODO
-        if any('término' in t or 'termino' in t for t in row_lower):
-            for ci in range(data_col_start, len(row)):
-                period_fim.append(str(row[ci]).strip() if row[ci] is not None else '')
-
-    # Número de colunas de período
-    n_period_cols = max(
-        (len(r) - data_col_start for r in rows[first_baseline_row:] if len(r) > data_col_start),
-        default=0,
-    )
-
-    if n_period_cols == 0:
-        return None, None, 'Nenhuma coluna de período encontrada no arquivo.'
-
-    # Monta rótulos combinando mês + início/fim
-    period_labels = []
-    for i in range(n_period_cols):
-        ci  = data_col_start + i
-        ini = period_inicio[i] if i < len(period_inicio) else ''
-        fim = period_fim[i]    if i < len(period_fim)    else ''
-        mes = month_per_col.get(ci, '')
-        if mes and ini:
-            label = f'{mes}-{ini}' + (f'/{fim}' if fim else '')
-        elif ini:
-            label = str(ini) + (f'/{fim}' if fim else '')
-        else:
-            label = f'P{i+1}'
-        period_labels.append(label)
-
-    # Extrai linhas Baseline
-    records = []
-    last = {'empresa': '', 'funcao': '', 'regime': '', 'local': ''}
-
-    for ri in range(first_baseline_row, len(rows)):
-        row = rows[ri]
-
-        def _get(col):
-            return str(row[col]).strip() if col is not None and col < len(row) and row[col] is not None else None
-
-        v_emp = _get(empresa_col)
-        v_fun = _get(funcao_col)
-        v_reg = _get(regime_col)
-        v_loc = _get(local_col)
-
-        if v_emp: last['empresa'] = v_emp
-        if v_fun: last['funcao']  = v_fun
-        if v_reg: last['regime']  = v_reg
-        if v_loc: last['local']   = v_loc
-
-        tipo_cell = _get(tipo_col)
-        if not tipo_cell or tipo_cell.lower() != 'baseline':
-            continue
-
-        funcao_lower = last['funcao'].lower()
-        if any(s in funcao_lower for s in _SKIP_FUNCAO_CONTAINS) or funcao_lower in _SKIP_FUNCAO_EXACT:
-            continue
-
-        periodos = []
-        for pi in range(n_period_cols):
-            ci  = data_col_start + pi
-            raw = row[ci] if ci < len(row) else None
-            try:
-                qty = int(float(raw)) if raw is not None and str(raw).strip() not in ('', 'None') else 0
-            except (ValueError, TypeError):
-                qty = 0
-            periodos.append({'periodo': period_labels[pi], 'quantidade': qty})
-
-        records.append({
-            'empresa':         last['empresa'],
-            'funcao':          last['funcao'],
-            'regime_trabalho': last['regime'],
-            'local':           last['local'],
-            'tipo':            classify_tipo(last['funcao']),
-            'periodos':        periodos,
-        })
-
-    if not records:
-        return None, None, 'Nenhum registro Baseline encontrado. Verifique o formato do arquivo.'
-
-    return records, period_labels, None
 
 
 def parse_efetivo(form):
@@ -444,7 +295,7 @@ def novo():
                 flash(e, 'danger')
             return render_template('form.html',
                                    modo='novo',
-                                   contratadas=CONTRATADAS,
+                                   contratadas=get_contratadas(),
                                    funcoes=FUNCOES,
                                    pluviometria_opcoes=PLUVIOMETRIA_OPCOES,
                                    dias_semana=DIAS_SEMANA,
@@ -479,7 +330,7 @@ def novo():
 
     return render_template('form.html',
                            modo='novo',
-                           contratadas=CONTRATADAS,
+                           contratadas=get_contratadas(),
                            funcoes=FUNCOES,
                            pluviometria_opcoes=PLUVIOMETRIA_OPCOES,
                            dias_semana=DIAS_SEMANA,
@@ -549,7 +400,7 @@ def editar(id):
             return render_template('form.html',
                                    modo='editar',
                                    registro=registro,
-                                   contratadas=CONTRATADAS,
+                                   contratadas=get_contratadas(),
                                    funcoes=FUNCOES,
                                    pluviometria_opcoes=PLUVIOMETRIA_OPCOES,
                                    dias_semana=DIAS_SEMANA,
@@ -587,7 +438,7 @@ def editar(id):
     return render_template('form.html',
                            modo='editar',
                            registro=registro,
-                           contratadas=CONTRATADAS,
+                           contratadas=get_contratadas(),
                            funcoes=FUNCOES,
                            pluviometria_opcoes=PLUVIOMETRIA_OPCOES,
                            dias_semana=DIAS_SEMANA,
@@ -630,7 +481,9 @@ def dashboard():
                   chart_labels='[]', curva_fin_acum='[]', curva_fis_real='[]',
                   hist_labels='[]', hist_qtd='[]', hist_colors='[]',
                   hist_list=[], total_direto=0, total_indireto=0, total_classificar=0,
-                  pie_data='[]', pie_colors='[]', pie_labels='[]')
+                  pie_data='[]', pie_colors='[]', pie_labels='[]',
+                  prev_labels='[]', prev_qtd='[]', prev_colors='[]',
+                  prev_direto=0, prev_indireto=0)
 
     if not reg:
         return render_template('dashboard.html', **_vazio)
@@ -718,6 +571,27 @@ def dashboard():
     )
     saldo = total_valor_contrato - total_medido
 
+    # ── Histograma Previsto por Função ──────────────────────────────────────
+    hist_previsto = {}
+    for _, cdata in cfg.items():
+        if filtro_contratada and cdata.get('contratada') != filtro_contratada:
+            continue
+        for entry in cdata.get('linha_base_histograma', []):
+            funcao = (entry.get('funcao') or '').strip()
+            tipo   = entry.get('tipo', 'direto')
+            total  = sum(int(v or 0) for v in entry.get('semanas', {}).values())
+            if funcao:
+                if funcao not in hist_previsto:
+                    hist_previsto[funcao] = {'tipo': tipo, 'total': 0}
+                hist_previsto[funcao]['total'] += total
+    prev_list      = sorted(hist_previsto.items(), key=lambda x: x[1]['total'], reverse=True)
+    prev_direto    = sum(v['total'] for _, v in prev_list if v['tipo'] == 'direto')
+    prev_indireto  = sum(v['total'] for _, v in prev_list if v['tipo'] != 'direto')
+    _pcol          = lambda t: 'rgba(141,198,63,.85)' if t == 'direto' else 'rgba(0,174,239,.85)'
+    prev_labels    = json.dumps([f for f, _ in prev_list[:12]])
+    prev_qtd       = json.dumps([v['total'] for _, v in prev_list[:12]])
+    prev_colors    = json.dumps([_pcol(v['tipo']) for _, v in prev_list[:12]])
+
     kpis = {
         'total_contratos':      total_contratos,
         'total_medido':         total_medido,
@@ -748,7 +622,12 @@ def dashboard():
                            total_classificar=total_classificar,
                            pie_data=json.dumps(pie_data),
                            pie_colors=json.dumps(pie_colors),
-                           pie_labels=json.dumps(pie_labels))
+                           pie_labels=json.dumps(pie_labels),
+                           prev_labels=prev_labels,
+                           prev_qtd=prev_qtd,
+                           prev_colors=prev_colors,
+                           prev_direto=prev_direto,
+                           prev_indireto=prev_indireto)
 
 
 @app.route('/export/excel')
@@ -980,6 +859,31 @@ def admin():
     return render_template('admin.html', contratos=sorted(contratos.values(), key=lambda x: x['contratada']))
 
 
+@app.route('/admin/novo_contrato', methods=['POST'])
+def admin_novo_contrato():
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+
+    contratada = request.form.get('contratada', '').strip()
+    contrato_id = request.form.get('contrato', '').strip()
+
+    if not contratada or not contrato_id:
+        flash('Contratada e Contrato são obrigatórios.', 'danger')
+        return redirect(url_for('admin'))
+
+    key = contrato_key(contratada, contrato_id)
+    cfg = load_contratos_config()
+
+    if key in cfg:
+        flash(f'Contrato "{contrato_id}" para "{contratada}" já existe.', 'warning')
+        return redirect(url_for('admin_contrato', key=key))
+
+    cfg[key] = {'contratada': contratada, 'contrato': contrato_id}
+    save_contratos_config(cfg)
+    flash(f'Contrato "{contrato_id}" criado com sucesso. Configure os dados abaixo.', 'success')
+    return redirect(url_for('admin_contrato', key=key))
+
+
 @app.route('/admin/contrato/<path:key>', methods=['GET', 'POST'])
 def admin_contrato(key):
     if not _admin_required():
@@ -1007,13 +911,14 @@ def admin_contrato(key):
             for s, p in zip(semanas_fis, percs_fis) if s
         ]
 
-        hist_funcoes = request.form.getlist('hist_funcao[]')
-        hist_qtds    = request.form.getlist('hist_qtd[]')
-        hist_tipos   = request.form.getlist('hist_tipo[]')
-        data['linha_base_histograma'] = [
-            {'funcao': f.strip(), 'quantidade': int(q or 0), 'tipo': t}
-            for f, q, t in zip(hist_funcoes, hist_qtds, hist_tipos) if f.strip()
-        ]
+        data['data_inicio_contrato'] = request.form.get('data_inicio_contrato', '')
+        data['data_fim_contrato']    = request.form.get('data_fim_contrato', '')
+
+        hist_json = request.form.get('hist_json', '[]')
+        try:
+            data['linha_base_histograma'] = json.loads(hist_json)
+        except (json.JSONDecodeError, ValueError):
+            data['linha_base_histograma'] = []
 
         cfg[key] = data
         save_contratos_config(cfg)
@@ -1026,93 +931,8 @@ def admin_contrato(key):
         data['contratada'] = parts[0]
         data['contrato']   = parts[1] if len(parts) > 1 else ''
 
-    hist_temp = None
-    tp = hist_temp_path(key)
-    if os.path.exists(tp):
-        try:
-            with open(tp, 'r', encoding='utf-8') as f:
-                hist_temp = json.load(f)
-        except Exception:
-            hist_temp = None
-
-    return render_template('admin_contrato.html', key=key, contrato=data, hist_temp=hist_temp)
-
-
-@app.route('/admin/contrato/<path:key>/upload_histograma', methods=['POST'])
-def upload_histograma(key):
-    if not _admin_required():
-        return redirect(url_for('admin_login'))
-
-    uploaded = request.files.get('file_histograma')
-    if not uploaded or not uploaded.filename:
-        flash('Nenhum arquivo selecionado.', 'danger')
-        return redirect(url_for('admin_contrato', key=key))
-
-    if not uploaded.filename.lower().endswith('.xlsx'):
-        flash('Apenas arquivos .xlsx são aceitos.', 'danger')
-        return redirect(url_for('admin_contrato', key=key))
-
-    os.makedirs('data', exist_ok=True)
-    tmp_path = os.path.join('data', f'_upload_{uuid.uuid4().hex}.xlsx')
-    uploaded.save(tmp_path)
-
-    records, period_labels, err = parse_histograma_excel(tmp_path)
-    os.remove(tmp_path)
-
-    if err:
-        flash(f'Erro ao processar arquivo: {err}', 'danger')
-        return redirect(url_for('admin_contrato', key=key))
-
-    temp_data = {
-        'importado_em':  datetime.now().isoformat(),
-        'n_funcoes':     len(records),
-        'n_periodos':    len(period_labels),
-        'period_labels': period_labels,
-        'registros':     records,
-    }
-
-    with open(hist_temp_path(key), 'w', encoding='utf-8') as f:
-        json.dump(temp_data, f, ensure_ascii=False, indent=2)
-
-    flash(f'Planilha processada: {len(records)} funções · {len(period_labels)} períodos. Revise a prévia e confirme.', 'success')
-    return redirect(url_for('admin_contrato', key=key))
-
-
-@app.route('/admin/contrato/<path:key>/confirmar_histograma', methods=['POST'])
-def confirmar_histograma(key):
-    if not _admin_required():
-        return redirect(url_for('admin_login'))
-
-    tp = hist_temp_path(key)
-    if not os.path.exists(tp):
-        flash('Dados temporários não encontrados. Faça o upload novamente.', 'danger')
-        return redirect(url_for('admin_contrato', key=key))
-
-    with open(tp, 'r', encoding='utf-8') as f:
-        temp_data = json.load(f)
-
-    cfg = load_contratos_config()
-    if key not in cfg:
-        cfg[key] = {}
-    cfg[key]['linha_base_histograma_temporal'] = temp_data
-    save_contratos_config(cfg)
-    os.remove(tp)
-
-    flash(f'Baseline temporal salva: {temp_data["n_funcoes"]} funções × {temp_data["n_periodos"]} períodos.', 'success')
-    return redirect(url_for('admin_contrato', key=key))
-
-
-@app.route('/admin/contrato/<path:key>/cancelar_histograma', methods=['POST'])
-def cancelar_histograma(key):
-    if not _admin_required():
-        return redirect(url_for('admin_login'))
-
-    tp = hist_temp_path(key)
-    if os.path.exists(tp):
-        os.remove(tp)
-
-    flash('Importação descartada.', 'warning')
-    return redirect(url_for('admin_contrato', key=key))
+    return render_template('admin_contrato.html', key=key, contrato=data,
+                           funcoes_mao_obra=get_funcoes_list())
 
 
 if __name__ == '__main__':
