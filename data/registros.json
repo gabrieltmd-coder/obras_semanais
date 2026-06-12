@@ -1,0 +1,123 @@
+[
+  {
+    "id": "e278aac5-2e07-4291-8ede-9b7b52483a73",
+    "contrato": "45645",
+    "contratada": "Engenharia Beta",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "cvdc",
+    "efetivo": [],
+    "total_direto": 0,
+    "total_indireto": 0,
+    "equipamentos": [],
+    "pontos_atencao": "bvfg",
+    "valor_medido": 65.0,
+    "avanco_fisico": 43.0,
+    "pluviometria": {
+      "segunda": "Chuva Produtiva",
+      "terca": "Chuva Produtiva",
+      "quarta": "Incidência de Raio",
+      "quinta": "Chuva Parcial",
+      "sexta": "Chuva Parcial",
+      "sabado": "Chuva Parcial",
+      "domingo": "Chuva Produtiva"
+    },
+    "criado_em": "2026-06-09T12:19:24.372226",
+    "atualizado_em": "2026-06-10T15:37:28.703812",
+    "alterado_em": "2026-06-10T15:37:28.703825"
+  },
+  {
+    "id": "00f1a29c-b150-41a0-a15a-9be1ef321b59",
+    "contrato": "y6456",
+    "contratada": "gabriel",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "rsthesth",
+    "efetivo": [
+      {
+        "funcao": "Mestre de Obras",
+        "quantidade": 1,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Eletricista",
+        "quantidade": 1,
+        "tipo": "direto"
+      }
+    ],
+    "total_direto": 2,
+    "total_indireto": 0,
+    "equipamentos": [
+      {
+        "descricao": "Guindaste sobre Esteiras",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Rolo Compactador Pé de Carneiro",
+        "quantidade": 1
+      }
+    ],
+    "pontos_atencao": "etyesty",
+    "valor_medido": 5454.0,
+    "avanco_fisico": 34.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-10T16:11:59.193053",
+    "atualizado_em": "2026-06-10T16:11:59.193068"
+  },
+  {
+    "id": "70b04b6c-12a1-4f93-8983-7aa8b8de17d6",
+    "contrato": "645645",
+    "contratada": "BUILDERS",
+    "semana_referencia": "2026-06-01",
+    "trabalhos_notaveis": "ksjdfbsjkldv",
+    "efetivo": [
+      {
+        "funcao": "Engenheiro Civil",
+        "quantidade": 1,
+        "tipo": "classificar"
+      },
+      {
+        "funcao": "Mestre de Obras",
+        "quantidade": 1,
+        "tipo": "classificar"
+      },
+      {
+        "funcao": "Pedreiro",
+        "quantidade": 1,
+        "tipo": "classificar"
+      }
+    ],
+    "total_direto": 0,
+    "total_indireto": 0,
+    "equipamentos": [
+      {
+        "descricao": "Compactador de Placa",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Rolo Compactador Liso",
+        "quantidade": 1
+      }
+    ],
+    "pontos_atencao": "slfvdknsk",
+    "valor_medido": 0.0,
+    "avanco_fisico": 21.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Incidência de Raio",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-11T22:19:32.794982",
+    "atualizado_em": "2026-06-11T22:19:32.794989"
+  }
+]

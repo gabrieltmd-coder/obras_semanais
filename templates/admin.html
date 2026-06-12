@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Admin — Contratos{% endblock %}
+{% block page_icon %}<i class="bi bi-shield-lock"></i>{% endblock %}
+{% block page_title %}Administração{% endblock %}
+{% block breadcrumb %}Configuração de Contratos{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div style="font-size:.82rem; color:var(--tms-muted);">
+        <i class="bi bi-info-circle me-1"></i>
+        Configure os dados de linha de base de cada contrato. Os dados são usados nos gráficos do Dashboard.
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-primary-rumo btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoContrato">
+            <i class="bi bi-plus-circle me-1"></i>Novo Contrato
+        </button>
+        <a href="{{ url_for('admin_logout') }}" class="btn btn-danger-rumo btn-sm">
+            <i class="bi bi-box-arrow-right me-1"></i>Sair
+        </a>
+    </div>
+</div>
+
+<!-- Modal: Novo Contrato -->
+<div class="modal fade" id="modalNovoContrato" tabindex="-1" aria-labelledby="modalNovoContratoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--tms-radius); border:1px solid var(--tms-border); overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,var(--tms-dark) 0%,var(--tms-navy) 100%); border-bottom:none; padding:1.1rem 1.4rem;">
+                <h5 class="modal-title" id="modalNovoContratoLabel"
+                    style="font-family:'Montserrat',sans-serif; font-size:.82rem; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:#fff; margin:0;">
+                    <i class="bi bi-plus-circle me-2" style="color:var(--tms-cyan);"></i>Novo Contrato
+                </h5>
+                <button type="button" class="btn-close btn-close-white btn-close-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ url_for('admin_novo_contrato') }}">
+                <div class="modal-body" style="padding:1.5rem;">
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-building me-1" style="color:var(--tms-cyan);"></i>Contratada</label>
+                        <input type="text" name="contratada" class="form-control"
+                               placeholder="Nome da empresa contratada" required autofocus>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label"><i class="bi bi-file-text me-1" style="color:var(--tms-cyan);"></i>Contrato / Identificador</label>
+                        <input type="text" name="contrato" class="form-control"
+                               placeholder="Ex: CT-2025-001">
+                        <small style="color:var(--tms-muted); font-size:.68rem;">
+                            Identificador único dentro da contratada.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--tms-border); padding:.85rem 1.4rem; gap:.6rem;">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-rumo">
+                        <i class="bi bi-plus-circle me-1"></i>Criar e Configurar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if not contratos %}
+<div class="card-rumo">
+    <div class="empty-state">
+        <i class="bi bi-folder"></i>
+        <p>Nenhum contrato encontrado.<br>
+           <button type="button" class="btn btn-primary-rumo mt-2" data-bs-toggle="modal" data-bs-target="#modalNovoContrato">
+               <i class="bi bi-plus-circle me-1"></i>Criar Novo Contrato
+           </button>
+        </p>
+    </div>
+</div>
+{% else %}
+<div class="card-rumo">
+    <div class="card-header">
+        <i class="bi bi-card-list"></i>
+        Contratos ({{ contratos|length }})
+    </div>
+    <div class="table-responsive">
+        <table class="table table-rumo mb-0">
+            <thead>
+                <tr>
+                    <th>Contratada</th>
+                    <th>Contrato</th>
+                    <th class="text-end">Valor do Contrato</th>
+                    <th class="text-center">Base Fin.</th>
+                    <th class="text-center">Base Fís.</th>
+                    <th class="text-center">Base Hist.</th>
+                    <th class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in contratos %}
+                {% set cfg = c.config %}
+                <tr>
+                    <td><strong>{{ c.contratada }}</strong></td>
+                    <td style="color:var(--tms-muted); font-size:.82rem;">{{ c.contrato }}</td>
+                    <td class="text-end" style="font-weight:700; color:{% if cfg.get('valor_contrato') %}#1a5c00{% else %}#ccc{% endif %};">
+                        {% if cfg.get('valor_contrato') %}
+                            {{ cfg.valor_contrato|currency }}
+                        {% else %}
+                            <span style="color:#ccc; font-weight:400; font-size:.78rem;">Não informado</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% set n_fin = cfg.get('linha_base_financeira', [])|length %}
+                        {% if n_fin %}
+                        <span class="badge" style="background:rgba(0,174,239,.12); color:var(--tms-cyan); font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">
+                            {{ n_fin }} semanas
+                        </span>
+                        {% else %}
+                        <span style="color:#ccc; font-size:.75rem;">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% set n_fis = cfg.get('linha_base_fisica', [])|length %}
+                        {% if n_fis %}
+                        <span class="badge" style="background:rgba(141,198,63,.12); color:var(--tms-green-dark); font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">
+                            {{ n_fis }} semanas
+                        </span>
+                        {% else %}
+                        <span style="color:#ccc; font-size:.75rem;">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% set n_hist = cfg.get('linha_base_histograma', [])|length %}
+                        {% if n_hist %}
+                        <span class="badge" style="background:rgba(240,165,0,.12); color:#b37d00; font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">
+                            {{ n_hist }} funções
+                        </span>
+                        {% else %}
+                        <span style="color:#ccc; font-size:.75rem;">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{{ url_for('admin_contrato', key=c.key) }}"
+                           class="btn btn-secondary-rumo btn-sm">
+                            <i class="bi bi-sliders me-1"></i>Configurar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
