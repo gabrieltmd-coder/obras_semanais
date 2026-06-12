@@ -34,22 +34,30 @@
                 </a>
             {% endif %}
         </div>
-        <div class="col-md-auto ms-auto">
-            <a href="{{ url_for('novo') }}" class="btn btn-primary-rumo">
-                <i class="bi bi-plus-lg me-1"></i>Novo Registro
-            </a>
-        </div>
     </form>
 </div>
 
 <!-- TABLE -->
 <div class="card-rumo">
-    <div class="card-header">
-        <i class="bi bi-table"></i>
-        Registros
-        {% if filtro_contratada or filtro_semana %}
-            <span style="color:rgba(255,255,255,.55); font-weight:400;"> — filtrado</span>
-        {% endif %}
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <i class="bi bi-table"></i>
+            Registros
+            {% if filtro_contratada or filtro_semana %}
+                <span style="color:rgba(255,255,255,.55); font-weight:400;"> — filtrado</span>
+            {% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('novo') }}" class="btn btn-primary-rumo btn-sm">
+                <i class="bi bi-plus-lg me-1" style="color:#fff;"></i>Novo Registro
+            </a>
+            <a href="{{ url_for('export_excel') }}" class="btn-export" title="Exportar Excel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3v13M7 11l5 5 5-5"/>
+                    <line x1="4" y1="21" x2="20" y2="21"/>
+                </svg>
+            </a>
+        </div>
     </div>
 
     {% if registros %}

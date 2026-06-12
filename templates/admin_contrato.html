@@ -300,12 +300,23 @@ function addRow(bodyId, prefix) {
 let _hWeeks = [];
 let _hRows  = [];
 
-// Constrói opções <select> de função a partir de _HIST_FUNCOES
+// Constrói opções <select> agrupadas por grupo a partir de _HIST_FUNCOES
 function _buildFuncaoOptions(selectedCargo) {
-    let html = '<option value="">Selecione uma função...</option>';
+    let html = '<option value="">Selecione...</option>';
+    const grupos = [];
+    const porGrupo = {};
     _HIST_FUNCOES.forEach(f => {
-        const sel = f.cargo === selectedCargo ? 'selected' : '';
-        html += `<option value="${_esc(f.cargo)}" ${sel}>${_esc(f.cargo)}</option>`;
+        const g = f.grupo || 'Outros';
+        if (!porGrupo[g]) { porGrupo[g] = []; grupos.push(g); }
+        porGrupo[g].push(f);
+    });
+    grupos.forEach(g => {
+        html += `<optgroup label="── ${_esc(g)} ──">`;
+        porGrupo[g].forEach(f => {
+            const sel = f.cargo === selectedCargo ? 'selected' : '';
+            html += `<option value="${_esc(f.cargo)}" ${sel}>${_esc(f.cargo)}</option>`;
+        });
+        html += '</optgroup>';
     });
     return html;
 }
@@ -413,8 +424,9 @@ function _rebuildHist() {
         // Categoria → Direto/Indireto
         bHtml += `<td class="htd" style="position:sticky;left:210px;z-index:1;background:${bg};min-width:110px;">` +
                  `<select class="adm-select" data-ht="${ri}" style="min-width:100px;">` +
-                 `<option value="direto"   ${row.tipo==='direto'   ?'selected':''}>Direto</option>` +
-                 `<option value="indireto" ${row.tipo==='indireto' ?'selected':''}>Indireto</option>` +
+                 `<option value="direto"      ${row.tipo==='direto'      ?'selected':''}>Direto</option>` +
+                 `<option value="indireto"   ${row.tipo==='indireto'   ?'selected':''}>Indireto</option>` +
+                 `<option value="equipamento"${row.tipo==='equipamento'?'selected':''}>Equipamento</option>` +
                  `</select></td>`;
 
         // Células por semana
@@ -527,7 +539,7 @@ function _rebuildAcoes() {
         bHtml += `<td class="htd" style="position:sticky;left:0;z-index:1;background:${bg};min-width:260px;">` +
                  `<input type="text" class="adm-input" data-af="${ri}" value="${_esc(row.acao)}" ` +
                  `placeholder="Descreva a ação..." style="min-width:248px;"></td>`;
-        const _unOpts = ['m²','m³','m','dia'].map(u =>
+        const _unOpts = ['m²','m³','m','Unid'].map(u =>
             `<option value="${u}" ${row.unidade===u?'selected':''}>${u}</option>`).join('');
         bHtml += `<td class="htd" style="background:${bg};min-width:90px;">` +
                  `<select class="adm-select" data-au="${ri}" style="min-width:82px;">` +
