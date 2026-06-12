@@ -96,11 +96,11 @@
         .nav-card.dash  { background: rgba(0,174,239,.09); border-color: rgba(0,174,239,.25); }
         .nav-card.dash:hover  { background: rgba(0,174,239,.16); border-color: rgba(0,174,239,.5); box-shadow: 0 20px 60px rgba(0,174,239,.18); }
 
-        .nav-card.reg   { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.12); }
-        .nav-card.reg:hover   { background: rgba(255,255,255,.10); }
+        .nav-card.fin   { background: rgba(240,165,0,.09); border-color: rgba(240,165,0,.25); }
+        .nav-card.fin:hover   { background: rgba(240,165,0,.16); border-color: rgba(240,165,0,.5); box-shadow: 0 20px 60px rgba(240,165,0,.15); }
 
-        .nav-card.novo  { background: rgba(141,198,63,.09); border-color: rgba(141,198,63,.25); }
-        .nav-card.novo:hover  { background: rgba(141,198,63,.16); border-color: rgba(141,198,63,.5); box-shadow: 0 20px 60px rgba(141,198,63,.15); }
+        .nav-card.rdo   { background: rgba(141,198,63,.09); border-color: rgba(141,198,63,.25); }
+        .nav-card.rdo:hover   { background: rgba(141,198,63,.16); border-color: rgba(141,198,63,.5); box-shadow: 0 20px 60px rgba(141,198,63,.15); }
 
         .card-icon {
             width: 62px; height: 62px;
@@ -110,8 +110,8 @@
             margin-bottom: .25rem;
         }
         .dash  .card-icon { background: rgba(0,174,239,.18); color: #00d4ff; }
-        .reg   .card-icon { background: rgba(255,255,255,.10); color: rgba(255,255,255,.8); }
-        .novo  .card-icon { background: rgba(141,198,63,.18); color: #8DC63F; }
+        .fin   .card-icon { background: rgba(240,165,0,.18); color: #f0a500; }
+        .rdo   .card-icon { background: rgba(141,198,63,.18); color: #8DC63F; }
 
         .card-title {
             font-family: 'Montserrat', sans-serif;
@@ -121,8 +121,8 @@
             letter-spacing: .08em;
         }
         .dash  .card-title { color: #00d4ff; }
-        .reg   .card-title { color: rgba(255,255,255,.85); }
-        .novo  .card-title { color: #8DC63F; }
+        .fin   .card-title { color: #f0a500; }
+        .rdo   .card-title { color: #8DC63F; }
 
         .card-desc {
             font-size: .73rem;
@@ -139,7 +139,8 @@
         }
         .nav-card:hover .card-arrow { opacity: .9; transform: translateX(4px); }
         .dash:hover  .card-arrow { color: #00d4ff; }
-        .novo:hover  .card-arrow { color: #8DC63F; }
+        .fin:hover   .card-arrow { color: #f0a500; }
+        .rdo:hover   .card-arrow { color: #8DC63F; }
 
         /* Footer */
         .capa-footer {
@@ -192,21 +193,21 @@
             <a href="{{ url_for('dashboard') }}" class="nav-card dash">
                 <div class="card-icon"><i class="bi bi-speedometer2"></i></div>
                 <div class="card-title">Dashboard</div>
-                <div class="card-desc">KPIs, curvas S financeira e física, histograma consolidado</div>
+                <div class="card-desc">KPIs, curvas S, histograma e avanço físico consolidado</div>
                 <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
             </a>
 
-            <a href="{{ url_for('index') }}" class="nav-card reg">
-                <div class="card-icon"><i class="bi bi-grid-3x3-gap"></i></div>
-                <div class="card-title">Registros</div>
-                <div class="card-desc">Consulte, filtre e gerencie os registros semanais</div>
+            <a href="{{ url_for('construcao') }}" class="nav-card fin">
+                <div class="card-icon"><i class="bi bi-currency-dollar"></i></div>
+                <div class="card-title">Financeiro</div>
+                <div class="card-desc">Acompanhamento financeiro, medições e linha de base</div>
                 <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
             </a>
 
-            <a href="{{ url_for('novo') }}" class="nav-card novo">
-                <div class="card-icon"><i class="bi bi-plus-circle"></i></div>
-                <div class="card-title">Novo Registro</div>
-                <div class="card-desc">Cadastre a evolução da semana para um contrato</div>
+            <a href="{{ url_for('construcao') }}" class="nav-card rdo">
+                <div class="card-icon"><i class="bi bi-file-earmark-text"></i></div>
+                <div class="card-title">RDO's</div>
+                <div class="card-desc">Relatórios semanais de obra — consulte, filtre e gerencie</div>
                 <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
             </a>
 
@@ -216,11 +217,11 @@
     <div class="capa-footer">TMS &mdash; Terminal Multimodal de Santos &copy; {{ now.year }}</div>
 
     <script>
-    // Teclado: 1=Dashboard, 2=Registros, 3=Novo
+    // Teclado: 1=Dashboard, 2=Financeiro, 3=RDO's
     document.addEventListener('keydown', e => {
         if (e.key === '1') window.location = "{{ url_for('dashboard') }}";
-        if (e.key === '2') window.location = "{{ url_for('index') }}";
-        if (e.key === '3') window.location = "{{ url_for('novo') }}";
+        if (e.key === '2') window.location = "{{ url_for('construcao') }}";
+        if (e.key === '3') window.location = "{{ url_for('construcao') }}";
     });
     </script>
 

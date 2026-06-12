@@ -46,12 +46,19 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label" for="contrato">
+                        <label class="form-label" for="contrato-text">
                             <i class="bi bi-file-earmark-text me-1" style="color:var(--rumo-cyan)"></i>Contrato *
                         </label>
-                        <input type="text" class="form-control" id="contrato" name="contrato"
-                               placeholder="Ex: CW64087" required
+                        <input type="hidden" id="contrato" name="contrato" value="{{ form_data.get('contrato', '') }}">
+                        <input type="text" class="form-control" id="contrato-text"
+                               placeholder="Ex: CT-2024-001"
                                value="{{ form_data.get('contrato', '') }}">
+                        <select class="form-select" id="contrato-select" style="display:none">
+                            <option value="">Selecione o contrato...</option>
+                        </select>
+                        <small id="contrato-hint" class="text-muted" style="font-size:.7rem; display:none;">
+                            <i class="bi bi-info-circle me-1" style="color:var(--rumo-cyan);"></i>Esta contratada possui mais de um contrato ativo
+                        </small>
                     </div>
 
                     <!-- Linha: Semana | Avanço Físico -->
@@ -342,11 +349,107 @@
 <script>
 const CONTRATOS_CFG = {{ contratos_cfg_json|safe }};
 
+// ── Status de contrato ──────────────────────────────────────────────────────
+function _isoWeekToSunday(weekStr) {
+    if (!weekStr || !weekStr.includes('-W')) return null;
+    const [yearPart, wPart] = weekStr.split('-W');
+    const year = parseInt(yearPart), week = parseInt(wPart);
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const mondayW1 = new Date(jan4);
+    mondayW1.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() + 6) % 7));
+    const monday = new Date(mondayW1);
+    monday.setUTCDate(mondayW1.getUTCDate() + (week - 1) * 7);
+    const sunday = new Date(monday);
+    sunday.setUTCDate(monday.getUTCDate() + 6);
+    return sunday;
+}
+
+function _isContratoAtivo(cfg) {
+    const fim = cfg && cfg.data_fim_contrato;
+    if (!fim) return true;
+    const endDate = _isoWeekToSunday(fim);
+    if (!endDate) return true;
+    const today = new Date();
+    today.setUTCHours(23, 59, 59, 0);
+    return today <= endDate;
+}
+
+function _getActiveContratos(contratada) {
+    const result = [];
+    for (const [key, cfg] of Object.entries(CONTRATOS_CFG)) {
+        if (cfg.contratada === contratada && _isContratoAtivo(cfg)) {
+            result.push({ key, contrato: cfg.contrato, cfg });
+        }
+    }
+    return result;
+}
+
+// ── UI do campo Contrato ────────────────────────────────────────────────────
+// currentValue: valor pré-existente (modo editar). Sempre passe '' para nova seleção.
+function updateContratoUI(contratada, currentValue) {
+    const textEl   = document.getElementById('contrato-text');
+    const selectEl = document.getElementById('contrato-select');
+    const hiddenEl = document.getElementById('contrato');
+    const hintEl   = document.getElementById('contrato-hint');
+
+    if (!contratada || contratada === '__outro__') {
+        textEl.style.display    = '';
+        selectEl.style.display  = 'none';
+        hintEl.style.display    = 'none';
+        textEl.readOnly         = false;
+        textEl.style.background = '';
+        textEl.value   = '';
+        hiddenEl.value = '';
+        return;
+    }
+
+    const ativos = _getActiveContratos(contratada);
+    const val    = currentValue || '';   // nunca usa hiddenEl.value antigo
+
+    if (ativos.length === 0) {
+        // Sem contratos ativos → campo de texto livre
+        textEl.style.display    = '';
+        selectEl.style.display  = 'none';
+        hintEl.style.display    = 'none';
+        textEl.readOnly         = false;
+        textEl.style.background = '';
+        textEl.value   = val;
+        hiddenEl.value = val;
+
+    } else if (ativos.length === 1) {
+        // Único contrato ativo → preenche automático
+        textEl.style.display    = '';
+        selectEl.style.display  = 'none';
+        hintEl.style.display    = 'none';
+        textEl.readOnly         = true;
+        textEl.style.background = 'var(--rumo-gray-bg)';
+        textEl.value   = ativos[0].contrato;
+        hiddenEl.value = ativos[0].contrato;
+
+    } else {
+        // Múltiplos contratos ativos → dropdown de seleção
+        const matched = ativos.some(a => a.contrato === val) ? val : '';
+        textEl.style.display    = 'none';
+        selectEl.style.display  = '';
+        hintEl.style.display    = '';
+        selectEl.innerHTML =
+            '<option value="">— Selecione o contrato —</option>' +
+            ativos.map(a =>
+                `<option value="${_escHtml(a.contrato)}"${a.contrato === matched ? ' selected' : ''}>${_escHtml(a.contrato)}</option>`
+            ).join('');
+        selectEl.value = matched;
+        hiddenEl.value = matched;
+    }
+
+    atualizarAcoes();
+}
+
 function toggleCustomContratada(sel) {
     const custom = document.getElementById('contratada_custom');
     custom.style.display = sel.value === '__outro__' ? 'block' : 'none';
     if (sel.value === '__outro__') custom.focus();
-    atualizarAcoes();
+    // Sempre passa '' — nova seleção pelo usuário, sem herdar valor anterior
+    updateContratoUI(sel.value === '__outro__' ? '' : sel.value, '');
 }
 
 function _getCurrentISOWeek() {
@@ -483,8 +586,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePluvStyle(sel);
         sel.addEventListener('change', () => updatePluvStyle(sel));
     });
-    const sel = document.getElementById('contratadaSelect');
-    if (sel && sel.value === '__outro__') {
+
+    const contratadaSel = document.getElementById('contratadaSelect');
+    if (contratadaSel && contratadaSel.value === '__outro__') {
         document.getElementById('contratada_custom').style.display = 'block';
     }
 
@@ -495,25 +599,39 @@ document.addEventListener('DOMContentLoaded', () => {
         semanaInput.value = currentWeek;
     }
 
-    document.getElementById('contrato').addEventListener('change', atualizarAcoes);
-    document.getElementById('contrato').addEventListener('input', atualizarAcoes);
+    // Sincroniza texto/select → hidden
+    document.getElementById('contrato-text').addEventListener('input', function() {
+        document.getElementById('contrato').value = this.value;
+        atualizarAcoes();
+    });
+    document.getElementById('contrato-select').addEventListener('change', function() {
+        document.getElementById('contrato').value = this.value;
+        atualizarAcoes();
+    });
+
+    // Inicializa UI de contrato (modo editar: respeita valor existente; modo novo: '')
+    const initialContratada = contratadaSel?.value;
+    const initialContrato   = document.getElementById('contrato')?.value || '';
+    if (initialContratada && initialContratada !== '__outro__') {
+        updateContratoUI(initialContratada, initialContrato);
+    }
 
     atualizarAcoes();
 
     document.getElementById('mainForm').addEventListener('submit', function(e) {
         const contratada = document.getElementById('contratadaSelect')?.value;
-        const semana = document.getElementById('semana_referencia')?.value;
-        const contrato = document.getElementById('contrato')?.value;
-        const trabalhos = document.getElementById('trabalhos_notaveis')?.value;
-        const pontos = document.getElementById('pontos_atencao')?.value;
-        const avanco = document.getElementById('avanco_fisico')?.value;
+        const semana     = document.getElementById('semana_referencia')?.value;
+        const contrato   = document.getElementById('contrato')?.value;
+        const trabalhos  = document.getElementById('trabalhos_notaveis')?.value;
+        const pontos     = document.getElementById('pontos_atencao')?.value;
+        const avanco     = document.getElementById('avanco_fisico')?.value;
 
         const erros = [];
         if (!contratada || contratada === '') erros.push('Selecione uma contratada.');
         if (contratada === '__outro__' && !document.getElementById('contratada_custom')?.value.trim())
             erros.push('Digite o nome da contratada.');
         if (!semana) erros.push('Informe a semana de referência.');
-        if (!contrato.trim()) erros.push('Informe o contrato.');
+        if (!contrato || !contrato.trim()) erros.push('Informe o contrato.');
         if (avanco === '' || avanco === null) erros.push('Informe o avanço físico (%).');
         if (!trabalhos.trim()) erros.push('Descreva os trabalhos notáveis.');
         if (!pontos.trim()) erros.push('Descreva os pontos de atenção.');

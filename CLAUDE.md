@@ -14,7 +14,9 @@ Aplicação web Flask para registro e acompanhamento semanal de obras de constru
 ```powershell
 Start-Process py -ArgumentList "app.py" -WorkingDirectory "c:\Users\Gabriel\Desktop\PROJETOS\A\obras_semanais-master" -WindowStyle Normal
 ```
+**Iniciar automaticamente ao começar qualquer conversa sobre este projeto.**
 **Reiniciar sempre que alterar `app.py` ou qualquer template — sem pedir permissão.**
+Após iniciar, confirmar que http://localhost:5000 responde HTTP 200 antes de prosseguir.
 
 ## Estrutura de Arquivos
 ```

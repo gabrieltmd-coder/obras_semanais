@@ -120,6 +120,28 @@ def format_date_to_week(date_str):
 app.jinja_env.filters['date_to_week'] = format_date_to_week
 
 
+def contract_status(data):
+    manual = data.get('status_manual', 'auto')
+    if manual == 'ativo':
+        return 'ativo'
+    if manual == 'encerrado':
+        return 'encerrado'
+    fim = data.get('data_fim_contrato', '')
+    if not fim:
+        return 'ativo'
+    try:
+        if '-W' in str(fim):
+            year, week = str(fim).split('-W')
+            d = datetime.strptime(f'{year}-W{int(week):02d}-7', '%G-W%V-%u').date()
+        else:
+            d = datetime.strptime(str(fim), '%Y-%m-%d').date()
+        return 'encerrado' if date.today() > d else 'ativo'
+    except Exception:
+        return 'ativo'
+
+app.jinja_env.globals['contract_status'] = contract_status
+
+
 @app.context_processor
 def inject_now():
     return {'now': datetime.now()}
@@ -239,6 +261,11 @@ def format_pluviometria_excel(pluv):
 @app.route('/')
 def capa():
     return render_template('capa.html')
+
+
+@app.route('/construcao')
+def construcao():
+    return render_template('construcao.html')
 
 
 @app.route('/registros')
@@ -938,6 +965,7 @@ def admin_contrato(key):
 
         data['data_inicio_contrato'] = request.form.get('data_inicio_contrato', '')
         data['data_fim_contrato']    = request.form.get('data_fim_contrato', '')
+        data['status_manual']        = request.form.get('status_manual', 'auto')
 
         hist_json = request.form.get('hist_json', '[]')
         try:

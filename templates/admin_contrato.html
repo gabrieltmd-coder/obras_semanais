@@ -108,6 +108,17 @@
                            onchange="onContractDateChange()">
                 </div>
             </div>
+            <div class="row g-3 mt-1">
+                <div class="col-md-4">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Status do Contrato</label>
+                    <select name="status_manual" class="adm-select">
+                        <option value="auto" {% if contrato.get('status_manual', 'auto') == 'auto' %}selected{% endif %}>Automático (por data)</option>
+                        <option value="ativo" {% if contrato.get('status_manual') == 'ativo' %}selected{% endif %}>Ativo</option>
+                        <option value="encerrado" {% if contrato.get('status_manual') == 'encerrado' %}selected{% endif %}>Encerrado</option>
+                    </select>
+                    <small style="color:var(--tms-muted); font-size:.68rem;">Substituir cálculo automático por data.</small>
+                </div>
+            </div>
         </div>
     </div>
 
