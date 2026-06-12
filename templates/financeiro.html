@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Financeiro{% endblock %}
+{% block page_icon %}<i class="bi bi-currency-dollar"></i>{% endblock %}
+{% block page_title %}Dashboard Financeiro{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('index') }}" style="color:rgba(255,255,255,.65);">Início</a> › Financeiro{% endblock %}
+
+{% block content %}
+<style>
+/* ── DARK THEME ── */
+body { background: #0b1828 !important; }
+.page-header { background: linear-gradient(135deg,#040c18 0%,#0b1828 100%) !important; padding:1rem 0 .85rem !important; margin-bottom:.85rem !important; }
+.app-footer  { background: #040c18 !important; margin-top:0 !important; padding:.6rem !important; }
+
+/* ── GLASS CARD ── */
+.gc {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 16px;
+    padding: .85rem 1rem;
+    backdrop-filter: blur(10px);
+}
+.gc-title {
+    font-size:.6rem; font-weight:800; text-transform:uppercase;
+    letter-spacing:.10em; color:rgba(255,255,255,.4);
+    margin-bottom:.6rem;
+    display:flex; align-items:center; justify-content:space-between;
+}
+.gc-title i { color:#f0a500; margin-right:.3rem; }
+.gc-sub { font-size:.58rem; color:rgba(255,255,255,.25); }
+
+/* ── FILTER BAR ── */
+.d-filter {
+    background: linear-gradient(135deg,#231400 0%,#3d2200 50%,#4d2d00 100%);
+    border: 1px solid rgba(240,165,0,.40);
+    border-left: 4px solid #f0a500;
+    border-radius: 12px;
+    padding:.65rem 1rem;
+    margin-bottom:.7rem;
+    display:flex; align-items:flex-end; gap:.85rem; flex-wrap:wrap;
+    box-shadow: 0 4px 24px rgba(80,40,0,.55);
+}
+.d-filter .filter-label { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.70); margin-bottom:.18rem; }
+.d-filter .form-control,
+.d-filter .form-select {
+    background:rgba(255,255,255,.07) !important;
+    border:1px solid rgba(255,255,255,.12) !important;
+    color:#fff !important; border-radius:8px !important;
+    font-size:.76rem !important; padding:.28rem .65rem !important; height:30px !important;
+}
+.d-filter .form-select option { background:#0b1828; }
+.d-filter .btn { height:30px; border-radius:8px; font-size:.68rem; padding:.28rem .75rem; display:inline-flex; align-items:center; gap:.3rem; }
+.d-filter .btn-f { background:rgba(240,165,0,.18); border:1px solid rgba(240,165,0,.35); color:#f0c040; }
+.d-filter .btn-x { background:rgba(220,53,69,.15); border:1px solid rgba(220,53,69,.25); color:#ff6b7a; }
+
+/* ── KPI STRIP ── */
+.kpi-strip { display:flex; gap:.55rem; margin-bottom:.7rem; }
+.kpi-mini {
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09);
+    border-radius:12px; padding:.55rem .8rem; flex:1; min-width:0;
+    border-left:3px solid rgba(255,255,255,.15);
+}
+.kpi-mini.am  { border-left-color:#f0a500; }
+.kpi-mini.g   { border-left-color:#8DC63F; }
+.kpi-mini.red { border-left-color:#ff6b7a; }
+.kpi-ml { font-size:.56rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.38); margin-bottom:.18rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kpi-mv { font-family:'Montserrat',sans-serif; font-size:.95rem; font-weight:800; color:#fff; line-height:1; }
+.kpi-mv.sm { font-size:.75rem; }
+
+/* ── TABELA DE CONTRATOS ── */
+.fin-table { width:100%; border-collapse:collapse; font-size:.78rem; }
+.fin-table thead tr { background:rgba(240,165,0,.12); }
+.fin-table th {
+    padding:.45rem .65rem; text-align:left;
+    font-size:.6rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; color:rgba(255,255,255,.45);
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+.fin-table th.r { text-align:right; }
+.fin-table td { padding:.42rem .65rem; border-bottom:1px solid rgba(255,255,255,.05); color:rgba(255,255,255,.85); vertical-align:middle; }
+.fin-table td.r { text-align:right; font-variant-numeric:tabular-nums; }
+.fin-table tbody tr:hover { background:rgba(255,255,255,.04); }
+
+.prog-bar { height:6px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden; min-width:80px; }
+.prog-fill { height:100%; border-radius:3px; transition:width .4s; }
+
+.badge-ativo    { background:rgba(141,198,63,.2); color:#7dda24; border:1px solid rgba(141,198,63,.35); border-radius:6px; font-size:.58rem; font-weight:700; padding:.15rem .45rem; }
+.badge-encerrado{ background:rgba(255,107,122,.15); color:#ff6b7a; border:1px solid rgba(255,107,122,.3); border-radius:6px; font-size:.58rem; font-weight:700; padding:.15rem .45rem; }
+</style>
+
+<div style="color:#fff;">
+
+{% if not kpis %}
+<div class="gc text-center py-4">
+    <i class="bi bi-currency-dollar" style="font-size:2rem;color:rgba(255,255,255,.15);display:block;margin-bottom:.5rem;"></i>
+    <p style="color:rgba(255,255,255,.35);font-size:.82rem;margin:0;">Nenhum registro. <a href="{{ url_for('novo') }}" style="color:#f0a500;">Criar registro</a>.</p>
+</div>
+
+{% else %}
+
+<!-- FILTROS -->
+<form method="get" class="d-filter">
+    <div>
+        <div class="filter-label">Contratada</div>
+        <select name="contratada" class="form-select" style="min-width:160px;">
+            <option value="">Todas</option>
+            {% for c in contratadas %}<option value="{{ c }}" {% if filtro_contratada==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+    </div>
+    <div>
+        <div class="filter-label">De</div>
+        <input type="date" name="de" class="form-control" value="{{ filtro_de }}" style="width:130px;">
+    </div>
+    <div>
+        <div class="filter-label">Até</div>
+        <input type="date" name="ate" class="form-control" value="{{ filtro_ate }}" style="width:130px;">
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-f"><i class="bi bi-funnel"></i>Filtrar</button>
+        {% if filtro_contratada or filtro_de or filtro_ate %}
+        <a href="{{ url_for('financeiro') }}" class="btn btn-x"><i class="bi bi-x-lg"></i></a>
+        {% endif %}
+    </div>
+</form>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+    <div class="kpi-mini am">
+        <div class="kpi-ml">Valor Total Contratos</div>
+        <div class="kpi-mv sm">{{ kpis.total_valor_contrato|currency }}</div>
+    </div>
+    <div class="kpi-mini g">
+        <div class="kpi-ml">Total Medido</div>
+        <div class="kpi-mv sm">{{ kpis.total_medido|currency }}</div>
+    </div>
+    {% if kpis.saldo >= 0 %}
+    <div class="kpi-mini g">
+    {% else %}
+    <div class="kpi-mini red">
+    {% endif %}
+        <div class="kpi-ml">Saldo Disponível</div>
+        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#7dda24{% else %}#ff6b7a{% endif %};">
+            {{ kpis.saldo|currency }}
+        </div>
+    </div>
+    <div class="kpi-mini am">
+        <div class="kpi-ml">% Executado</div>
+        <div class="kpi-mv" style="color:#f0a500;">{{ kpis.pct_global }}%</div>
+    </div>
+    <div class="kpi-mini g">
+        <div class="kpi-ml">Medição da Semana</div>
+        <div class="kpi-mv sm">{{ kpis.valor_semana|currency }}</div>
+    </div>
+</div>
+
+<!-- CURVA S FINANCEIRA + BARRA POR CONTRATADA -->
+<div class="row g-2 mb-2">
+    <div class="col-lg-8">
+        <div class="gc h-100">
+            <div class="gc-title">
+                <span><i class="bi bi-graph-up-arrow"></i>Curva S Financeira</span>
+                <span class="gc-sub">R$ Acumulado</span>
+            </div>
+            <canvas id="chartFinanceiro" height="130"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="gc h-100">
+            <div class="gc-title">
+                <span><i class="bi bi-bar-chart-horizontal"></i>Medição por Contratada</span>
+                <span class="gc-sub">R$ Total</span>
+            </div>
+            <canvas id="chartBarContratada" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- TABELA DE CONTRATOS -->
+<div class="gc">
+    <div class="gc-title">
+        <span><i class="bi bi-table"></i>Resumo por Contrato</span>
+        <span class="gc-sub">{{ contratos_fin|length }} contrato(s)</span>
+    </div>
+    {% if contratos_fin %}
+    <div style="overflow-x:auto;">
+    <table class="fin-table">
+        <thead>
+            <tr>
+                <th>Contratada</th>
+                <th>Contrato</th>
+                <th class="r">Valor do Contrato</th>
+                <th class="r">Total Medido</th>
+                <th class="r">Saldo</th>
+                <th style="text-align:center; width:120px;">% Executado</th>
+                <th style="text-align:center;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for c in contratos_fin %}
+        {% set pct_color = '#7dda24' if c.pct >= 80 else ('#f0a500' if c.pct >= 40 else '#00d4ff') %}
+        <tr>
+            <td style="font-weight:600;">{{ c.contratada }}</td>
+            <td style="color:rgba(255,255,255,.55); font-size:.72rem;">{{ c.contrato }}</td>
+            <td class="r">{% if c.valor %}{{ c.valor|currency }}{% else %}<span style="color:rgba(255,255,255,.2);">—</span>{% endif %}</td>
+            <td class="r" style="color:#7dda24;">{{ c.medido|currency }}</td>
+            <td class="r" style="color:{% if c.saldo >= 0 %}#7dda24{% else %}#ff6b7a{% endif %};">
+                {{ c.saldo|currency }}
+            </td>
+            <td style="padding:.42rem .65rem;">
+                <div style="display:flex;align-items:center;gap:.45rem;">
+                    <div class="prog-bar" style="flex:1;">
+                        <div class="prog-fill" style="width:{{ [c.pct,100]|min }}%; background:{{ pct_color }};"></div>
+                    </div>
+                    <span style="font-family:'Montserrat',sans-serif;font-size:.72rem;font-weight:800;color:{{ pct_color }};min-width:36px;text-align:right;">{{ c.pct }}%</span>
+                </div>
+            </td>
+            <td style="text-align:center;">
+                {% if c.status == 'ativo' %}
+                <span class="badge-ativo">Ativo</span>
+                {% else %}
+                <span class="badge-encerrado">Encerrado</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p style="color:rgba(255,255,255,.3);font-size:.8rem;text-align:center;padding:1rem 0;margin:0;">Nenhum contrato configurado.</p>
+    {% endif %}
+</div>
+
+{% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>
+Chart.register(ChartDataLabels);
+
+const LABELS    = {{ chart_labels|safe }};
+const FIN_ACUM  = {{ curva_fin_acum|safe }};
+const FIN_BASE  = {{ curva_fin_base|safe }};
+const BAR_LABELS  = {{ bar_labels|safe }};
+const BAR_VALS    = {{ bar_vals|safe }};
+const BAR_COLORS  = {{ bar_colors|safe }};
+
+const GRID = 'rgba(255,255,255,.06)';
+const TICK = { color:'rgba(255,255,255,.35)', font:{ size:10 } };
+
+Chart.defaults.set('plugins.datalabels', {
+    color: '#fff',
+    font: { size: 10, weight: 700, family: "'Inter',sans-serif" },
+    display: ctx => ctx.dataset.data[ctx.dataIndex] != null,
+});
+
+// ── Curva S Financeira ──
+if (document.getElementById('chartFinanceiro') && LABELS.length) {
+    new Chart(document.getElementById('chartFinanceiro'), {
+        type: 'line',
+        data: {
+            labels: LABELS,
+            datasets: [{
+                label: 'Realizado (R$)',
+                data: FIN_ACUM,
+                borderColor: '#f0a500',
+                backgroundColor: 'rgba(240,165,0,.08)',
+                borderWidth: 2,
+                pointRadius: 3, pointBackgroundColor: '#f0a500',
+                fill: true, tension: 0.45,
+            },{
+                label: 'Linha de Base',
+                data: FIN_BASE,
+                borderColor: '#00d4ff',
+                borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
+            }]
+        },
+        options: {
+            responsive:true, animation:{ duration:600 },
+            plugins:{
+                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
+                tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
+                datalabels:{
+                    display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
+                    align:'top', anchor:'end', color:'#f0c040',
+                    formatter: v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'
+                }
+            },
+            scales:{
+                x:{ grid:{color:GRID}, ticks:TICK },
+                y:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>'R$'+(v/1000).toLocaleString('pt-BR')+'k' }}
+            }
+        }
+    });
+}
+
+// ── Barra por Contratada ──
+if (document.getElementById('chartBarContratada') && BAR_LABELS.length) {
+    new Chart(document.getElementById('chartBarContratada'), {
+        type: 'bar',
+        data: {
+            labels: BAR_LABELS,
+            datasets:[{
+                label:'Medição (R$)',
+                data: BAR_VALS,
+                backgroundColor: BAR_COLORS,
+                borderRadius: 4,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis:'y', responsive:true, animation:{ duration:600 },
+            layout:{ padding:{ right:55 } },
+            plugins:{
+                legend:{ display:false },
+                tooltip:{ callbacks:{ label: ctx=>' R$ '+ctx.parsed.x.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
+                datalabels:{
+                    anchor:'end', align:'end', color:'#fff', clip:false,
+                    formatter: v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'
+                }
+            },
+            scales:{
+                x:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>'R$'+(v/1000).toLocaleString('pt-BR')+'k' },
+                    max: BAR_VALS.length ? Math.max(...BAR_VALS) * 1.35 : 100 },
+                y:{ grid:{display:false}, ticks:TICK }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

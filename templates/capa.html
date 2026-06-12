@@ -197,7 +197,7 @@
                 <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
             </a>
 
-            <a href="{{ url_for('construcao') }}" class="nav-card fin">
+            <a href="{{ url_for('financeiro') }}" class="nav-card fin">
                 <div class="card-icon"><i class="bi bi-currency-dollar"></i></div>
                 <div class="card-title">Financeiro</div>
                 <div class="card-desc">Acompanhamento financeiro, medições e linha de base</div>
@@ -220,7 +220,7 @@
     // Teclado: 1=Dashboard, 2=Financeiro, 3=RDO's
     document.addEventListener('keydown', e => {
         if (e.key === '1') window.location = "{{ url_for('dashboard') }}";
-        if (e.key === '2') window.location = "{{ url_for('construcao') }}";
+        if (e.key === '2') window.location = "{{ url_for('financeiro') }}";
         if (e.key === '3') window.location = "{{ url_for('construcao') }}";
     });
     </script>

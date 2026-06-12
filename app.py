@@ -325,6 +325,153 @@ def capa():
     return render_template('capa.html')
 
 
+@app.route('/financeiro')
+def financeiro():
+    registros = load_data()
+    todas_contratadas = sorted(set(r.get('contratada', '') for r in registros if r.get('contratada')))
+
+    filtro_contratada = request.args.get('contratada', '')
+    filtro_de         = request.args.get('de', '')
+    filtro_ate        = request.args.get('ate', '')
+
+    reg = registros[:]
+    if filtro_contratada:
+        reg = [r for r in reg if r.get('contratada') == filtro_contratada]
+    if filtro_de:
+        reg = [r for r in reg if r.get('semana_referencia', '') >= filtro_de]
+    if filtro_ate:
+        reg = [r for r in reg if r.get('semana_referencia', '') <= filtro_ate]
+
+    cfg = load_contratos_config()
+
+    _vazio = dict(kpis=None, contratadas=todas_contratadas,
+                  filtro_contratada=filtro_contratada,
+                  filtro_de=filtro_de, filtro_ate=filtro_ate,
+                  chart_labels='[]', curva_fin_acum='[]', curva_fin_base='[]',
+                  contratos_fin=[], bar_labels='[]', bar_vals='[]', bar_colors='[]')
+
+    if not reg:
+        return render_template('financeiro.html', **_vazio)
+
+    reg_ord = sorted(reg, key=lambda r: r.get('semana_referencia', ''))
+
+    # ── KPIs globais ──
+    pares_unicos = set(
+        contrato_key(r.get('contratada', ''), r.get('contrato', ''))
+        for r in reg if r.get('contratada') and r.get('contrato')
+    )
+    total_valor_contrato = sum(
+        float(cfg.get(k, {}).get('valor_contrato', 0) or 0) for k in pares_unicos
+    )
+    total_medido  = sum(r.get('valor_medido', 0) for r in reg)
+    saldo_global  = total_valor_contrato - total_medido
+    pct_global    = round(total_medido / total_valor_contrato * 100, 1) if total_valor_contrato else 0
+
+    ultima_semana = reg_ord[-1].get('semana_referencia', '')
+    reg_semana    = [r for r in reg if r.get('semana_referencia') == ultima_semana]
+    valor_semana  = sum(r.get('valor_medido', 0) for r in reg_semana)
+
+    # ── Dados semanais para Curva S ──
+    semanas_data = {}
+    for r in reg_ord:
+        sem = r.get('semana_referencia', '')
+        semanas_data.setdefault(sem, 0)
+        semanas_data[sem] += r.get('valor_medido', 0)
+
+    semanas_sorted = sorted(semanas_data.keys())
+    chart_labels   = [format_date_br(s) for s in semanas_sorted]
+
+    curva_fin_acum, acum = [], 0
+    for s in semanas_sorted:
+        acum += semanas_data[s]
+        curva_fin_acum.append(round(acum, 2))
+
+    # ── Linha de base financeira ──
+    def _month_of_week_fin(week_date_str):
+        d = datetime.strptime(week_date_str, '%Y-%m-%d').date()
+        return f'{d.year}-{d.month:02d}'
+
+    fin_base_monthly = {}
+    for _, cdata in cfg.items():
+        if filtro_contratada and cdata.get('contratada') != filtro_contratada:
+            continue
+        for entry in cdata.get('linha_base_financeira', []):
+            m = entry.get('semana', '')
+            v = float(entry.get('valor', 0) or 0)
+            if m:
+                fin_base_monthly[m] = fin_base_monthly.get(m, 0) + v
+
+    fin_base_cumul, acum_fin = {}, 0
+    for m in sorted(fin_base_monthly):
+        acum_fin += fin_base_monthly[m]
+        fin_base_cumul[m] = round(acum_fin, 2)
+    fin_months = sorted(fin_base_cumul)
+
+    curva_fin_base = []
+    for s in semanas_sorted:
+        m    = _month_of_week_fin(s)
+        fval = next((fin_base_cumul[bm] for bm in reversed(fin_months) if bm <= m), None)
+        curva_fin_base.append(fval)
+
+    # ── Tabela por contrato ──
+    contratos_fin = []
+    for key, cdata in sorted(cfg.items()):
+        contratada = cdata.get('contratada', '')
+        contrato   = cdata.get('contrato', '')
+        if filtro_contratada and contratada != filtro_contratada:
+            continue
+        valor  = float(cdata.get('valor_contrato', 0) or 0)
+        reg_c  = [r for r in reg if r.get('contratada') == contratada and r.get('contrato') == contrato]
+        medido = sum(r.get('valor_medido', 0) for r in reg_c)
+        saldo  = valor - medido
+        pct    = round(medido / valor * 100, 1) if valor else 0
+        contratos_fin.append({
+            'contratada': contratada,
+            'contrato':   contrato,
+            'valor':      valor,
+            'medido':     medido,
+            'saldo':      saldo,
+            'pct':        pct,
+            'status':     contract_status(cdata),
+        })
+
+    # ── Barra: medição por contratada ──
+    med_por_c = {}
+    for r in reg:
+        c = r.get('contratada', '')
+        if c:
+            med_por_c[c] = med_por_c.get(c, 0) + r.get('valor_medido', 0)
+    med_sorted  = sorted(med_por_c.items(), key=lambda x: -x[1])
+    bar_labels  = json.dumps([x[0] for x in med_sorted])
+    bar_vals    = json.dumps([round(x[1], 2) for x in med_sorted])
+    _PALETTE    = ['rgba(0,212,255,.85)', 'rgba(141,198,63,.85)', 'rgba(240,165,0,.85)',
+                   'rgba(255,107,122,.85)', 'rgba(155,89,182,.85)']
+    bar_colors  = json.dumps([_PALETTE[i % len(_PALETTE)] for i in range(len(med_sorted))])
+
+    kpis = dict(
+        total_valor_contrato=total_valor_contrato,
+        total_medido=total_medido,
+        saldo=saldo_global,
+        pct_global=pct_global,
+        valor_semana=valor_semana,
+        ultima_semana=ultima_semana,
+    )
+
+    return render_template('financeiro.html',
+                           kpis=kpis,
+                           contratadas=todas_contratadas,
+                           filtro_contratada=filtro_contratada,
+                           filtro_de=filtro_de,
+                           filtro_ate=filtro_ate,
+                           chart_labels=json.dumps(chart_labels),
+                           curva_fin_acum=json.dumps(curva_fin_acum),
+                           curva_fin_base=json.dumps(curva_fin_base),
+                           contratos_fin=contratos_fin,
+                           bar_labels=bar_labels,
+                           bar_vals=bar_vals,
+                           bar_colors=bar_colors)
+
+
 @app.route('/construcao')
 def construcao():
     return render_template('construcao.html')
