@@ -86,6 +86,18 @@ def get_monday(date_str):
         return date_str
 
 
+def _week_to_last_day(week_str):
+    """Converte 'YYYY-Wnn' para a data do domingo dessa semana no formato DD/MM/YYYY."""
+    try:
+        if week_str and '-W' in str(week_str):
+            year, week = str(week_str).split('-W')
+            d = datetime.strptime(f'{year}-W{int(week):02d}-7', '%G-W%V-%u').date()
+            return d.strftime('%d/%m/%Y')
+        return week_str or ''
+    except Exception:
+        return week_str or ''
+
+
 def format_date_br(date_str):
     try:
         d = datetime.strptime(date_str, '%Y-%m-%d')
@@ -1028,8 +1040,8 @@ def export_contratos():
             data.get('contrato', ''),
             'Ativo' if status == 'ativo' else 'Encerrado',
             data.get('valor_contrato', 0) or 0,
-            data.get('data_inicio_contrato', ''),
-            data.get('data_fim_contrato', ''),
+            _week_to_last_day(data.get('data_inicio_contrato', '')),
+            _week_to_last_day(data.get('data_fim_contrato', '')),
         ]
         fill = alt_fill if i % 2 == 0 else None
         ws.row_dimensions[i].height = 20
