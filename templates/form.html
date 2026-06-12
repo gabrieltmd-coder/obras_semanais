@@ -69,7 +69,7 @@
                         <input type="week" class="form-control" id="semana_referencia"
                                name="semana_referencia"
                                value="{{ form_data.get('semana_referencia', '')|date_to_week }}"
-                               onchange="atualizarAcoes()" required>
+                               onchange="atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();" required>
                         <small class="text-muted" style="font-size:.7rem;">
                             <i class="bi bi-info-circle me-1"></i>Selecione a semana do registro
                         </small>
@@ -152,52 +152,24 @@
                 <i class="bi bi-bar-chart-steps"></i>Histograma
             </div>
             <div class="p-3">
-                <div class="table-responsive">
-                    <table class="table efetivo-table mb-0" id="efetivo-table">
+                <div id="hist-vazio" style="text-align:center; padding:.8rem; color:#b0bece; font-size:.75rem;">
+                    Selecione contratada, contrato e semana para ver o histograma previsto.
+                </div>
+                <div id="hist-sem-dados" style="display:none; text-align:center; padding:.8rem; color:#f0a500; font-size:.75rem;">
+                    <i class="bi bi-exclamation-circle me-1"></i>Nenhuma função cadastrada para esta semana.
+                </div>
+                <div id="hist-table-wrap" style="display:none;">
+                    <table style="width:100%; border-collapse:collapse; font-size:.78rem;">
                         <thead>
-                            <tr>
-                                <th>Função</th>
-                                <th style="width:80px; text-align:center;">Qtd</th>
-                                <th style="width:32px;"></th>
+                            <tr style="background:#f0f4f8;">
+                                <th style="padding:.3rem .5rem; text-align:left; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700;">Função</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:70px;">Tipo</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:60px;">Qtd Prev.</th>
                             </tr>
                         </thead>
-                        <tbody id="efetivo-body">
-                            {% if efetivo %}
-                                {% for ef in efetivo %}
-                                <tr class="efetivo-row">
-                                    <td>
-                                        <input type="text" class="form-control form-control-sm"
-                                               name="efetivo_funcao[]"
-                                               list="funcoes-list"
-                                               value="{{ ef.funcao }}"
-                                               placeholder="Função">
-                                    </td>
-                                    <td>
-                                        <input type="number" class="form-control form-control-sm"
-                                               name="efetivo_quantidade[]"
-                                               value="{{ ef.quantidade }}" min="0">
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn-remove-row" onclick="removeRow(this)">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% endif %}
-                        </tbody>
+                        <tbody id="hist-tbody"></tbody>
                     </table>
                 </div>
-
-                <datalist id="funcoes-list">
-                    {% for f in funcoes %}
-                        <option value="{{ f }}">
-                    {% endfor %}
-                </datalist>
-
-                <button type="button" class="btn-add-row w-100 mt-2" onclick="addRow()">
-                    <i class="bi bi-plus-lg me-1"></i>Adicionar Função
-                </button>
             </div>
         </div>
 
@@ -220,9 +192,11 @@
                                 <th style="padding:.3rem .5rem; text-align:left; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700;">Ação Notável</th>
                                 <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:55px;">Unid.</th>
                                 <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:70px;">% Prev.</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:75px;">Realizado</th>
                             </tr>
                         </thead>
                         <tbody id="acoes-tbody"></tbody>
+                        <input type="hidden" id="acoes-realizadas-json" name="acoes_realizadas_json" value="{}">
                     </table>
                 </div>
             </div>
@@ -234,88 +208,23 @@
                 <i class="bi bi-truck"></i>Equipamentos
             </div>
             <div class="p-3">
-                <div class="table-responsive">
-                    <table class="table efetivo-table mb-0" id="equip-table">
+                <div id="equip-vazio" style="text-align:center; padding:.8rem; color:#b0bece; font-size:.75rem;">
+                    Selecione contratada, contrato e semana para ver os equipamentos previstos.
+                </div>
+                <div id="equip-sem-dados" style="display:none; text-align:center; padding:.8rem; color:#f0a500; font-size:.75rem;">
+                    <i class="bi bi-exclamation-circle me-1"></i>Nenhum equipamento cadastrado para esta semana.
+                </div>
+                <div id="equip-table-wrap" style="display:none;">
+                    <table style="width:100%; border-collapse:collapse; font-size:.78rem;">
                         <thead>
-                            <tr>
-                                <th>Equipamento</th>
-                                <th style="width:80px; text-align:center;">Qtd</th>
-                                <th style="width:32px;"></th>
+                            <tr style="background:#f0f4f8;">
+                                <th style="padding:.3rem .5rem; text-align:left; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700;">Equipamento</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:60px;">Qtd Prev.</th>
                             </tr>
                         </thead>
-                        <tbody id="equip-body">
-                            {% if equipamentos %}
-                                {% for eq in equipamentos %}
-                                <tr class="equip-row">
-                                    <td>
-                                        <input type="text" class="form-control form-control-sm"
-                                               name="equip_descricao[]"
-                                               list="equip-list"
-                                               value="{{ eq.descricao }}"
-                                               placeholder="Descrição">
-                                    </td>
-                                    <td>
-                                        <input type="number" class="form-control form-control-sm"
-                                               name="equip_quantidade[]"
-                                               value="{{ eq.quantidade }}" min="0">
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn-remove-row" onclick="removeEquipRow(this)">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% endif %}
-                        </tbody>
+                        <tbody id="equip-tbody"></tbody>
                     </table>
                 </div>
-
-                <datalist id="equip-list">
-                    <option value="Escavadeira Hidráulica">
-                    <option value="Retroescavadeira">
-                    <option value="Motoniveladora (Patrol)">
-                    <option value="Trator de Esteiras (Bulldozer)">
-                    <option value="Pá Carregadeira">
-                    <option value="Minicarregadeira (Bob Cat)">
-                    <option value="Caminhão Basculante">
-                    <option value="Caminhão Betoneira">
-                    <option value="Caminhão Munck">
-                    <option value="Caminhão Pipa">
-                    <option value="Rolo Compactador Liso">
-                    <option value="Rolo Compactador Pé de Carneiro">
-                    <option value="Rolo Vibratório">
-                    <option value="Compactador de Placa">
-                    <option value="Soquete Vibratório">
-                    <option value="Grua (Torre)">
-                    <option value="Guindaste Telescópico">
-                    <option value="Guindaste sobre Esteiras">
-                    <option value="Plataforma Elevatória (Manlift)">
-                    <option value="Plataforma Tesoura (Scissor Lift)">
-                    <option value="Betoneira">
-                    <option value="Bomba de Concreto">
-                    <option value="Vibrador de Imersão">
-                    <option value="Gerador de Energia">
-                    <option value="Compressor de Ar">
-                    <option value="Andaime Metálico Tubular">
-                    <option value="Andaime Fachadeiro">
-                    <option value="Escoramento Metálico">
-                    <option value="Forma Deslizante">
-                    <option value="Perfuratriz (Crawler Drill)">
-                    <option value="Conjunto Moto-Bomba">
-                    <option value="Bomba d'Água Submersível">
-                    <option value="Martelete Pneumático">
-                    <option value="Serra de Disco">
-                    <option value="Serra de Corte de Concreto">
-                    <option value="Empilhadeira">
-                    <option value="Draga">
-                    <option value="Carro de Inspeção">
-                    <option value="Veículo de Apoio">
-                </datalist>
-
-                <button type="button" class="btn-add-row w-100 mt-2" onclick="addEquipRow()">
-                    <i class="bi bi-plus-lg me-1"></i>Adicionar Equipamento
-                </button>
             </div>
         </div>
 
@@ -348,6 +257,7 @@
 {% block scripts %}
 <script>
 const CONTRATOS_CFG = {{ contratos_cfg_json|safe }};
+const ACOES_REALIZADAS = {{ (registro.get('acoes_realizadas', {}) if registro else {})|tojson }};
 
 // ── Status de contrato ──────────────────────────────────────────────────────
 function _isoWeekToSunday(weekStr) {
@@ -441,7 +351,7 @@ function updateContratoUI(contratada, currentValue) {
         hiddenEl.value = matched;
     }
 
-    atualizarAcoes();
+    atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
 }
 
 function toggleCustomContratada(sel) {
@@ -517,12 +427,95 @@ function atualizarAcoes() {
         const perc = a.semanas[semana];
         const bg   = i % 2 === 0 ? '#fff' : '#f8fafc';
         const unid = a.unidade ? _escHtml(a.unidade) : '—';
+        const realVal = ACOES_REALIZADAS[a.acao] !== undefined ? ACOES_REALIZADAS[a.acao] : '';
         return `<tr style="background:${bg};">
             <td style="padding:.3rem .5rem; border-bottom:1px solid #f0f4f8;">${_escHtml(a.acao)}</td>
             <td style="padding:.3rem .5rem; text-align:center; border-bottom:1px solid #f0f4f8;
                 color:#8a9aaa; font-size:.72rem;">${unid}</td>
             <td style="padding:.3rem .5rem; text-align:center; border-bottom:1px solid #f0f4f8;
                 font-weight:700; color:var(--rumo-cyan);">${perc}%</td>
+            <td style="padding:.2rem .4rem; text-align:center; border-bottom:1px solid #f0f4f8;">
+                <input type="number" min="0" step="0.1"
+                       data-acao-real="${_escHtml(a.acao)}"
+                       value="${realVal}"
+                       class="form-control form-control-sm"
+                       style="width:65px; text-align:center; padding:.15rem .3rem; font-size:.75rem; display:inline-block;">
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function _getSelectors() {
+    const contratadaEl = document.getElementById('contratadaSelect');
+    const contratada = contratadaEl?.value === '__outro__'
+        ? (document.getElementById('contratada_custom')?.value?.trim() || '')
+        : (contratadaEl?.value || '');
+    const contrato = (document.getElementById('contrato')?.value || '').trim();
+    const semana   = document.getElementById('semana_referencia')?.value || '';
+    return { contratada, contrato, semana };
+}
+
+function atualizarHistograma() {
+    const { contratada, contrato, semana } = _getSelectors();
+    const vazio    = document.getElementById('hist-vazio');
+    const semDados = document.getElementById('hist-sem-dados');
+    const tableWrap = document.getElementById('hist-table-wrap');
+
+    if (!contratada || !contrato || !semana) {
+        vazio.style.display = ''; semDados.style.display = 'none'; tableWrap.style.display = 'none'; return;
+    }
+    const cfg = CONTRATOS_CFG[`${contratada}||${contrato}`];
+    if (!cfg) {
+        vazio.style.display = ''; semDados.style.display = 'none'; tableWrap.style.display = 'none'; return;
+    }
+    const items = (cfg.linha_base_histograma || []).filter(h =>
+        h.semanas && h.semanas[semana] !== undefined && h.semanas[semana] !== ''
+    );
+    if (!items.length) {
+        vazio.style.display = 'none'; semDados.style.display = ''; tableWrap.style.display = 'none'; return;
+    }
+    vazio.style.display = 'none'; semDados.style.display = 'none'; tableWrap.style.display = '';
+    document.getElementById('hist-tbody').innerHTML = items.map((h, i) => {
+        const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
+        const tColor = h.tipo === 'direto' ? '#3a7a00' : '#003d8f';
+        const tBg    = h.tipo === 'direto' ? 'rgba(141,198,63,.12)' : 'rgba(0,174,239,.12)';
+        return `<tr style="background:${bg};">
+            <td style="padding:.3rem .5rem;border-bottom:1px solid #f0f4f8;">${_escHtml(h.funcao)}</td>
+            <td style="padding:.3rem .5rem;text-align:center;border-bottom:1px solid #f0f4f8;">
+                <span style="background:${tBg};color:${tColor};font-size:.62rem;font-weight:700;
+                    padding:.1rem .4rem;border-radius:4px;text-transform:uppercase;">${_escHtml(h.tipo)}</span></td>
+            <td style="padding:.3rem .5rem;text-align:center;border-bottom:1px solid #f0f4f8;
+                font-weight:700;color:var(--rumo-cyan);">${h.semanas[semana]}</td>
+        </tr>`;
+    }).join('');
+}
+
+function atualizarEquipamentos() {
+    const { contratada, contrato, semana } = _getSelectors();
+    const vazio    = document.getElementById('equip-vazio');
+    const semDados = document.getElementById('equip-sem-dados');
+    const tableWrap = document.getElementById('equip-table-wrap');
+
+    if (!contratada || !contrato || !semana) {
+        vazio.style.display = ''; semDados.style.display = 'none'; tableWrap.style.display = 'none'; return;
+    }
+    const cfg = CONTRATOS_CFG[`${contratada}||${contrato}`];
+    if (!cfg) {
+        vazio.style.display = ''; semDados.style.display = 'none'; tableWrap.style.display = 'none'; return;
+    }
+    const items = (cfg.linha_base_equipamentos || []).filter(e =>
+        e.semanas && e.semanas[semana] !== undefined && e.semanas[semana] !== ''
+    );
+    if (!items.length) {
+        vazio.style.display = 'none'; semDados.style.display = ''; tableWrap.style.display = 'none'; return;
+    }
+    vazio.style.display = 'none'; semDados.style.display = 'none'; tableWrap.style.display = '';
+    document.getElementById('equip-tbody').innerHTML = items.map((e, i) => {
+        const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
+        return `<tr style="background:${bg};">
+            <td style="padding:.3rem .5rem;border-bottom:1px solid #f0f4f8;">${_escHtml(e.equipamento)}</td>
+            <td style="padding:.3rem .5rem;text-align:center;border-bottom:1px solid #f0f4f8;
+                font-weight:700;color:var(--rumo-cyan);">${e.semanas[semana]}</td>
         </tr>`;
     }).join('');
 }
@@ -602,11 +595,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sincroniza texto/select → hidden
     document.getElementById('contrato-text').addEventListener('input', function() {
         document.getElementById('contrato').value = this.value;
-        atualizarAcoes();
+        atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
     });
     document.getElementById('contrato-select').addEventListener('change', function() {
         document.getElementById('contrato').value = this.value;
-        atualizarAcoes();
+        atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
     });
 
     // Inicializa UI de contrato (modo editar: respeita valor existente; modo novo: '')
@@ -616,9 +609,18 @@ document.addEventListener('DOMContentLoaded', () => {
         updateContratoUI(initialContratada, initialContrato);
     }
 
-    atualizarAcoes();
+    atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
 
     document.getElementById('mainForm').addEventListener('submit', function(e) {
+        // Serializa valores de Realizado antes do envio
+        const realizadoMap = {};
+        document.querySelectorAll('[data-acao-real]').forEach(inp => {
+            const nome = inp.dataset.acaoReal;
+            const val  = inp.value.trim();
+            if (nome && val !== '') realizadoMap[nome] = parseFloat(val);
+        });
+        document.getElementById('acoes-realizadas-json').value = JSON.stringify(realizadoMap);
+
         const contratada = document.getElementById('contratadaSelect')?.value;
         const semana     = document.getElementById('semana_referencia')?.value;
         const contrato   = document.getElementById('contrato')?.value;

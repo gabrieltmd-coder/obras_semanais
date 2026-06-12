@@ -153,8 +153,58 @@ def get_contratadas():
     return sorted({v.get('contratada', '') for v in cfg.values() if v.get('contratada')})
 
 
+_FUNCOES_PADRAO = [
+    # ── Gestão & Técnico ──
+    {'cargo': 'Engenheiro Civil',           'tipo': 'indireto', 'grupo': 'Gestão & Técnico'},
+    {'cargo': 'Engenheiro de Segurança',    'tipo': 'indireto', 'grupo': 'Gestão & Técnico'},
+    {'cargo': 'Técnico de Segurança',       'tipo': 'indireto', 'grupo': 'Gestão & Técnico'},
+    {'cargo': 'Mestre de Obras',            'tipo': 'indireto', 'grupo': 'Gestão & Técnico'},
+    {'cargo': 'Encarregado',                'tipo': 'indireto', 'grupo': 'Gestão & Técnico'},
+    {'cargo': 'Apontador',                  'tipo': 'indireto', 'grupo': 'Gestão & Técnico'},
+    {'cargo': 'Almoxarife',                 'tipo': 'indireto', 'grupo': 'Gestão & Técnico'},
+    {'cargo': 'Topógrafo',                  'tipo': 'indireto', 'grupo': 'Gestão & Técnico'},
+    # ── Mão de Obra Direta ──
+    {'cargo': 'Pedreiro',                   'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    {'cargo': 'Armador',                    'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    {'cargo': 'Carpinteiro',                'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    {'cargo': 'Eletricista',                'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    {'cargo': 'Soldador',                   'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    {'cargo': 'Serralheiro',                'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    {'cargo': 'Pintor',                     'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    {'cargo': 'Servente',                   'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    {'cargo': 'Ajudante Geral',             'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    {'cargo': 'Sinaleiro',                  'tipo': 'direto', 'grupo': 'Mão de Obra Direta'},
+    # ── Operadores ──
+    {'cargo': 'Operador de Escavadeira',    'tipo': 'direto', 'grupo': 'Operadores'},
+    {'cargo': 'Operador de Máquinas',       'tipo': 'direto', 'grupo': 'Operadores'},
+    {'cargo': 'Operador de Pavimentadora',  'tipo': 'direto', 'grupo': 'Operadores'},
+    {'cargo': 'Operador de Compactador',    'tipo': 'direto', 'grupo': 'Operadores'},
+    {'cargo': 'Operador de Guindaste',      'tipo': 'direto', 'grupo': 'Operadores'},
+    {'cargo': 'Motorista',                  'tipo': 'direto', 'grupo': 'Operadores'},
+    # ── Maquinário ──
+    {'cargo': 'Escavadeira Hidráulica',     'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Retroescavadeira',           'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Pá Carregadeira',            'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Motoniveladora (Patrol)',     'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Trator de Esteiras',         'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Pavimentadora Asfáltica',    'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Rolo Compactador Liso',      'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Rolo Compactador Pé de Carneiro', 'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Caminhão Basculante',        'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Caminhão Betoneira',         'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Caminhão Munck',             'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Caminhão Pipa',              'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Guindaste Telescópico',      'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Betoneira',                  'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Bomba de Concreto',          'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Compressor de Ar',           'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Gerador de Energia',         'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Plataforma Elevatória',      'tipo': 'equipamento', 'grupo': 'Maquinário'},
+    {'cargo': 'Minicarregadeira (Bob Cat)', 'tipo': 'equipamento', 'grupo': 'Maquinário'},
+]
+
 def get_funcoes_list():
-    """Carrega lista de cargos/tipos do Excel a cada chamada (reflete atualizações sem restart)."""
+    """Carrega lista de cargos/tipos do Excel; usa lista padrão se arquivo não encontrado."""
     result = []
     try:
         wb = load_workbook(TIPO_MAO_OBRA_FILE, data_only=True)
@@ -167,7 +217,7 @@ def get_funcoes_list():
                 result.append({'cargo': cargo, 'tipo': tipo})
     except Exception:
         pass
-    return result
+    return result if result else _FUNCOES_PADRAO
 
 FUNCOES = [
     "Engenheiro Civil",
@@ -338,6 +388,13 @@ def novo():
         efetivo, total_direto, total_indireto = parse_efetivo(request.form)
         equipamentos = parse_equipamentos(request.form)
 
+        try:
+            acoes_realizadas = json.loads(request.form.get('acoes_realizadas_json', '{}'))
+            if not isinstance(acoes_realizadas, dict):
+                acoes_realizadas = {}
+        except Exception:
+            acoes_realizadas = {}
+
         if erros:
             for e in erros:
                 flash(e, 'danger')
@@ -368,6 +425,7 @@ def novo():
             'valor_medido': valor_medido,
             'avanco_fisico': avanco_fisico,
             'pluviometria': pluviometria,
+            'acoes_realizadas': acoes_realizadas,
             'criado_em': datetime.now().isoformat(),
             'atualizado_em': datetime.now().isoformat(),
         }
@@ -444,6 +502,13 @@ def editar(id):
         efetivo, total_direto, total_indireto = parse_efetivo(request.form)
         equipamentos = parse_equipamentos(request.form)
 
+        try:
+            acoes_realizadas = json.loads(request.form.get('acoes_realizadas_json', '{}'))
+            if not isinstance(acoes_realizadas, dict):
+                acoes_realizadas = {}
+        except Exception:
+            acoes_realizadas = {}
+
         if erros:
             for e in erros:
                 flash(e, 'danger')
@@ -474,6 +539,7 @@ def editar(id):
             'valor_medido': valor_medido,
             'avanco_fisico': avanco_fisico,
             'pluviometria': pluviometria,
+            'acoes_realizadas': acoes_realizadas,
             'atualizado_em': datetime.now().isoformat(),
             'alterado_em': datetime.now().isoformat(),
         })
@@ -530,12 +596,13 @@ def dashboard():
     _vazio = dict(kpis=None, contratadas=todas_contratadas,
                   filtro_contratada=filtro_contratada,
                   filtro_de=filtro_de, filtro_ate=filtro_ate,
-                  chart_labels='[]', curva_fin_acum='[]', curva_fis_real='[]',
+                  chart_labels='[]', curva_fin_acum='[]', curva_fis_real='[]', curva_fin_base='[]', curva_fis_base='[]',
                   hist_labels='[]', hist_qtd='[]', hist_colors='[]',
                   hist_list=[], total_direto=0, total_indireto=0, total_classificar=0,
                   pie_data='[]', pie_colors='[]', pie_labels='[]',
                   prev_labels='[]', prev_qtd='[]', prev_colors='[]',
-                  prev_direto=0, prev_indireto=0)
+                  prev_direto=0, prev_indireto=0,
+                  acoes_labels='[]', acoes_pct='[]')
 
     if not reg:
         return render_template('dashboard.html', **_vazio)
@@ -623,6 +690,48 @@ def dashboard():
     )
     saldo = total_valor_contrato - total_medido
 
+    # ── Linhas de Base para Curvas S ──
+    def _month_of_week(week_date_str):
+        d = datetime.strptime(week_date_str, '%Y-%m-%d').date()
+        return f'{d.year}-{d.month:02d}'
+
+    fin_base_monthly = {}
+    fis_base_monthly = {}
+    for _, cdata in cfg.items():
+        if filtro_contratada and cdata.get('contratada') != filtro_contratada:
+            continue
+        for entry in cdata.get('linha_base_financeira', []):
+            m = entry.get('semana', '')
+            v = float(entry.get('valor', 0) or 0)
+            if m:
+                fin_base_monthly[m] = fin_base_monthly.get(m, 0) + v
+        for entry in cdata.get('linha_base_fisica', []):
+            m = entry.get('semana', '')
+            p = float(entry.get('percentual', 0) or 0)
+            if m:
+                fis_base_monthly.setdefault(m, []).append(p)
+
+    fin_base_cumul, fis_base_cumul = {}, {}
+    acum_fin = 0
+    for m in sorted(fin_base_monthly):
+        acum_fin += fin_base_monthly[m]
+        fin_base_cumul[m] = round(acum_fin, 2)
+    acum_fis = 0
+    for m in sorted(fis_base_monthly):
+        vals = fis_base_monthly[m]
+        acum_fis += (sum(vals) / len(vals)) if vals else 0
+        fis_base_cumul[m] = round(acum_fis, 2)
+
+    fin_months = sorted(fin_base_cumul)
+    fis_months = sorted(fis_base_cumul)
+    curva_fin_base, curva_fis_base = [], []
+    for s in semanas_sorted:
+        m = _month_of_week(s)
+        fval = next((fin_base_cumul[bm] for bm in reversed(fin_months) if bm <= m), None)
+        pval = next((fis_base_cumul[bm] for bm in reversed(fis_months) if bm <= m), None)
+        curva_fin_base.append(fval)
+        curva_fis_base.append(pval)
+
     # ── Histograma Previsto por Função ──────────────────────────────────────
     hist_previsto = {}
     for _, cdata in cfg.items():
@@ -643,6 +752,29 @@ def dashboard():
     prev_labels    = json.dumps([f for f, _ in prev_list[:12]])
     prev_qtd       = json.dumps([v['total'] for _, v in prev_list[:12]])
     prev_colors    = json.dumps([_pcol(v['tipo']) for _, v in prev_list[:12]])
+
+    # ── Progresso das Ações Notáveis ────────────────────────────────────────
+    last_sem = semanas_sorted[-1] if semanas_sorted else ''
+    acoes_prog = {}
+    for _, cdata in cfg.items():
+        if filtro_contratada and cdata.get('contratada') != filtro_contratada:
+            continue
+        for entry in cdata.get('linha_base_acoes', []):
+            acao = (entry.get('acao') or '').strip()
+            vals = entry.get('semanas', {})
+            if not acao or not vals:
+                continue
+            total_plan = sum(float(v or 0) for v in vals.values())
+            if total_plan == 0:
+                continue
+            done = sum(float(v or 0) for k, v in vals.items() if k <= last_sem) if last_sem else 0
+            if acao not in acoes_prog:
+                acoes_prog[acao] = {'done': 0, 'total': 0}
+            acoes_prog[acao]['done']  += done
+            acoes_prog[acao]['total'] += total_plan
+    acoes_sorted = sorted(acoes_prog.items(), key=lambda x: -(x[1]['done'] / x[1]['total']) if x[1]['total'] else 0)
+    acoes_labels = json.dumps([a for a, _ in acoes_sorted])
+    acoes_pct    = json.dumps([round(min(100, v['done'] / v['total'] * 100), 1) if v['total'] else 0 for _, v in acoes_sorted])
 
     kpis = {
         'total_contratos':      total_contratos,
@@ -665,6 +797,8 @@ def dashboard():
                            chart_labels=json.dumps(chart_labels),
                            curva_fin_acum=json.dumps(curva_fin_acum),
                            curva_fis_real=json.dumps(curva_fis_real),
+                           curva_fin_base=json.dumps(curva_fin_base),
+                           curva_fis_base=json.dumps(curva_fis_base),
                            hist_labels=json.dumps(hist_labels),
                            hist_qtd=json.dumps(hist_qtd),
                            hist_colors=json.dumps(hist_colors),
@@ -679,7 +813,9 @@ def dashboard():
                            prev_qtd=prev_qtd,
                            prev_colors=prev_colors,
                            prev_direto=prev_direto,
-                           prev_indireto=prev_indireto)
+                           prev_indireto=prev_indireto,
+                           acoes_labels=acoes_labels,
+                           acoes_pct=acoes_pct)
 
 
 @app.route('/export/excel')
@@ -848,6 +984,71 @@ def export_excel():
     wb.save(filepath)
 
     return send_file(filepath, as_attachment=True, download_name='registros_semanais.xlsx',
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+@app.route('/export/contratos')
+def export_contratos():
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    cfg = load_contratos_config()
+    os.makedirs(EXPORT_DIR, exist_ok=True)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Contratos'
+
+    header_fill = PatternFill(start_color='003366', end_color='003366', fill_type='solid')
+    alt_fill    = PatternFill(start_color='F0F8FF', end_color='F0F8FF', fill_type='solid')
+    header_font = Font(color='FFFFFF', bold=True, name='Calibri', size=11)
+    normal_font = Font(name='Calibri', size=10)
+    center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    left_align   = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    thin_border  = Border(
+        left=Side(style='thin', color='CCCCCC'), right=Side(style='thin', color='CCCCCC'),
+        top=Side(style='thin', color='CCCCCC'),  bottom=Side(style='thin', color='CCCCCC')
+    )
+
+    headers = ['Contratada', 'Contrato', 'Status', 'Valor do Contrato (R$)',
+               'Início do Contrato', 'Término do Contrato']
+    col_widths = [30, 18, 12, 24, 20, 20]
+
+    ws.row_dimensions[1].height = 30
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = thin_border
+
+    for i, (_, data) in enumerate(sorted(cfg.items()), 2):
+        status = contract_status(data)
+        row_data = [
+            data.get('contratada', ''),
+            data.get('contrato', ''),
+            'Ativo' if status == 'ativo' else 'Encerrado',
+            data.get('valor_contrato', 0) or 0,
+            data.get('data_inicio_contrato', ''),
+            data.get('data_fim_contrato', ''),
+        ]
+        fill = alt_fill if i % 2 == 0 else None
+        ws.row_dimensions[i].height = 20
+        for col, val in enumerate(row_data, 1):
+            cell = ws.cell(row=i, column=col, value=val)
+            cell.font = normal_font
+            cell.border = thin_border
+            cell.alignment = left_align
+            if fill:
+                cell.fill = fill
+
+    for col, w in enumerate(col_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = w
+
+    ws.freeze_panes = 'A2'
+
+    filepath = os.path.join(EXPORT_DIR, 'contratos.xlsx')
+    wb.save(filepath)
+    return send_file(filepath, as_attachment=True, download_name='contratos.xlsx',
                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 
