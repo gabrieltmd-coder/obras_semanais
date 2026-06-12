@@ -122,6 +122,7 @@ body { background: #0b1828 !important; }
     </div>
 </form>
 
+
 <!-- KPI STRIP -->
 <div class="kpi-strip">
     <div class="kpi-mini c">
@@ -164,38 +165,17 @@ body { background: #0b1828 !important; }
     </div>
 </div>
 
-<!-- ROW 1: Curva S Fin | Métricas | Donut -->
+<!-- ROW 1: Curva S Fin | Donut -->
 <div class="row g-2 mb-2">
 
-    <div class="col-lg-5">
+    <div class="col-lg-6">
         <div class="gc h-100">
             <div class="gc-title"><span><i class="bi bi-currency-dollar"></i>Curva S Financeira</span><span class="gc-sub">R$ Acumulado</span></div>
             <canvas id="chartFinanceiro" height="120"></canvas>
         </div>
     </div>
 
-    <div class="col-lg-3">
-        <div class="d-flex flex-column gap-2 h-100">
-            <div class="met-card">
-                <div class="met-ico" style="background:rgba(0,174,239,.15);color:#00d4ff;"><i class="bi bi-file-earmark-text"></i></div>
-                <div><div class="met-lbl">Total Contratos</div><div class="met-val">{{ kpis.total_contratos }}</div></div>
-            </div>
-            <div class="met-card">
-                <div class="met-ico" style="background:rgba(141,198,63,.15);color:#7dda24;"><i class="bi bi-bar-chart-line"></i></div>
-                <div><div class="met-lbl">AF — Semana</div><div class="met-val">{{ kpis.af_semana }}%</div></div>
-            </div>
-            <div class="met-card">
-                <div class="met-ico" style="background:rgba(141,198,63,.15);color:#7dda24;"><i class="bi bi-graph-up-arrow"></i></div>
-                <div><div class="met-lbl">AF Acumulado</div><div class="met-val">{{ kpis.af_acumulado }}%</div></div>
-            </div>
-            <div class="met-card">
-                <div class="met-ico" style="background:rgba(0,174,239,.15);color:#00d4ff;"><i class="bi bi-cash-stack"></i></div>
-                <div><div class="met-lbl">Valor Semana</div><div class="met-val sm">{{ kpis.valor_semana|currency }}</div></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-4">
+    <div class="col-lg-6">
         <div class="gc h-100">
             <div class="gc-title"><span><i class="bi bi-pie-chart"></i>Efetivo Previsto — Composição</span></div>
             {% if prev_direto > 0 or prev_indireto > 0 %}
@@ -206,23 +186,20 @@ body { background: #0b1828 !important; }
                     <div class="leg">
                         <div class="leg-dot" style="background:rgba(141,198,63,.85);"></div>
                         <span class="leg-name">Direto</span>
-                        <span class="leg-val" style="color:#8DC63F;">{{ prev_direto }}</span>
+                        {% set tot = prev_direto + prev_indireto %}
+                        <span class="leg-val" style="color:#8DC63F;">{{ (prev_direto / tot * 100)|round|int if tot else 0 }}%</span>
                     </div>
                     <div class="leg">
                         <div class="leg-dot" style="background:rgba(0,174,239,.85);"></div>
                         <span class="leg-name">Indireto</span>
-                        <span class="leg-val" style="color:#00AEEF;">{{ prev_indireto }}</span>
-                    </div>
-                    <div style="border-top:1px solid rgba(255,255,255,.08);margin-top:.4rem;padding-top:.4rem;display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:.58rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;">Total H·H</span>
-                        <span style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.05rem;">{{ prev_direto + prev_indireto }}</span>
+                        <span class="leg-val" style="color:#00AEEF;">{{ (prev_indireto / tot * 100)|round|int if tot else 0 }}%</span>
                     </div>
                 </div>
             </div>
-            <!-- Bar top funções previsto -->
+            <!-- Ações Notáveis — progresso -->
             <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:.55rem;">
-                <div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.28);margin-bottom:.45rem;">Top Funções</div>
-                <canvas id="chartPrevBar" height="110"></canvas>
+                <div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.28);margin-bottom:.45rem;">Ações Notáveis — Evolução</div>
+                <canvas id="chartAcoes" height="110"></canvas>
             </div>
             {% else %}
             <div style="text-align:center;padding:1.5rem;color:rgba(255,255,255,.25);font-size:.8rem;">
@@ -266,15 +243,19 @@ body { background: #0b1828 !important; }
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
-const LABELS   = {{ chart_labels|safe }};
-const FIN_ACUM = {{ curva_fin_acum|safe }};
-const FIS_REAL = {{ curva_fis_real|safe }};
+const LABELS    = {{ chart_labels|safe }};
+const FIN_ACUM  = {{ curva_fin_acum|safe }};
+const FIS_REAL  = {{ curva_fis_real|safe }};
+const FIN_BASE  = {{ curva_fin_base|safe }};
+const FIS_BASE  = {{ curva_fis_base|safe }};
 const HIST_LABELS = {{ hist_labels|safe }};
 const HIST_QTD    = {{ hist_qtd|safe }};
 const HIST_COLORS = {{ hist_colors|safe }};
 const PREV_LABELS   = {{ prev_labels|safe }};
 const PREV_QTD      = {{ prev_qtd|safe }};
 const PREV_COLORS   = {{ prev_colors|safe }};
+const ACOES_LABELS  = {{ acoes_labels|safe }};
+const ACOES_PCT     = {{ acoes_pct|safe }};
 const PREV_DIRETO   = {{ prev_direto }};
 const PREV_INDIRETO = {{ prev_indireto }};
 
@@ -301,14 +282,14 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
             datasets: [{
                 label: 'Realizado (R$)',
                 data: FIN_ACUM,
-                borderColor: '#00d4ff',
-                backgroundColor: 'rgba(0,212,255,.08)',
+                borderColor: '#7dda24',
+                backgroundColor: 'rgba(125,218,36,.08)',
                 borderWidth: 2,
-                pointRadius: 3, pointBackgroundColor: '#00d4ff',
+                pointRadius: 3, pointBackgroundColor: '#7dda24',
                 fill: true, tension: 0.45,
             },{
                 label: 'Linha de Base',
-                data: [], borderColor: '#8DC63F',
+                data: FIN_BASE, borderColor: '#00d4ff',
                 borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
             }]
         },
@@ -319,7 +300,7 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
                 tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
                 datalabels:{
                     display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
-                    align:'top', anchor:'end', color:'#00d4ff',
+                    align:'top', anchor:'end', color:'#7dda24',
                     formatter: v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'
                 }
             },
@@ -347,7 +328,7 @@ if (document.getElementById('chartFisico') && LABELS.length) {
                 fill: true, tension: 0.45,
             },{
                 label: 'Linha de Base',
-                data: [], borderColor: '#00d4ff',
+                data: FIS_BASE, borderColor: '#00d4ff',
                 borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false,
             }]
         },
@@ -380,13 +361,14 @@ if (document.getElementById('chartHistograma') && HIST_LABELS.length) {
         },
         options: {
             indexAxis:'y', responsive:true, animation:{ duration:600 },
+            layout:{ padding:{ right: 36 } },
             plugins:{
                 legend:{display:false},
                 tooltip:{ callbacks:{ label: ctx=>` ${ctx.parsed.x} trabalhadores` }},
-                datalabels:{ anchor:'end', align:'end', color:'#fff', formatter: v => v }
+                datalabels:{ anchor:'end', align:'end', color:'#fff', clip:false, formatter: v => v }
             },
             scales:{
-                x:{ grid:{color:GRID}, ticks:{ ...TICK, stepSize:1 }},
+                x:{ grid:{color:GRID}, ticks:{ ...TICK, stepSize:1 }, max: Math.max(...HIST_QTD) * 1.25 },
                 y:{ grid:{display:false}, ticks:TICK }
             }
         }
@@ -413,7 +395,7 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
                     formatter: (v, ctx) => {
                         const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
                         const pct = tot ? Math.round(v/tot*100) : 0;
-                        return v>0 ? `${v}\n(${pct}%)` : '';
+                        return v>0 ? `${pct}%` : '';
                     },
                     textAlign:'center'
                 }
@@ -422,23 +404,40 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
     });
 }
 
-// ── Bar previsto — top funções ──
-if (document.getElementById('chartPrevBar') && PREV_LABELS.length) {
-    new Chart(document.getElementById('chartPrevBar'), {
+// ── Ações Notáveis — evolução % ──
+if (document.getElementById('chartAcoes') && ACOES_LABELS.length) {
+    const acoesBg = ACOES_PCT.map(p =>
+        p >= 80 ? 'rgba(141,198,63,.85)' :
+        p >= 40 ? 'rgba(0,174,239,.85)'  :
+                  'rgba(240,165,0,.85)'
+    );
+    new Chart(document.getElementById('chartAcoes'), {
         type:'bar',
         data:{
-            labels: PREV_LABELS,
-            datasets:[{ label:'H·H Planejado', data:PREV_QTD, backgroundColor:PREV_COLORS, borderRadius:4, borderSkipped:false }]
+            labels: ACOES_LABELS,
+            datasets:[{
+                label:'Evolução (%)',
+                data: ACOES_PCT,
+                backgroundColor: acoesBg,
+                borderRadius: 4,
+                borderSkipped: false
+            }]
         },
         options:{
             indexAxis:'y', responsive:true, animation:{ duration:600 },
+            layout:{ padding:{ right: 42 } },
             plugins:{
-                legend:{display:false},
-                tooltip:{ callbacks:{ label: ctx=>` ${ctx.parsed.x} H·H` }},
-                datalabels:{ anchor:'end', align:'end', color:'#fff', font:{size:9,weight:700}, formatter: v => v }
+                legend:{ display:false },
+                tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.x}% concluído` }},
+                datalabels:{
+                    anchor:'end', align:'end', clip:false,
+                    color: ctx => acoesBg[ctx.dataIndex],
+                    font:{ size:9, weight:700 },
+                    formatter: v => v + '%'
+                }
             },
             scales:{
-                x:{ grid:{color:GRID}, ticks:{ ...TICK, stepSize:1 }},
+                x:{ min:0, max:100, grid:{color:GRID}, ticks:{ ...TICK, callback: v => v+'%' }},
                 y:{ grid:{display:false}, ticks:{ ...TICK, font:{size:9} }}
             }
         }
