@@ -2,18 +2,19 @@ import json
 import uuid
 import os
 from datetime import datetime, date, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 
 app = Flask(__name__)
-app.secret_key = 'rumo-obras-secret-2024'
+app.secret_key = os.environ.get('SECRET_KEY', 'rumo-obras-secret-2024')
 
 DATA_FILE             = 'data/registros.json'
 CONTRATOS_CONFIG_FILE = 'data/contratos_config.json'
 EXPORT_DIR            = 'exports'
-ADMIN_PASSWORD        = 'Pipoc@2407'
-TIPO_MAO_OBRA_FILE = r'C:\Users\Admin\Desktop\PBX\BASES DASHs\CONTRATADAS\TIPO DE MAO DE OBRA.xlsx'
+ADMIN_PASSWORD        = os.environ.get('ADMIN_PASSWORD', 'Pipoc@2407')
+TIPO_MAO_OBRA_FILE    = os.environ.get('TIPO_MAO_OBRA_FILE',
+                        r'C:\Users\Admin\Desktop\PBX\BASES DASHs\CONTRATADAS\TIPO DE MAO DE OBRA.xlsx')
 
 
 def load_tipo_mao_obra():
@@ -29,10 +30,6 @@ def load_tipo_mao_obra():
     except Exception:
         pass
     return mapping
-
-
-TIPO_MAO_OBRA = load_tipo_mao_obra()
-TIPO_MAO_OBRA_JSON = json.dumps(TIPO_MAO_OBRA)
 
 
 def classify_tipo(funcao):
@@ -71,18 +68,22 @@ def contrato_key(contratada, contrato):
     return f"{contratada}||{contrato}"
 
 
+def _iso_week_date(week_str, weekday):
+    """Converte 'YYYY-Wnn' para date no dia da semana indicado (1=segunda ... 7=domingo)."""
+    year, week = str(week_str).split('-W')
+    return datetime.strptime(f'{year}-W{int(week):02d}-{weekday}', '%G-W%V-%u').date()
+
+
 def get_monday(date_str):
     if not date_str:
         return date_str
     try:
         if '-W' in date_str:
-            year, week = date_str.split('-W')
-            d = datetime.strptime(f'{year}-W{int(week):02d}-1', '%G-W%V-%u').date()
-            return d.strftime('%Y-%m-%d')
+            return _iso_week_date(date_str, 1).strftime('%Y-%m-%d')
         d = datetime.strptime(date_str, '%Y-%m-%d').date()
         monday = d - timedelta(days=d.weekday())
         return monday.strftime('%Y-%m-%d')
-    except:
+    except Exception:
         return date_str
 
 
@@ -90,26 +91,30 @@ def _week_to_last_day(week_str):
     """Converte 'YYYY-Wnn' para a data do domingo dessa semana no formato DD/MM/YYYY."""
     try:
         if week_str and '-W' in str(week_str):
-            year, week = str(week_str).split('-W')
-            d = datetime.strptime(f'{year}-W{int(week):02d}-7', '%G-W%V-%u').date()
-            return d.strftime('%d/%m/%Y')
+            return _iso_week_date(week_str, 7).strftime('%d/%m/%Y')
         return week_str or ''
     except Exception:
         return week_str or ''
+
+
+def _month_of_week(week_date_str):
+    """Converte 'YYYY-MM-DD' para 'YYYY-MM'."""
+    d = datetime.strptime(week_date_str, '%Y-%m-%d').date()
+    return f'{d.year}-{d.month:02d}'
 
 
 def format_date_br(date_str):
     try:
         d = datetime.strptime(date_str, '%Y-%m-%d')
         return d.strftime('%d/%m/%Y')
-    except:
+    except Exception:
         return date_str
 
 
 def format_currency(value):
     try:
         return f"R$ {float(value):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-    except:
+    except Exception:
         return "R$ 0,00"
 
 
@@ -134,17 +139,14 @@ app.jinja_env.filters['date_to_week'] = format_date_to_week
 
 def contract_status(data):
     manual = data.get('status_manual', 'auto')
-    if manual == 'ativo':
-        return 'ativo'
-    if manual == 'encerrado':
-        return 'encerrado'
+    if manual in ('ativo', 'encerrado'):
+        return manual
     fim = data.get('data_fim_contrato', '')
     if not fim:
         return 'ativo'
     try:
         if '-W' in str(fim):
-            year, week = str(fim).split('-W')
-            d = datetime.strptime(f'{year}-W{int(week):02d}-7', '%G-W%V-%u').date()
+            d = _iso_week_date(fim, 7)
         else:
             d = datetime.strptime(str(fim), '%Y-%m-%d').date()
         return 'encerrado' if date.today() > d else 'ativo'
@@ -231,18 +233,14 @@ def get_funcoes_list():
         pass
     return result if result else _FUNCOES_PADRAO
 
-FUNCOES = [
-    "Engenheiro Civil",
-    "Técnico de Segurança",
-    "Mestre de Obras",
-    "Encarregado",
-    "Operador de Máquinas",
-    "Pedreiro",
-    "Servente",
-    "Eletricista",
-    "Soldador",
-    "Motorista",
-]
+
+# Mapa cargo→tipo para classificação. Usa o Excel se existir; senão deriva da lista padrão.
+TIPO_MAO_OBRA = load_tipo_mao_obra()
+if not TIPO_MAO_OBRA:
+    TIPO_MAO_OBRA = {
+        f['cargo'].strip().lower(): f['tipo']
+        for f in _FUNCOES_PADRAO if f['tipo'] in ('direto', 'indireto')
+    }
 
 PLUVIOMETRIA_OPCOES = [
     "Tempo Bom",
@@ -263,31 +261,20 @@ DIAS_SEMANA = [
     ('domingo', 'Domingo'),
 ]
 
-DIAS_ABREV = {
-    'segunda': 'Seg',
-    'terca':   'Ter',
-    'quarta':  'Qua',
-    'quinta':  'Qui',
-    'sexta':   'Sex',
-    'sabado':  'Sáb',
-    'domingo': 'Dom',
-}
-
-
 def parse_efetivo(form):
     funcoes = form.getlist('efetivo_funcao[]')
     quantidades = form.getlist('efetivo_quantidade[]')
     efetivo = []
     total_direto = 0
     total_indireto = 0
-    for i in range(len(funcoes)):
-        if funcoes[i].strip():
+    for funcao, qtd_str in zip(funcoes, quantidades):
+        if funcao.strip():
             try:
-                qtd = int(quantidades[i]) if i < len(quantidades) else 0
-            except:
+                qtd = int(qtd_str)
+            except Exception:
                 qtd = 0
-            tipo = classify_tipo(funcoes[i])
-            efetivo.append({'funcao': funcoes[i].strip(), 'quantidade': qtd, 'tipo': tipo})
+            tipo = classify_tipo(funcao)
+            efetivo.append({'funcao': funcao.strip(), 'quantidade': qtd, 'tipo': tipo})
             if tipo == 'direto':
                 total_direto += qtd
             elif tipo == 'indireto':
@@ -299,13 +286,13 @@ def parse_equipamentos(form):
     descricoes = form.getlist('equip_descricao[]')
     quantidades = form.getlist('equip_quantidade[]')
     equipamentos = []
-    for i in range(len(descricoes)):
-        if descricoes[i].strip():
+    for desc, qtd_str in zip(descricoes, quantidades):
+        if desc.strip():
             try:
-                qtd = int(quantidades[i]) if i < len(quantidades) else 0
-            except:
+                qtd = int(qtd_str)
+            except Exception:
                 qtd = 0
-            equipamentos.append({'descricao': descricoes[i].strip(), 'quantidade': qtd})
+            equipamentos.append({'descricao': desc.strip(), 'quantidade': qtd})
     return equipamentos
 
 
@@ -313,11 +300,37 @@ def parse_pluviometria(form):
     return {dia: form.get(f'pluv_{dia}', '').strip() for dia, _ in DIAS_SEMANA}
 
 
-def format_pluviometria_excel(pluv):
-    if not pluv or not isinstance(pluv, dict):
-        return ''
-    parts = [f"{DIAS_ABREV[d]}: {pluv.get(d, '—') or '—'}" for d, _ in DIAS_SEMANA]
-    return ' | '.join(parts)
+def parse_acoes_realizadas(form):
+    """Lê o JSON {acao: valor} enviado pelo form; retorna {} se ausente/inválido."""
+    try:
+        data = json.loads(form.get('acoes_realizadas_json', '{}'))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def fin_base_curve(cfg, filtro_contratada, semanas_sorted):
+    """Linha de base financeira acumulada (mensal) alinhada ao eixo semanal do gráfico."""
+    monthly = {}
+    for _, cdata in cfg.items():
+        if filtro_contratada and cdata.get('contratada') != filtro_contratada:
+            continue
+        for entry in cdata.get('linha_base_financeira', []):
+            m = entry.get('semana', '')
+            if m:
+                monthly[m] = monthly.get(m, 0) + float(entry.get('valor', 0) or 0)
+
+    cumul, acum = {}, 0
+    for m in sorted(monthly):
+        acum += monthly[m]
+        cumul[m] = round(acum, 2)
+    months = sorted(cumul)
+
+    curve = []
+    for s in semanas_sorted:
+        m = _month_of_week(s)
+        curve.append(next((cumul[bm] for bm in reversed(months) if bm <= m), None))
+    return curve
 
 
 @app.route('/')
@@ -355,13 +368,11 @@ def financeiro():
 
     reg_ord = sorted(reg, key=lambda r: r.get('semana_referencia', ''))
 
-    # ── KPIs globais ──
-    pares_unicos = set(
-        contrato_key(r.get('contratada', ''), r.get('contrato', ''))
-        for r in reg if r.get('contratada') and r.get('contrato')
-    )
+    # ── KPIs globais (valor total considera todos os contratos configurados) ──
     total_valor_contrato = sum(
-        float(cfg.get(k, {}).get('valor_contrato', 0) or 0) for k in pares_unicos
+        float(cdata.get('valor_contrato', 0) or 0)
+        for cdata in cfg.values()
+        if not filtro_contratada or cdata.get('contratada') == filtro_contratada
     )
     total_medido  = sum(r.get('valor_medido', 0) for r in reg)
     saldo_global  = total_valor_contrato - total_medido
@@ -375,8 +386,7 @@ def financeiro():
     semanas_data = {}
     for r in reg_ord:
         sem = r.get('semana_referencia', '')
-        semanas_data.setdefault(sem, 0)
-        semanas_data[sem] += r.get('valor_medido', 0)
+        semanas_data[sem] = semanas_data.get(sem, 0) + r.get('valor_medido', 0)
 
     semanas_sorted = sorted(semanas_data.keys())
     chart_labels   = [format_date_br(s) for s in semanas_sorted]
@@ -386,36 +396,11 @@ def financeiro():
         acum += semanas_data[s]
         curva_fin_acum.append(round(acum, 2))
 
-    # ── Linha de base financeira ──
-    def _month_of_week_fin(week_date_str):
-        d = datetime.strptime(week_date_str, '%Y-%m-%d').date()
-        return f'{d.year}-{d.month:02d}'
-
-    fin_base_monthly = {}
-    for _, cdata in cfg.items():
-        if filtro_contratada and cdata.get('contratada') != filtro_contratada:
-            continue
-        for entry in cdata.get('linha_base_financeira', []):
-            m = entry.get('semana', '')
-            v = float(entry.get('valor', 0) or 0)
-            if m:
-                fin_base_monthly[m] = fin_base_monthly.get(m, 0) + v
-
-    fin_base_cumul, acum_fin = {}, 0
-    for m in sorted(fin_base_monthly):
-        acum_fin += fin_base_monthly[m]
-        fin_base_cumul[m] = round(acum_fin, 2)
-    fin_months = sorted(fin_base_cumul)
-
-    curva_fin_base = []
-    for s in semanas_sorted:
-        m    = _month_of_week_fin(s)
-        fval = next((fin_base_cumul[bm] for bm in reversed(fin_months) if bm <= m), None)
-        curva_fin_base.append(fval)
+    curva_fin_base = fin_base_curve(cfg, filtro_contratada, semanas_sorted)
 
     # ── Tabela por contrato ──
     contratos_fin = []
-    for key, cdata in sorted(cfg.items()):
+    for _, cdata in sorted(cfg.items()):
         contratada = cdata.get('contratada', '')
         contrato   = cdata.get('contrato', '')
         if filtro_contratada and contratada != filtro_contratada:
@@ -479,19 +464,19 @@ def construcao():
 
 @app.route('/registros')
 def index():
-    registros = load_data()
+    todos = load_data()
+    todas_contratadas = sorted(set(r.get('contratada', '') for r in todos if r.get('contratada')))
 
     filtro_contratada = request.args.get('contratada', '')
     filtro_semana = request.args.get('semana', '')
 
+    registros = todos
     if filtro_contratada:
-        registros = [r for r in registros if filtro_contratada.lower() in r['contratada'].lower()]
+        registros = [r for r in registros if filtro_contratada.lower() in r.get('contratada', '').lower()]
     if filtro_semana:
-        registros = [r for r in registros if r['semana_referencia'] == filtro_semana]
+        registros = [r for r in registros if r.get('semana_referencia') == filtro_semana]
 
-    registros.sort(key=lambda r: r['semana_referencia'], reverse=True)
-
-    todas_contratadas = sorted(set(r['contratada'] for r in load_data()))
+    registros.sort(key=lambda r: r.get('semana_referencia', ''), reverse=True)
 
     return render_template('index.html',
                            registros=registros,
@@ -546,13 +531,7 @@ def novo():
 
         efetivo, total_direto, total_indireto = parse_efetivo(request.form)
         equipamentos = parse_equipamentos(request.form)
-
-        try:
-            acoes_realizadas = json.loads(request.form.get('acoes_realizadas_json', '{}'))
-            if not isinstance(acoes_realizadas, dict):
-                acoes_realizadas = {}
-        except Exception:
-            acoes_realizadas = {}
+        acoes_realizadas = parse_acoes_realizadas(request.form)
 
         if erros:
             for e in erros:
@@ -560,14 +539,11 @@ def novo():
             return render_template('form.html',
                                    modo='novo',
                                    contratadas=get_contratadas(),
-                                   funcoes=FUNCOES,
                                    pluviometria_opcoes=PLUVIOMETRIA_OPCOES,
                                    dias_semana=DIAS_SEMANA,
                                    form_data=request.form,
-                                   efetivo=efetivo,
-                                   equipamentos=equipamentos,
                                    pluviometria_data=pluviometria,
-                                   tipo_mao_obra_json=TIPO_MAO_OBRA_JSON,
+                                   acoes_realizadas=acoes_realizadas,
                                    contratos_cfg_json=json.dumps(load_contratos_config()))
 
         novo_registro = {
@@ -597,14 +573,11 @@ def novo():
     return render_template('form.html',
                            modo='novo',
                            contratadas=get_contratadas(),
-                           funcoes=FUNCOES,
                            pluviometria_opcoes=PLUVIOMETRIA_OPCOES,
                            dias_semana=DIAS_SEMANA,
                            form_data={},
-                           efetivo=[],
-                           equipamentos=[],
                            pluviometria_data={},
-                           tipo_mao_obra_json=TIPO_MAO_OBRA_JSON,
+                           acoes_realizadas={},
                            contratos_cfg_json=json.dumps(load_contratos_config()))
 
 
@@ -660,13 +633,7 @@ def editar(id):
 
         efetivo, total_direto, total_indireto = parse_efetivo(request.form)
         equipamentos = parse_equipamentos(request.form)
-
-        try:
-            acoes_realizadas = json.loads(request.form.get('acoes_realizadas_json', '{}'))
-            if not isinstance(acoes_realizadas, dict):
-                acoes_realizadas = {}
-        except Exception:
-            acoes_realizadas = {}
+        acoes_realizadas = parse_acoes_realizadas(request.form)
 
         if erros:
             for e in erros:
@@ -675,14 +642,11 @@ def editar(id):
                                    modo='editar',
                                    registro=registro,
                                    contratadas=get_contratadas(),
-                                   funcoes=FUNCOES,
                                    pluviometria_opcoes=PLUVIOMETRIA_OPCOES,
                                    dias_semana=DIAS_SEMANA,
                                    form_data=request.form,
-                                   efetivo=efetivo,
-                                   equipamentos=equipamentos,
                                    pluviometria_data=pluviometria,
-                                   tipo_mao_obra_json=TIPO_MAO_OBRA_JSON,
+                                   acoes_realizadas=acoes_realizadas,
                                    contratos_cfg_json=json.dumps(load_contratos_config()))
 
         registro.update({
@@ -715,21 +679,21 @@ def editar(id):
                            modo='editar',
                            registro=registro,
                            contratadas=get_contratadas(),
-                           funcoes=FUNCOES,
                            pluviometria_opcoes=PLUVIOMETRIA_OPCOES,
                            dias_semana=DIAS_SEMANA,
                            form_data=registro,
-                           efetivo=registro.get('efetivo', []),
-                           equipamentos=registro.get('equipamentos', []),
                            pluviometria_data=pluv_existente,
-                           tipo_mao_obra_json=TIPO_MAO_OBRA_JSON,
+                           acoes_realizadas=registro.get('acoes_realizadas', {}),
                            contratos_cfg_json=json.dumps(load_contratos_config()))
 
 
 @app.route('/excluir/<id>', methods=['POST'])
 def excluir(id):
+    if request.form.get('senha') != ADMIN_PASSWORD and not _admin_required():
+        flash('Senha de administrador incorreta. Exclusão não realizada.', 'danger')
+        return redirect(url_for('index'))
     registros = load_data()
-    registros = [r for r in registros if r['id'] != id]
+    registros = [r for r in registros if r.get('id') != id]
     save_data(registros)
     flash('Registro excluído com sucesso.', 'success')
     return redirect(url_for('index'))
@@ -756,10 +720,7 @@ def dashboard():
                   filtro_contratada=filtro_contratada,
                   filtro_de=filtro_de, filtro_ate=filtro_ate,
                   chart_labels='[]', curva_fin_acum='[]', curva_fis_real='[]', curva_fin_base='[]', curva_fis_base='[]',
-                  hist_labels='[]', hist_qtd='[]', hist_colors='[]',
-                  hist_list=[], total_direto=0, total_indireto=0, total_classificar=0,
-                  pie_data='[]', pie_colors='[]', pie_labels='[]',
-                  prev_labels='[]', prev_qtd='[]', prev_colors='[]',
+                  hist_labels='[]', hist_qtd='[]', hist_colors='[]', hist_list=[],
                   prev_direto=0, prev_indireto=0,
                   acoes_labels='[]', acoes_pct='[]')
 
@@ -808,7 +769,7 @@ def dashboard():
         avg = d['af_sum'] / d['af_n'] if d['af_n'] else 0
         curva_fis_real.append(round(avg, 2))
 
-    # ── Histograma consolidado ──
+    # ── Histograma consolidado (usa o tipo gravado no registro; reclassifica só se ausente) ──
     histograma = {}
     for r in reg:
         for ef in r.get('efetivo', []):
@@ -816,26 +777,18 @@ def dashboard():
             if not funcao:
                 continue
             qtd  = ef.get('quantidade', 0)
-            tipo = classify_tipo(funcao)
+            tipo = ef.get('tipo') if ef.get('tipo') in ('direto', 'indireto') else classify_tipo(funcao)
             if funcao not in histograma:
                 histograma[funcao] = {'tipo': tipo, 'total': 0}
             histograma[funcao]['total'] += qtd
 
     hist_list = sorted(histograma.items(), key=lambda x: x[1]['total'], reverse=True)
 
-    total_direto     = sum(v['total'] for _, v in hist_list if v['tipo'] == 'direto')
-    total_indireto   = sum(v['total'] for _, v in hist_list if v['tipo'] == 'indireto')
-    total_classificar = sum(v['total'] for _, v in hist_list if v['tipo'] == 'classificar')
-
     TOP = 15
     hist_labels = [k for k, _ in hist_list[:TOP]]
     hist_qtd    = [v['total'] for _, v in hist_list[:TOP]]
     _COLOR_MAP  = {'direto': 'rgba(141,198,63,.85)', 'indireto': 'rgba(0,174,239,.85)', 'classificar': 'rgba(240,165,0,.85)'}
     hist_colors = [_COLOR_MAP.get(v['tipo'], '#ccc') for _, v in hist_list[:TOP]]
-
-    pie_labels = ['Direto', 'Indireto', 'A Classificar']
-    pie_data   = [total_direto, total_indireto, total_classificar]
-    pie_colors = ['rgba(141,198,63,.9)', 'rgba(0,174,239,.9)', 'rgba(240,165,0,.9)']
 
     # ── Saldo = Valor do Contrato (ADM) − Total Medido ──
     cfg = load_contratos_config()
@@ -850,48 +803,31 @@ def dashboard():
     saldo = total_valor_contrato - total_medido
 
     # ── Linhas de Base para Curvas S ──
-    def _month_of_week(week_date_str):
-        d = datetime.strptime(week_date_str, '%Y-%m-%d').date()
-        return f'{d.year}-{d.month:02d}'
+    curva_fin_base = fin_base_curve(cfg, filtro_contratada, semanas_sorted)
 
-    fin_base_monthly = {}
     fis_base_monthly = {}
     for _, cdata in cfg.items():
         if filtro_contratada and cdata.get('contratada') != filtro_contratada:
             continue
-        for entry in cdata.get('linha_base_financeira', []):
-            m = entry.get('semana', '')
-            v = float(entry.get('valor', 0) or 0)
-            if m:
-                fin_base_monthly[m] = fin_base_monthly.get(m, 0) + v
         for entry in cdata.get('linha_base_fisica', []):
             m = entry.get('semana', '')
             p = float(entry.get('percentual', 0) or 0)
             if m:
                 fis_base_monthly.setdefault(m, []).append(p)
 
-    fin_base_cumul, fis_base_cumul = {}, {}
-    acum_fin = 0
-    for m in sorted(fin_base_monthly):
-        acum_fin += fin_base_monthly[m]
-        fin_base_cumul[m] = round(acum_fin, 2)
-    acum_fis = 0
+    fis_base_cumul, acum_fis = {}, 0
     for m in sorted(fis_base_monthly):
         vals = fis_base_monthly[m]
         acum_fis += (sum(vals) / len(vals)) if vals else 0
         fis_base_cumul[m] = round(acum_fis, 2)
 
-    fin_months = sorted(fin_base_cumul)
     fis_months = sorted(fis_base_cumul)
-    curva_fin_base, curva_fis_base = [], []
+    curva_fis_base = []
     for s in semanas_sorted:
         m = _month_of_week(s)
-        fval = next((fin_base_cumul[bm] for bm in reversed(fin_months) if bm <= m), None)
-        pval = next((fis_base_cumul[bm] for bm in reversed(fis_months) if bm <= m), None)
-        curva_fin_base.append(fval)
-        curva_fis_base.append(pval)
+        curva_fis_base.append(next((fis_base_cumul[bm] for bm in reversed(fis_months) if bm <= m), None))
 
-    # ── Histograma Previsto por Função ──────────────────────────────────────
+    # ── Histograma Previsto por Função (equipamentos ficam fora do efetivo) ──
     hist_previsto = {}
     for _, cdata in cfg.items():
         if filtro_contratada and cdata.get('contratada') != filtro_contratada:
@@ -899,20 +835,28 @@ def dashboard():
         for entry in cdata.get('linha_base_histograma', []):
             funcao = (entry.get('funcao') or '').strip()
             tipo   = entry.get('tipo', 'direto')
-            total  = sum(int(v or 0) for v in entry.get('semanas', {}).values())
-            if funcao:
-                if funcao not in hist_previsto:
-                    hist_previsto[funcao] = {'tipo': tipo, 'total': 0}
-                hist_previsto[funcao]['total'] += total
-    prev_list      = sorted(hist_previsto.items(), key=lambda x: x[1]['total'], reverse=True)
-    prev_direto    = sum(v['total'] for _, v in prev_list if v['tipo'] == 'direto')
-    prev_indireto  = sum(v['total'] for _, v in prev_list if v['tipo'] != 'direto')
-    _pcol          = lambda t: 'rgba(141,198,63,.85)' if t == 'direto' else 'rgba(0,174,239,.85)'
-    prev_labels    = json.dumps([f for f, _ in prev_list[:12]])
-    prev_qtd       = json.dumps([v['total'] for _, v in prev_list[:12]])
-    prev_colors    = json.dumps([_pcol(v['tipo']) for _, v in prev_list[:12]])
+            if not funcao or tipo == 'equipamento':
+                continue
+            total = sum(int(v or 0) for v in entry.get('semanas', {}).values())
+            if funcao not in hist_previsto:
+                hist_previsto[funcao] = {'tipo': tipo, 'total': 0}
+            hist_previsto[funcao]['total'] += total
+    prev_list     = sorted(hist_previsto.items(), key=lambda x: x[1]['total'], reverse=True)
+    prev_direto   = sum(v['total'] for _, v in prev_list if v['tipo'] == 'direto')
+    prev_indireto = sum(v['total'] for _, v in prev_list if v['tipo'] != 'direto')
 
     # ── Progresso das Ações Notáveis ────────────────────────────────────────
+    # Realizado: soma dos valores lançados nos registros da semana (campo "Realizado" do form).
+    # Sem nenhum lançamento, usa o previsto acumulado até a última semana como referência.
+    real_por_acao = {}
+    for r in reg:
+        for acao, val in (r.get('acoes_realizadas') or {}).items():
+            try:
+                real_por_acao[acao] = real_por_acao.get(acao, 0) + float(val or 0)
+            except Exception:
+                continue
+    tem_realizado = bool(real_por_acao)
+
     last_sem = semanas_sorted[-1] if semanas_sorted else ''
     acoes_prog = {}
     for _, cdata in cfg.items():
@@ -926,10 +870,13 @@ def dashboard():
             total_plan = sum(float(v or 0) for v in vals.values())
             if total_plan == 0:
                 continue
-            done = sum(float(v or 0) for k, v in vals.items() if k <= last_sem) if last_sem else 0
+            if tem_realizado:
+                done = real_por_acao.get(acao, 0)
+            else:
+                done = sum(float(v or 0) for k, v in vals.items() if k <= last_sem) if last_sem else 0
             if acao not in acoes_prog:
                 acoes_prog[acao] = {'done': 0, 'total': 0}
-            acoes_prog[acao]['done']  += done
+            acoes_prog[acao]['done']   = done if tem_realizado else acoes_prog[acao]['done'] + done
             acoes_prog[acao]['total'] += total_plan
     acoes_sorted = sorted(acoes_prog.items(), key=lambda x: -(x[1]['done'] / x[1]['total']) if x[1]['total'] else 0)
     acoes_labels = json.dumps([a for a, _ in acoes_sorted])
@@ -962,19 +909,51 @@ def dashboard():
                            hist_qtd=json.dumps(hist_qtd),
                            hist_colors=json.dumps(hist_colors),
                            hist_list=hist_list,
-                           total_direto=total_direto,
-                           total_indireto=total_indireto,
-                           total_classificar=total_classificar,
-                           pie_data=json.dumps(pie_data),
-                           pie_colors=json.dumps(pie_colors),
-                           pie_labels=json.dumps(pie_labels),
-                           prev_labels=prev_labels,
-                           prev_qtd=prev_qtd,
-                           prev_colors=prev_colors,
                            prev_direto=prev_direto,
                            prev_indireto=prev_indireto,
                            acoes_labels=acoes_labels,
                            acoes_pct=acoes_pct)
+
+
+def _excel_write_sheet(ws, headers, rows, col_widths, currency_cols=(), percent_cols=()):
+    """Escreve cabeçalho estilizado + linhas zebradas + larguras + freeze no padrão do app."""
+    header_fill = PatternFill(start_color='003366', end_color='003366', fill_type='solid')
+    alt_fill    = PatternFill(start_color='F0F8FF', end_color='F0F8FF', fill_type='solid')
+    header_font = Font(color='FFFFFF', bold=True, name='Calibri', size=11)
+    normal_font = Font(name='Calibri', size=10)
+    center      = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    left        = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    border      = Border(
+        left=Side(style='thin', color='CCCCCC'), right=Side(style='thin', color='CCCCCC'),
+        top=Side(style='thin', color='CCCCCC'),  bottom=Side(style='thin', color='CCCCCC')
+    )
+
+    ws.row_dimensions[1].height = 30
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center
+        cell.border = border
+
+    for i, row_data in enumerate(rows, 2):
+        fill = alt_fill if i % 2 == 0 else None
+        ws.row_dimensions[i].height = 20
+        for col, val in enumerate(row_data, 1):
+            cell = ws.cell(row=i, column=col, value=val)
+            cell.font = normal_font
+            cell.border = border
+            cell.alignment = left
+            if fill:
+                cell.fill = fill
+            if col in currency_cols:
+                cell.number_format = '"R$" #,##0.00'
+            elif col in percent_cols:
+                cell.number_format = '0.00"%"'
+
+    for col, w in enumerate(col_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = w
+    ws.freeze_panes = 'A2'
 
 
 @app.route('/export/excel')
@@ -984,44 +963,27 @@ def export_excel():
 
     wb = Workbook()
 
-    header_fill = PatternFill(start_color='003366', end_color='003366', fill_type='solid')
-    alt_fill = PatternFill(start_color='F0F8FF', end_color='F0F8FF', fill_type='solid')
-    header_font = Font(color='FFFFFF', bold=True, name='Calibri', size=11)
-    normal_font = Font(name='Calibri', size=10)
-    center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
-    left_align = Alignment(horizontal='left', vertical='center', wrap_text=True)
-    thin_border = Border(
-        left=Side(style='thin', color='CCCCCC'),
-        right=Side(style='thin', color='CCCCCC'),
-        top=Side(style='thin', color='CCCCCC'),
-        bottom=Side(style='thin', color='CCCCCC')
-    )
-
     # Aba 1: Registros
     ws1 = wb.active
     ws1.title = 'Registros'
-
     headers1 = ['ID', 'Contrato', 'Contratada', 'Semana Referência', 'Trabalhos Notáveis',
                 'Total Direto', 'Total Indireto', 'Pontos de Atenção',
-                'Valor Medido da Semana (R$)', 'Avanço Físico (%)',
+                'Valor Medido da Semana (R$)', 'Avanço Físico (%)', 'Ações Realizadas',
                 'Pluv. Segunda', 'Pluv. Terça', 'Pluv. Quarta', 'Pluv. Quinta',
                 'Pluv. Sexta', 'Pluv. Sábado', 'Pluv. Domingo',
                 'Criado Em', 'Atualizado Em']
 
-    ws1.row_dimensions[1].height = 30
-    for col, h in enumerate(headers1, 1):
-        cell = ws1.cell(row=1, column=col, value=h)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = center_align
-        cell.border = thin_border
-
-    for i, r in enumerate(registros, 2):
+    rows1 = []
+    for r in registros:
         pluv = r.get('pluviometria', {})
         if not isinstance(pluv, dict):
             pluv = {}
-        row_data = [
-            r['id'],
+        acoes_str = ' | '.join(
+            f'{acao}: {val}%'
+            for acao, val in (r.get('acoes_realizadas') or {}).items()
+        )
+        rows1.append([
+            r.get('id', ''),
             r.get('contrato', ''),
             r.get('contratada', ''),
             r.get('semana_referencia', ''),
@@ -1031,113 +993,40 @@ def export_excel():
             r.get('pontos_atencao', ''),
             r.get('valor_medido', 0),
             r.get('avanco_fisico', 0),
-            pluv.get('segunda', ''),
-            pluv.get('terca', ''),
-            pluv.get('quarta', ''),
-            pluv.get('quinta', ''),
-            pluv.get('sexta', ''),
-            pluv.get('sabado', ''),
+            acoes_str,
+            pluv.get('segunda', ''), pluv.get('terca', ''), pluv.get('quarta', ''),
+            pluv.get('quinta', ''), pluv.get('sexta', ''), pluv.get('sabado', ''),
             pluv.get('domingo', ''),
             r.get('criado_em', '')[:19].replace('T', ' ') if r.get('criado_em') else '',
             r.get('atualizado_em', '')[:19].replace('T', ' ') if r.get('atualizado_em') else '',
-        ]
-        fill = alt_fill if i % 2 == 0 else None
-        ws1.row_dimensions[i].height = 20
-        for col, val in enumerate(row_data, 1):
-            cell = ws1.cell(row=i, column=col, value=val)
-            cell.font = normal_font
-            cell.border = thin_border
-            cell.alignment = left_align
-            if fill:
-                cell.fill = fill
+        ])
 
-    col_widths1 = [38, 12, 22, 16, 40, 12, 14, 35, 24, 15,
-                   18, 18, 18, 18, 18, 18, 18, 20, 20]
-    for col, w in enumerate(col_widths1, 1):
-        ws1.column_dimensions[ws1.cell(row=1, column=col).column_letter].width = w
-
-    ws1.freeze_panes = 'A2'
+    _excel_write_sheet(ws1, headers1, rows1,
+                       col_widths=[38, 12, 22, 16, 40, 12, 14, 35, 24, 15, 35,
+                                   18, 18, 18, 18, 18, 18, 18, 20, 20],
+                       currency_cols={9}, percent_cols={10})
 
     # Aba 2: Histograma Detalhado
     ws2 = wb.create_sheet('Histograma_Detalhado')
-
-    headers2 = ['ID Registro', 'Contratada', 'Semana Referência', 'Função', 'Quantidade', 'Tipo']
-
-    ws2.row_dimensions[1].height = 30
-    for col, h in enumerate(headers2, 1):
-        cell = ws2.cell(row=1, column=col, value=h)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = center_align
-        cell.border = thin_border
-
-    row_idx = 2
-    for r in registros:
-        for ef in r.get('efetivo', []):
-            row_data = [
-                r['id'],
-                r.get('contratada', ''),
-                r.get('semana_referencia', ''),
-                ef.get('funcao', ''),
-                ef.get('quantidade', 0),
-                ef.get('tipo', ''),
-            ]
-            fill = alt_fill if row_idx % 2 == 0 else None
-            ws2.row_dimensions[row_idx].height = 20
-            for col, val in enumerate(row_data, 1):
-                cell = ws2.cell(row=row_idx, column=col, value=val)
-                cell.font = normal_font
-                cell.border = thin_border
-                cell.alignment = left_align
-                if fill:
-                    cell.fill = fill
-            row_idx += 1
-
-    col_widths2 = [38, 22, 16, 28, 12, 12]
-    for col, w in enumerate(col_widths2, 1):
-        ws2.column_dimensions[ws2.cell(row=1, column=col).column_letter].width = w
-
-    ws2.freeze_panes = 'A2'
+    rows2 = [
+        [r.get('id', ''), r.get('contratada', ''), r.get('semana_referencia', ''),
+         ef.get('funcao', ''), ef.get('quantidade', 0), ef.get('tipo', '')]
+        for r in registros for ef in r.get('efetivo', [])
+    ]
+    _excel_write_sheet(ws2,
+                       ['ID Registro', 'Contratada', 'Semana Referência', 'Função', 'Quantidade', 'Tipo'],
+                       rows2, col_widths=[38, 22, 16, 28, 12, 12])
 
     # Aba 3: Equipamentos Detalhados
     ws3 = wb.create_sheet('Equipamentos_Detalhados')
-
-    headers3 = ['ID Registro', 'Contratada', 'Semana Referência', 'Equipamento', 'Quantidade']
-
-    ws3.row_dimensions[1].height = 30
-    for col, h in enumerate(headers3, 1):
-        cell = ws3.cell(row=1, column=col, value=h)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = center_align
-        cell.border = thin_border
-
-    row_idx = 2
-    for r in registros:
-        for eq in r.get('equipamentos', []):
-            row_data = [
-                r['id'],
-                r.get('contratada', ''),
-                r.get('semana_referencia', ''),
-                eq.get('descricao', ''),
-                eq.get('quantidade', 0),
-            ]
-            fill = alt_fill if row_idx % 2 == 0 else None
-            ws3.row_dimensions[row_idx].height = 20
-            for col, val in enumerate(row_data, 1):
-                cell = ws3.cell(row=row_idx, column=col, value=val)
-                cell.font = normal_font
-                cell.border = thin_border
-                cell.alignment = left_align
-                if fill:
-                    cell.fill = fill
-            row_idx += 1
-
-    col_widths3 = [38, 22, 16, 35, 12]
-    for col, w in enumerate(col_widths3, 1):
-        ws3.column_dimensions[ws3.cell(row=1, column=col).column_letter].width = w
-
-    ws3.freeze_panes = 'A2'
+    rows3 = [
+        [r.get('id', ''), r.get('contratada', ''), r.get('semana_referencia', ''),
+         eq.get('descricao', ''), eq.get('quantidade', 0)]
+        for r in registros for eq in r.get('equipamentos', [])
+    ]
+    _excel_write_sheet(ws3,
+                       ['ID Registro', 'Contratada', 'Semana Referência', 'Equipamento', 'Quantidade'],
+                       rows3, col_widths=[38, 22, 16, 35, 12])
 
     filepath = os.path.join(EXPORT_DIR, 'registros_semanais.xlsx')
     wb.save(filepath)
@@ -1157,55 +1046,22 @@ def export_contratos():
     ws = wb.active
     ws.title = 'Contratos'
 
-    header_fill = PatternFill(start_color='003366', end_color='003366', fill_type='solid')
-    alt_fill    = PatternFill(start_color='F0F8FF', end_color='F0F8FF', fill_type='solid')
-    header_font = Font(color='FFFFFF', bold=True, name='Calibri', size=11)
-    normal_font = Font(name='Calibri', size=10)
-    center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
-    left_align   = Alignment(horizontal='left', vertical='center', wrap_text=True)
-    thin_border  = Border(
-        left=Side(style='thin', color='CCCCCC'), right=Side(style='thin', color='CCCCCC'),
-        top=Side(style='thin', color='CCCCCC'),  bottom=Side(style='thin', color='CCCCCC')
-    )
-
-    headers = ['Contratada', 'Contrato', 'Status', 'Valor do Contrato (R$)',
-               'Início do Contrato', 'Término do Contrato']
-    col_widths = [30, 18, 12, 24, 20, 20]
-
-    ws.row_dimensions[1].height = 30
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=h)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = center_align
-        cell.border = thin_border
-
-    for i, (_, data) in enumerate(sorted(cfg.items()), 2):
+    rows = []
+    for _, data in sorted(cfg.items()):
         status = contract_status(data)
-        row_data = [
+        rows.append([
             data.get('contratada', ''),
             data.get('contrato', ''),
             'Ativo' if status == 'ativo' else 'Encerrado',
             data.get('valor_contrato', 0) or 0,
             _week_to_last_day(data.get('data_inicio_contrato', '')),
             _week_to_last_day(data.get('data_fim_contrato', '')),
-        ]
-        fill = alt_fill if i % 2 == 0 else None
-        ws.row_dimensions[i].height = 20
-        for col, val in enumerate(row_data, 1):
-            cell = ws.cell(row=i, column=col, value=val)
-            cell.font = normal_font
-            cell.border = thin_border
-            cell.alignment = left_align
-            if fill:
-                cell.fill = fill
-            if col == 4:  # Valor do Contrato
-                cell.number_format = u'"R$" #,##0.00'
+        ])
 
-    for col, w in enumerate(col_widths, 1):
-        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = w
-
-    ws.freeze_panes = 'A2'
+    _excel_write_sheet(ws,
+                       ['Contratada', 'Contrato', 'Status', 'Valor do Contrato (R$)',
+                        'Início do Contrato', 'Término do Contrato'],
+                       rows, col_widths=[30, 18, 12, 24, 20, 20], currency_cols={4})
 
     filepath = os.path.join(EXPORT_DIR, 'contratos.xlsx')
     wb.save(filepath)
@@ -1331,9 +1187,17 @@ def admin_contrato(key):
 
         hist_json = request.form.get('hist_json', '[]')
         try:
-            data['linha_base_histograma'] = json.loads(hist_json)
+            hist_rows = json.loads(hist_json)
         except (json.JSONDecodeError, ValueError):
-            data['linha_base_histograma'] = []
+            hist_rows = []
+
+        # Linhas com categoria "equipamento" vão para linha_base_equipamentos
+        # (formato {equipamento, semanas}, lido pelo bloco Equipamentos do form).
+        data['linha_base_histograma'] = [r for r in hist_rows if r.get('tipo') != 'equipamento']
+        data['linha_base_equipamentos'] = [
+            {'equipamento': r.get('funcao', ''), 'semanas': r.get('semanas', {})}
+            for r in hist_rows if r.get('tipo') == 'equipamento' and r.get('funcao')
+        ]
 
         acoes_json = request.form.get('acoes_json', '[]')
         try:
@@ -1352,7 +1216,14 @@ def admin_contrato(key):
         data['contratada'] = parts[0]
         data['contrato']   = parts[1] if len(parts) > 1 else ''
 
-    return render_template('admin_contrato.html', key=key, contrato=data,
+    # Mescla equipamentos de volta na tabela do histograma para edição
+    data_view = dict(data)
+    data_view['linha_base_histograma'] = list(data.get('linha_base_histograma', [])) + [
+        {'funcao': e.get('equipamento', ''), 'tipo': 'equipamento', 'semanas': e.get('semanas', {})}
+        for e in data.get('linha_base_equipamentos', [])
+    ]
+
+    return render_template('admin_contrato.html', key=key, contrato=data_view,
                            funcoes_mao_obra=get_funcoes_list())
 
 

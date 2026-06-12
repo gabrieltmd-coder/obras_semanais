@@ -196,9 +196,9 @@
                             </tr>
                         </thead>
                         <tbody id="acoes-tbody"></tbody>
-                        <input type="hidden" id="acoes-realizadas-json" name="acoes_realizadas_json" value="{}">
                     </table>
                 </div>
+                <input type="hidden" id="acoes-realizadas-json" name="acoes_realizadas_json" value="{}">
             </div>
         </div>
 
@@ -257,7 +257,7 @@
 {% block scripts %}
 <script>
 const CONTRATOS_CFG = {{ contratos_cfg_json|safe }};
-const ACOES_REALIZADAS = {{ (registro.get('acoes_realizadas', {}) if registro else {})|tojson }};
+const ACOES_REALIZADAS = {{ acoes_realizadas|default({})|tojson }};
 
 // ── Status de contrato ──────────────────────────────────────────────────────
 function _isoWeekToSunday(weekStr) {
@@ -377,15 +377,7 @@ function _escHtml(s) {
 }
 
 function atualizarAcoes() {
-    const contratadaEl = document.getElementById('contratadaSelect');
-    const contratoEl   = document.getElementById('contrato');
-    const semanaEl     = document.getElementById('semana_referencia');
-
-    const contratada = contratadaEl?.value === '__outro__'
-        ? (document.getElementById('contratada_custom')?.value?.trim() || '')
-        : (contratadaEl?.value || '');
-    const contrato   = (contratoEl?.value || '').trim();
-    const semana     = semanaEl?.value || '';
+    const { contratada, contrato, semana } = _getSelectors();
 
     const vazio      = document.getElementById('acoes-vazio');
     const semDados   = document.getElementById('acoes-sem-dados');
@@ -477,8 +469,8 @@ function atualizarHistograma() {
     vazio.style.display = 'none'; semDados.style.display = 'none'; tableWrap.style.display = '';
     document.getElementById('hist-tbody').innerHTML = items.map((h, i) => {
         const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
-        const tColor = h.tipo === 'direto' ? '#3a7a00' : '#003d8f';
-        const tBg    = h.tipo === 'direto' ? 'rgba(141,198,63,.12)' : 'rgba(0,174,239,.12)';
+        const tColor = h.tipo === 'direto' ? '#3a7a00' : (h.tipo === 'equipamento' ? '#b37d00' : '#003d8f');
+        const tBg    = h.tipo === 'direto' ? 'rgba(141,198,63,.12)' : (h.tipo === 'equipamento' ? 'rgba(240,165,0,.12)' : 'rgba(0,174,239,.12)');
         return `<tr style="background:${bg};">
             <td style="padding:.3rem .5rem;border-bottom:1px solid #f0f4f8;">${_escHtml(h.funcao)}</td>
             <td style="padding:.3rem .5rem;text-align:center;border-bottom:1px solid #f0f4f8;">
@@ -518,46 +510,6 @@ function atualizarEquipamentos() {
                 font-weight:700;color:var(--rumo-cyan);">${e.semanas[semana]}</td>
         </tr>`;
     }).join('');
-}
-
-function addRow() {
-    const tbody = document.getElementById('efetivo-body');
-    const tr = document.createElement('tr');
-    tr.className = 'efetivo-row';
-    tr.innerHTML = `
-        <td><input type="text" class="form-control form-control-sm"
-                   name="efetivo_funcao[]" list="funcoes-list" placeholder="Função"></td>
-        <td><input type="number" class="form-control form-control-sm"
-                   name="efetivo_quantidade[]" value="1" min="0"></td>
-        <td><button type="button" class="btn-remove-row" onclick="removeRow(this)">
-            <i class="bi bi-x-lg"></i></button></td>
-    `;
-    tbody.appendChild(tr);
-    tr.querySelector('input[name="efetivo_funcao[]"]').focus();
-}
-
-function removeRow(btn) {
-    btn.closest('tr').remove();
-}
-
-function addEquipRow() {
-    const tbody = document.getElementById('equip-body');
-    const tr = document.createElement('tr');
-    tr.className = 'equip-row';
-    tr.innerHTML = `
-        <td><input type="text" class="form-control form-control-sm"
-                   name="equip_descricao[]" list="equip-list" placeholder="Descrição"></td>
-        <td><input type="number" class="form-control form-control-sm"
-                   name="equip_quantidade[]" value="1" min="0"></td>
-        <td><button type="button" class="btn-remove-row" onclick="removeEquipRow(this)">
-            <i class="bi bi-x-lg"></i></button></td>
-    `;
-    tbody.appendChild(tr);
-    tr.querySelector('input[name="equip_descricao[]"]').focus();
-}
-
-function removeEquipRow(btn) {
-    btn.closest('tr').remove();
 }
 
 function updatePluvStyle(sel) {

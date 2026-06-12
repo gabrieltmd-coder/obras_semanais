@@ -157,9 +157,6 @@
                 </p>
                 <input type="password" id="senhaExclusao" class="form-control"
                        placeholder="••••••••••" autocomplete="new-password">
-                <div id="senhaErro" style="display:none; color:#dc3545; font-size:.75rem; margin-top:.45rem;">
-                    <i class="bi bi-exclamation-circle me-1"></i>Senha incorreta. Tente novamente.
-                </div>
             </div>
             <div class="modal-footer" style="padding:.75rem 1.2rem; border-top:1px solid var(--rumo-gray-border);">
                 <button type="button" class="btn btn-secondary-rumo btn-sm" data-bs-dismiss="modal">Cancelar</button>
@@ -181,7 +178,6 @@ let _modalInstance = null;
 function abrirModalExclusao(form) {
     _formExclusao = form;
     document.getElementById('senhaExclusao').value = '';
-    document.getElementById('senhaErro').style.display = 'none';
     _modalInstance = new bootstrap.Modal(document.getElementById('modalExclusao'));
     _modalInstance.show();
     document.getElementById('modalExclusao').addEventListener('shown.bs.modal', function() {
@@ -189,15 +185,19 @@ function abrirModalExclusao(form) {
     }, { once: true });
 }
 
+// A senha é validada no servidor (rota /excluir); nada de segredo no front-end.
 document.getElementById('btnConfirmarExclusao').addEventListener('click', function() {
+    if (!_formExclusao) return;
     const senha = document.getElementById('senhaExclusao').value;
-    if (senha === 'Pipoc@2407') {
-        if (_formExclusao) _formExclusao.submit();
-    } else {
-        document.getElementById('senhaErro').style.display = 'block';
-        document.getElementById('senhaExclusao').value = '';
-        document.getElementById('senhaExclusao').focus();
+    let hidden = _formExclusao.querySelector('input[name="senha"]');
+    if (!hidden) {
+        hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'senha';
+        _formExclusao.appendChild(hidden);
     }
+    hidden.value = senha;
+    _formExclusao.submit();
 });
 
 document.getElementById('senhaExclusao').addEventListener('keydown', function(e) {

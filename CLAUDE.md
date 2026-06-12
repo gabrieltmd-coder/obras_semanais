@@ -55,10 +55,13 @@ Array de objetos com estrutura:
   "total_indireto": 0,
   "equipamentos": [{"descricao": "Escavadeira", "quantidade": 1}],
   "pontos_atencao": "...",
+  "valor_medido": 85000.0,
   "avanco_fisico": 43.0,
   "pluviometria": {"segunda": "Tempo Bom", ...},
+  "acoes_realizadas": {"Concretagem bloco A": 15.0},  // % realizado por ação (form)
   "criado_em": "ISO datetime",
-  "atualizado_em": "ISO datetime"
+  "atualizado_em": "ISO datetime",
+  "alterado_em": "ISO datetime"  // presente apenas se o registro foi editado
 }
 ```
 
@@ -72,13 +75,17 @@ Chave: `"Contratada||Contrato"`:
     "valor_contrato": 500000.0,
     "data_inicio_contrato": "2026-W12",   // formato YYYY-Wnn
     "data_fim_contrato": "2026-W40",
+    "status_manual": "auto",              // auto | ativo | encerrado (sobrepõe a data)
     "linha_base_financeira": [{"semana": "2026-01", "valor": 50000.0}],  // type=month
     "linha_base_fisica": [{"semana": "2026-01", "percentual": 10.0}],
     "linha_base_histograma": [{"funcao": "Pedreiro", "tipo": "direto", "semanas": {"2026-W12": 3}}],
+    "linha_base_equipamentos": [{"equipamento": "Escavadeira", "semanas": {"2026-W12": 2}}],
     "linha_base_acoes": [{"acao": "Concretagem bloco A", "unidade": "m³", "semanas": {"2026-W12": 45.5}}]
   }
 }
 ```
+No admin, equipamentos são editados na tabela do Histograma com categoria "Equipamento";
+no POST o app separa essas linhas para `linha_base_equipamentos`.
 
 ## Rotas Principais
 | Rota | Método | Descrição |
@@ -87,13 +94,19 @@ Chave: `"Contratada||Contrato"`:
 | `/registros` | GET | Listagem com filtros (contratada, data) |
 | `/novo` | GET/POST | Novo registro |
 | `/editar/<id>` | GET/POST | Editar registro |
-| `/excluir/<id>` | POST | Excluir registro |
+| `/excluir/<id>` | POST | Excluir registro (exige senha admin validada no servidor) |
 | `/dashboard` | GET | Dashboard com gráficos |
-| `/export/excel` | GET | Download Excel |
+| `/financeiro` | GET | Dashboard financeiro (tema âmbar) |
+| `/construcao` | GET | Página "em desenvolvimento" (RDO's) |
+| `/export/excel` | GET | Download Excel de registros |
+| `/export/contratos` | GET | Download Excel de contratos (requer login admin) |
 | `/admin` | GET | Lista contratos (requer login) |
 | `/admin/contrato/<key>` | GET/POST | Configurar contrato |
 | `/admin/novo_contrato` | POST | Criar contrato |
 | `/admin/login` | GET/POST | Login admin |
+| `/admin/logout` | GET | Logout admin |
+
+Segredos via variáveis de ambiente (com fallback p/ dev): `SECRET_KEY`, `ADMIN_PASSWORD`, `TIPO_MAO_OBRA_FILE`.
 
 ## Funções Importantes em app.py
 - `get_monday(date_str)` — converte `YYYY-Wnn` ou `YYYY-MM-DD` para a segunda-feira (`YYYY-MM-DD`)

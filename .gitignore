@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# Arquivos Excel gerados pelas rotas de export
+exports/registros_semanais.xlsx
+exports/contratos.xlsx
+
+# Ambiente
+.env
+venv/
+.venv/

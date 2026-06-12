@@ -68,17 +68,6 @@ body { background: #0b1828 !important; }
 .kpi-mv.sm { font-size:.75rem; }
 .kpi-mv.nd { color:rgba(255,255,255,.2); font-size:.8rem; }
 
-/* ── METRIC CARDS (middle column) ── */
-.met-card {
-    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
-    border-radius:12px; padding:.55rem .8rem;
-    display:flex; align-items:center; gap:.65rem;
-}
-.met-ico { width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0; }
-.met-lbl { font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.35); }
-.met-val { font-family:'Montserrat',sans-serif;font-size:.9rem;font-weight:800;color:#fff; }
-.met-val.sm { font-size:.74rem; }
-
 /* ── DONUT LEGEND ── */
 .leg { display:flex;align-items:center;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.06); }
 .leg:last-child { border-bottom:none; }
@@ -251,9 +240,6 @@ const FIS_BASE  = {{ curva_fis_base|safe }};
 const HIST_LABELS = {{ hist_labels|safe }};
 const HIST_QTD    = {{ hist_qtd|safe }};
 const HIST_COLORS = {{ hist_colors|safe }};
-const PREV_LABELS   = {{ prev_labels|safe }};
-const PREV_QTD      = {{ prev_qtd|safe }};
-const PREV_COLORS   = {{ prev_colors|safe }};
 const ACOES_LABELS  = {{ acoes_labels|safe }};
 const ACOES_PCT     = {{ acoes_pct|safe }};
 const PREV_DIRETO   = {{ prev_direto }};
