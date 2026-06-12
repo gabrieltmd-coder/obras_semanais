@@ -781,21 +781,16 @@
            class="nav-link-rumo {% if request.endpoint == 'dashboard' %}active{% endif %}">
             <i class="bi bi-speedometer2"></i>Dashboard
         </a>
+        {% if request.endpoint != 'financeiro' %}
         <a href="{{ url_for('index') }}"
            class="nav-link-rumo {% if request.endpoint == 'index' %}active{% endif %}">
             <i class="bi bi-grid-3x3-gap"></i>Registros
         </a>
-        <a href="{{ url_for('novo') }}"
-           class="nav-link-rumo {% if request.endpoint == 'novo' or request.endpoint == 'editar' %}active{% endif %}">
-            <i class="bi bi-plus-circle"></i>Novo
-        </a>
+        {% endif %}
         <a href="{{ url_for('admin') }}"
            class="nav-link-rumo {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}"
            style="border-color:rgba(141,198,63,.25);">
             <i class="bi bi-shield-lock" style="color:var(--tms-green);"></i>Admin
-        </a>
-        <a href="{{ url_for('export_excel') }}" class="btn-export ms-1">
-            <i class="bi bi-file-earmark-excel"></i>Exportar Excel
         </a>
     </div>
 </nav>
