@@ -1052,6 +1052,8 @@ def export_contratos():
             cell.alignment = left_align
             if fill:
                 cell.fill = fill
+            if col == 4:  # Valor do Contrato
+                cell.number_format = u'"R$" #,##0.00'
 
     for col, w in enumerate(col_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = w
