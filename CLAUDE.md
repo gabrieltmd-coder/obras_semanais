@@ -148,6 +148,7 @@ no POST o app separa essas linhas para `linha_base_equipamentos`.
 | `/admin/logout` | GET | Logout admin |
 | `/admin/usuarios` | GET | Lista/gerencia usuários |
 | `/admin/usuarios/novo` | POST | Criar usuário (gera senha + envia e-mail) |
+| `/admin/usuarios/<uid>/editar` | POST | Editar permissões (tipo/contratada/contrato) |
 | `/admin/usuarios/<uid>/reenviar` | POST | Reenviar link de redefinição |
 | `/admin/usuarios/<uid>/toggle` | POST | Ativar/desativar usuário |
 | `/admin/usuarios/<uid>/excluir` | POST | Excluir usuário |

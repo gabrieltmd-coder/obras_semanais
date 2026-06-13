@@ -114,6 +114,60 @@
     </div>
 </div>
 
+<!-- Modal: Editar Permissões -->
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--tms-radius); border:1px solid var(--tms-border); overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,var(--tms-dark) 0%,var(--tms-navy) 100%); border-bottom:none; padding:1.1rem 1.4rem;">
+                <h5 class="modal-title" style="font-family:'Montserrat',sans-serif; font-size:.82rem; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:#fff; margin:0;">
+                    <i class="bi bi-pencil-square me-2" style="color:var(--tms-cyan);"></i>Editar Permissões
+                </h5>
+                <button type="button" class="btn-close btn-close-white btn-close-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="formEditarUsuario">
+                <div class="modal-body" style="padding:1.5rem;">
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-envelope me-1" style="color:var(--tms-cyan);"></i>E-mail</label>
+                        <input type="email" id="editEmail" class="form-control" readonly
+                               style="background:var(--tms-bg); color:var(--tms-muted);">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-shield me-1" style="color:var(--tms-cyan);"></i>Tipo de acesso *</label>
+                        <select name="tipo" id="editTipo" class="form-select" onchange="editToggleContratada()">
+                            <option value="contratada">Contratada — somente leitura dos próprios dados</option>
+                            <option value="contratada_rw">Contratada — criar novos registros e visualizar</option>
+                            <option value="staff">Equipe interna — lançamento de dados</option>
+                            <option value="master">Master — acesso total, sem restrições</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="editWrapContratada">
+                        <label class="form-label"><i class="bi bi-building me-1" style="color:var(--tms-cyan);"></i>Contratada vinculada *</label>
+                        <select name="contratada" id="editContratada" class="form-select" onchange="editPopularContratos()">
+                            <option value="">Selecione...</option>
+                            {% for c in contratadas %}
+                            <option value="{{ c }}">{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-1" id="editWrapContrato">
+                        <label class="form-label"><i class="bi bi-file-earmark-text me-1" style="color:var(--tms-cyan);"></i>Contrato vinculado *</label>
+                        <select name="contrato" id="editContrato" class="form-select">
+                            <option value="">Selecione a contratada primeiro...</option>
+                        </select>
+                        <small style="color:var(--tms-muted); font-size:.68rem;">A segmentação de dados do usuário será feita por este contrato.</small>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--tms-border); padding:.85rem 1.4rem; gap:.6rem;">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-rumo">
+                        <i class="bi bi-check-lg me-1"></i>Salvar permissões
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% if not usuarios %}
 <div class="card-rumo">
     <div class="empty-state">
@@ -175,6 +229,14 @@
                     </td>
                     <td class="text-center">
                         <div class="d-flex gap-1 justify-content-center">
+                            <button type="button" class="btn btn-secondary-rumo btn-sm" title="Editar permissões"
+                                    onclick="abrirEditarUsuario(this)"
+                                    data-uid="{{ u.id }}" data-email="{{ u.email }}"
+                                    data-role="{{ u.role }}"
+                                    data-contratada="{{ u.contratada or '' }}"
+                                    data-contrato="{{ u.contrato or '' }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
                             <form method="post" action="{{ url_for('admin_usuarios_reenviar', uid=u.id) }}">
                                 <button type="submit" class="btn btn-secondary-rumo btn-sm" title="Reenviar link de senha">
                                     <i class="bi bi-envelope-arrow-up"></i>
@@ -230,5 +292,38 @@ function popularContratos() {
 
 toggleContratada();
 popularContratos();
+
+// ── Editar permissões ──
+function editToggleContratada() {
+    const tipo = document.getElementById('editTipo').value;
+    const semVinculo = (tipo === 'staff' || tipo === 'master');
+    document.getElementById('editWrapContratada').style.display = semVinculo ? 'none' : '';
+    document.getElementById('editWrapContrato').style.display   = semVinculo ? 'none' : '';
+}
+
+function editPopularContratos(selecionado) {
+    const contratada = document.getElementById('editContratada').value;
+    const sel = document.getElementById('editContrato');
+    const lista = CONTRATOS_POR_CONTRATADA[contratada] || [];
+    if (!contratada) {
+        sel.innerHTML = '<option value="">Selecione a contratada primeiro...</option>';
+    } else if (!lista.length) {
+        sel.innerHTML = '<option value="">Nenhum contrato cadastrado para esta contratada</option>';
+    } else {
+        sel.innerHTML = '<option value="">Selecione o contrato...</option>' +
+            lista.map(k => `<option value="${k}"${k === selecionado ? ' selected' : ''}>${k}</option>`).join('');
+    }
+}
+
+function abrirEditarUsuario(btn) {
+    const d = btn.dataset;
+    document.getElementById('formEditarUsuario').action = '/admin/usuarios/' + d.uid + '/editar';
+    document.getElementById('editEmail').value = d.email;
+    document.getElementById('editTipo').value = d.role || 'contratada';
+    document.getElementById('editContratada').value = d.contratada || '';
+    editPopularContratos(d.contrato || '');
+    editToggleContratada();
+    new bootstrap.Modal(document.getElementById('modalEditarUsuario')).show();
+}
 </script>
 {% endblock %}

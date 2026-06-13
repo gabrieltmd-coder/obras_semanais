@@ -1669,6 +1669,39 @@ def admin_usuarios_toggle(uid):
     return redirect(url_for('admin_usuarios'))
 
 
+@app.route('/admin/usuarios/<uid>/editar', methods=['POST'])
+def admin_usuarios_editar(uid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    usuarios = load_usuarios()
+    user = next((u for u in usuarios if u.get('id') == uid), None)
+    if not user:
+        flash('Usuário não encontrado.', 'danger')
+        return redirect(url_for('admin_usuarios'))
+
+    tipo       = request.form.get('tipo', user.get('role', 'contratada'))
+    contratada = request.form.get('contratada', '').strip()
+    contrato   = request.form.get('contrato', '').strip()
+
+    role = {'master': 'master', 'staff': 'staff',
+            'contratada_rw': 'contratada_rw'}.get(tipo, 'contratada')
+    is_scoped = role in SCOPED_ROLES
+
+    if is_scoped and (not contratada or not contrato):
+        flash('Selecione a contratada e o contrato vinculados ao usuário.', 'danger')
+        return redirect(url_for('admin_usuarios'))
+
+    antes = f'{user.get("role")}/{user.get("contratada") or "-"}/{user.get("contrato") or "-"}'
+    user['role']       = role
+    user['contratada'] = contratada if is_scoped else None
+    user['contrato']   = contrato if is_scoped else None
+    save_usuarios(usuarios)
+    depois = f'{role}/{contratada or "-"}/{contrato or "-"}'
+    audit_log('editar_usuario', user['email'], f'{antes} -> {depois}')
+    flash(f'Permissões de "{user["email"]}" atualizadas.', 'success')
+    return redirect(url_for('admin_usuarios'))
+
+
 @app.route('/admin/usuarios/<uid>/excluir', methods=['POST'])
 def admin_usuarios_excluir(uid):
     if not _admin_required():
