@@ -155,17 +155,19 @@ body { background: #0b1828 !important; }
 </div>
 
 <!-- ROW 1: Curva S Fin | Donut -->
-<div class="row g-2 mb-2">
+<div class="row g-2 mb-2 align-items-stretch">
 
-    <div class="col-lg-6">
-        <div class="gc h-100">
+    <div class="col-lg-6 d-flex">
+        <div class="gc w-100 d-flex flex-column" style="min-height:220px;">
             <div class="gc-title"><span><i class="bi bi-currency-dollar"></i>Curva S Financeira</span><span class="gc-sub">R$ Acumulado</span></div>
-            <canvas id="chartFinanceiro" height="120"></canvas>
+            <div style="position:relative;flex:1;min-height:160px;">
+                <canvas id="chartFinanceiro"></canvas>
+            </div>
         </div>
     </div>
 
-    <div class="col-lg-6">
-        <div class="gc h-100">
+    <div class="col-lg-6 d-flex">
+        <div class="gc w-100">
             <div class="gc-title"><span><i class="bi bi-pie-chart"></i>Efetivo Previsto — Composição</span></div>
             {% if prev_direto > 0 or prev_indireto > 0 %}
             <!-- Donut Direto/Indireto (previsto) -->
@@ -202,20 +204,22 @@ body { background: #0b1828 !important; }
 </div>
 
 <!-- ROW 2: Curva S Física | Histograma -->
-<div class="row g-2">
+<div class="row g-2 align-items-stretch">
 
-    <div class="col-lg-6">
-        <div class="gc">
+    <div class="col-lg-6 d-flex">
+        <div class="gc w-100 d-flex flex-column" style="min-height:220px;">
             <div class="gc-title"><span><i class="bi bi-bar-chart-line"></i>Curva S Física</span><span class="gc-sub">% Avanço</span></div>
-            <canvas id="chartFisico" height="120"></canvas>
+            <div style="position:relative;flex:1;min-height:160px;">
+                <canvas id="chartFisico"></canvas>
+            </div>
         </div>
     </div>
 
-    <div class="col-lg-6">
-        <div class="gc">
+    <div class="col-lg-6 d-flex">
+        <div class="gc w-100">
             <div class="gc-title"><span><i class="bi bi-people"></i>Efetivo por Função</span><span class="gc-sub">Top {{ hist_list|length }}</span></div>
             {% if hist_list %}
-            <canvas id="chartHistograma" height="100"></canvas>
+            <canvas id="chartHistograma" height="120"></canvas>
             {% else %}
             <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.25);font-size:.8rem;">Sem dados.</div>
             {% endif %}
@@ -280,7 +284,7 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
             }]
         },
         options: {
-            responsive:true, animation:{ duration:600 },
+            responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
             plugins:{
                 legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
                 tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
@@ -319,7 +323,7 @@ if (document.getElementById('chartFisico') && LABELS.length) {
             }]
         },
         options: {
-            responsive:true, animation:{ duration:600 },
+            responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
             plugins:{
                 legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
                 tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':` ${ctx.parsed.y}%` }},
@@ -377,7 +381,7 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
                 legend:{display:false},
                 tooltip:{ callbacks:{ label: ctx=>` ${ctx.label}: ${ctx.parsed}` }},
                 datalabels:{
-                    color:'#fff', font:{ size:12, weight:800 },
+                    color:'#fff', font:{ size:9, weight:800 },
                     formatter: (v, ctx) => {
                         const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
                         const pct = tot ? Math.round(v/tot*100) : 0;

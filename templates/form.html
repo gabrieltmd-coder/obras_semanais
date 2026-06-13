@@ -163,13 +163,43 @@
                         <thead>
                             <tr style="background:#f0f4f8;">
                                 <th style="padding:.3rem .5rem; text-align:left; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700;">Função</th>
-                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:70px;">Tipo</th>
-                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:60px;">Qtd Prev.</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:60px;">Tipo</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:55px;">Prev.</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:65px;">Realizado</th>
                             </tr>
                         </thead>
                         <tbody id="hist-tbody"></tbody>
                     </table>
                 </div>
+                <input type="hidden" id="histograma-realizados-json" name="histograma_realizados_json" value="{}">
+            </div>
+        </div>
+
+        <!-- EQUIPAMENTOS -->
+        <div class="card-rumo mb-3">
+            <div class="card-header">
+                <i class="bi bi-truck"></i>Equipamentos
+            </div>
+            <div class="p-3">
+                <div id="equip-vazio" style="text-align:center; padding:.8rem; color:#b0bece; font-size:.75rem;">
+                    Selecione contratada, contrato e semana para ver os equipamentos previstos.
+                </div>
+                <div id="equip-sem-dados" style="display:none; text-align:center; padding:.8rem; color:#f0a500; font-size:.75rem;">
+                    <i class="bi bi-exclamation-circle me-1"></i>Nenhum equipamento cadastrado para esta semana.
+                </div>
+                <div id="equip-table-wrap" style="display:none;">
+                    <table style="width:100%; border-collapse:collapse; font-size:.78rem;">
+                        <thead>
+                            <tr style="background:#f0f4f8;">
+                                <th style="padding:.3rem .5rem; text-align:left; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700;">Equipamento</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:55px;">Prev.</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:65px;">Realizado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="equip-tbody"></tbody>
+                    </table>
+                </div>
+                <input type="hidden" id="equipamentos-realizados-json" name="equipamentos_realizados_json" value="{}">
             </div>
         </div>
 
@@ -191,40 +221,14 @@
                             <tr style="background:#f0f4f8;">
                                 <th style="padding:.3rem .5rem; text-align:left; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700;">Ação Notável</th>
                                 <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:55px;">Unid.</th>
-                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:70px;">% Prev.</th>
-                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:75px;">Realizado</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:65px;">% Prev.</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:70px;">Realizado</th>
                             </tr>
                         </thead>
                         <tbody id="acoes-tbody"></tbody>
                     </table>
                 </div>
                 <input type="hidden" id="acoes-realizadas-json" name="acoes_realizadas_json" value="{}">
-            </div>
-        </div>
-
-        <!-- EQUIPAMENTOS -->
-        <div class="card-rumo mb-3">
-            <div class="card-header">
-                <i class="bi bi-truck"></i>Equipamentos
-            </div>
-            <div class="p-3">
-                <div id="equip-vazio" style="text-align:center; padding:.8rem; color:#b0bece; font-size:.75rem;">
-                    Selecione contratada, contrato e semana para ver os equipamentos previstos.
-                </div>
-                <div id="equip-sem-dados" style="display:none; text-align:center; padding:.8rem; color:#f0a500; font-size:.75rem;">
-                    <i class="bi bi-exclamation-circle me-1"></i>Nenhum equipamento cadastrado para esta semana.
-                </div>
-                <div id="equip-table-wrap" style="display:none;">
-                    <table style="width:100%; border-collapse:collapse; font-size:.78rem;">
-                        <thead>
-                            <tr style="background:#f0f4f8;">
-                                <th style="padding:.3rem .5rem; text-align:left; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700;">Equipamento</th>
-                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:60px;">Qtd Prev.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="equip-tbody"></tbody>
-                    </table>
-                </div>
             </div>
         </div>
 
@@ -257,7 +261,9 @@
 {% block scripts %}
 <script>
 const CONTRATOS_CFG = {{ contratos_cfg_json|safe }};
-const ACOES_REALIZADAS = {{ acoes_realizadas|default({})|tojson }};
+const ACOES_REALIZADAS        = {{ acoes_realizadas|default({})|tojson }};
+const EQUIPAMENTOS_REALIZADOS = {{ equipamentos_realizados|default({})|tojson }};
+const HISTOGRAMA_REALIZADOS   = {{ histograma_realizados|default({})|tojson }};
 
 // ── Status de contrato ──────────────────────────────────────────────────────
 function _isoWeekToSunday(weekStr) {
@@ -471,6 +477,7 @@ function atualizarHistograma() {
         const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
         const tColor = h.tipo === 'direto' ? '#3a7a00' : (h.tipo === 'equipamento' ? '#b37d00' : '#003d8f');
         const tBg    = h.tipo === 'direto' ? 'rgba(141,198,63,.12)' : (h.tipo === 'equipamento' ? 'rgba(240,165,0,.12)' : 'rgba(0,174,239,.12)');
+        const realVal = HISTOGRAMA_REALIZADOS[h.funcao] !== undefined ? HISTOGRAMA_REALIZADOS[h.funcao] : '';
         return `<tr style="background:${bg};">
             <td style="padding:.3rem .5rem;border-bottom:1px solid #f0f4f8;">${_escHtml(h.funcao)}</td>
             <td style="padding:.3rem .5rem;text-align:center;border-bottom:1px solid #f0f4f8;">
@@ -478,6 +485,13 @@ function atualizarHistograma() {
                     padding:.1rem .4rem;border-radius:4px;text-transform:uppercase;">${_escHtml(h.tipo)}</span></td>
             <td style="padding:.3rem .5rem;text-align:center;border-bottom:1px solid #f0f4f8;
                 font-weight:700;color:var(--rumo-cyan);">${h.semanas[semana]}</td>
+            <td style="padding:.2rem .4rem;text-align:center;border-bottom:1px solid #f0f4f8;">
+                <input type="number" min="0" step="1"
+                       data-hist-real="${_escHtml(h.funcao)}"
+                       value="${realVal}"
+                       class="form-control form-control-sm"
+                       style="width:60px;text-align:center;padding:.15rem .3rem;font-size:.75rem;display:inline-block;">
+            </td>
         </tr>`;
     }).join('');
 }
@@ -504,10 +518,18 @@ function atualizarEquipamentos() {
     vazio.style.display = 'none'; semDados.style.display = 'none'; tableWrap.style.display = '';
     document.getElementById('equip-tbody').innerHTML = items.map((e, i) => {
         const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
+        const realVal = EQUIPAMENTOS_REALIZADOS[e.equipamento] !== undefined ? EQUIPAMENTOS_REALIZADOS[e.equipamento] : '';
         return `<tr style="background:${bg};">
             <td style="padding:.3rem .5rem;border-bottom:1px solid #f0f4f8;">${_escHtml(e.equipamento)}</td>
             <td style="padding:.3rem .5rem;text-align:center;border-bottom:1px solid #f0f4f8;
                 font-weight:700;color:var(--rumo-cyan);">${e.semanas[semana]}</td>
+            <td style="padding:.2rem .4rem;text-align:center;border-bottom:1px solid #f0f4f8;">
+                <input type="number" min="0" step="1"
+                       data-equip-real="${_escHtml(e.equipamento)}"
+                       value="${realVal}"
+                       class="form-control form-control-sm"
+                       style="width:60px;text-align:center;padding:.15rem .3rem;font-size:.75rem;display:inline-block;">
+            </td>
         </tr>`;
     }).join('');
 }
@@ -564,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
     atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
 
     document.getElementById('mainForm').addEventListener('submit', function(e) {
-        // Serializa valores de Realizado antes do envio
+        // Serializa Ações Realizadas
         const realizadoMap = {};
         document.querySelectorAll('[data-acao-real]').forEach(inp => {
             const nome = inp.dataset.acaoReal;
@@ -572,6 +594,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (nome && val !== '') realizadoMap[nome] = parseFloat(val);
         });
         document.getElementById('acoes-realizadas-json').value = JSON.stringify(realizadoMap);
+
+        // Serializa Equipamentos Realizados
+        const equipMap = {};
+        document.querySelectorAll('[data-equip-real]').forEach(inp => {
+            const nome = inp.dataset.equipReal;
+            const val  = inp.value.trim();
+            if (nome && val !== '') equipMap[nome] = parseFloat(val);
+        });
+        document.getElementById('equipamentos-realizados-json').value = JSON.stringify(equipMap);
+
+        // Serializa Histograma Realizados
+        const histMap = {};
+        document.querySelectorAll('[data-hist-real]').forEach(inp => {
+            const nome = inp.dataset.histReal;
+            const val  = inp.value.trim();
+            if (nome && val !== '') histMap[nome] = parseFloat(val);
+        });
+        document.getElementById('histograma-realizados-json').value = JSON.stringify(histMap);
 
         const contratada = document.getElementById('contratadaSelect')?.value;
         const semana     = document.getElementById('semana_referencia')?.value;

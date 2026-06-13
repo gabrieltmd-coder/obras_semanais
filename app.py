@@ -1,8 +1,13 @@
 import json
 import uuid
 import os
+import string
+import secrets
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
+from werkzeug.security import generate_password_hash, check_password_hash
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 
@@ -11,10 +16,21 @@ app.secret_key = os.environ.get('SECRET_KEY', 'rumo-obras-secret-2024')
 
 DATA_FILE             = 'data/registros.json'
 CONTRATOS_CONFIG_FILE = 'data/contratos_config.json'
+USUARIOS_FILE         = 'data/usuarios.json'
+AUDITORIA_FILE        = 'data/auditoria.json'
 EXPORT_DIR            = 'exports'
 ADMIN_PASSWORD        = os.environ.get('ADMIN_PASSWORD', 'Pipoc@2407')
 TIPO_MAO_OBRA_FILE    = os.environ.get('TIPO_MAO_OBRA_FILE',
                         r'C:\Users\Admin\Desktop\PBX\BASES DASHs\CONTRATADAS\TIPO DE MAO DE OBRA.xlsx')
+
+# ── E-mail (SMTP) — configurável por variáveis de ambiente ──
+SMTP_HOST     = os.environ.get('SMTP_HOST', '')
+SMTP_PORT     = int(os.environ.get('SMTP_PORT', '587') or 587)
+SMTP_USER     = os.environ.get('SMTP_USER', '')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+SMTP_FROM     = os.environ.get('SMTP_FROM', SMTP_USER or 'no-reply@tms.local')
+SMTP_TLS      = os.environ.get('SMTP_TLS', 'true').lower() != 'false'
+RESET_TOKEN_TTL_H = 2  # validade do link de redefinição (horas)
 
 
 def load_tipo_mao_obra():
@@ -62,6 +78,210 @@ def save_contratos_config(cfg):
     os.makedirs('data', exist_ok=True)
     with open(CONTRATOS_CONFIG_FILE, 'w', encoding='utf-8') as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+
+# ── Usuários ─────────────────────────────────────────────────────────────────
+def load_usuarios():
+    if not os.path.exists(USUARIOS_FILE):
+        return []
+    with open(USUARIOS_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def save_usuarios(usuarios):
+    os.makedirs('data', exist_ok=True)
+    with open(USUARIOS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(usuarios, f, ensure_ascii=False, indent=2)
+
+
+def find_user_by_email(email):
+    if not email:
+        return None
+    email = email.strip().lower()
+    return next((u for u in load_usuarios() if u.get('email', '').lower() == email), None)
+
+
+def find_user_by_id(uid):
+    if not uid:
+        return None
+    return next((u for u in load_usuarios() if u.get('id') == uid), None)
+
+
+# ── Auditoria (log append-only de inclusão/edição/exclusão) ──────────────────
+def load_auditoria():
+    if not os.path.exists(AUDITORIA_FILE):
+        return []
+    with open(AUDITORIA_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def audit_log(acao, alvo, detalhe=''):
+    """Registra uma ação com data/hora e usuário responsável."""
+    try:
+        log = load_auditoria()
+        log.append({
+            'data_hora': datetime.now().isoformat(),
+            'usuario':   current_user_label(),
+            'acao':      acao,       # ex.: 'criar_registro', 'editar_registro', 'excluir_registro'
+            'alvo':      alvo,       # ex.: id ou chave afetada
+            'detalhe':   detalhe,
+        })
+        os.makedirs('data', exist_ok=True)
+        with open(AUDITORIA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(log, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        app.logger.warning(f'Falha ao gravar auditoria: {e}')
+
+
+# ── Sessão / controle de acesso ──────────────────────────────────────────────
+def current_user():
+    """Retorna o usuário atuante: admin (senha mestra), usuário cadastrado, ou None."""
+    if session.get('admin_ok') is True:
+        return {'id': 'admin', 'email': 'admin', 'nome': 'Administrador',
+                'role': 'admin', 'contratada': None}
+    uid = session.get('user_id')
+    if uid:
+        u = find_user_by_id(uid)
+        if u and u.get('ativo', True):
+            return u
+    return None
+
+
+def current_user_label():
+    u = current_user()
+    if not u:
+        return 'Público'
+    return u.get('nome') or u.get('email') or 'Usuário'
+
+
+def is_admin():
+    return session.get('admin_ok') is True
+
+
+# Papéis vinculados a uma contratada/contrato (dados filtrados ao próprio contrato):
+#   'contratada'    → somente leitura
+#   'contratada_rw' → leitura + criação de novos registros (não edita/exclui histórico)
+SCOPED_ROLES = ('contratada', 'contratada_rw')
+
+
+def can_write():
+    """Admin (senha mestra), 'master' e 'staff' podem lançar/editar/excluir dados."""
+    u = current_user()
+    return bool(u) and u.get('role') in ('admin', 'master', 'staff')
+
+
+def can_create():
+    """Quem pode criar novos registros: quem tem can_write + contratada com lançamento."""
+    u = current_user()
+    return can_write() or (bool(u) and u.get('role') == 'contratada_rw')
+
+
+def viewer_contratada():
+    """Se o usuário logado é vinculado a uma contratada, retorna o nome dela (filtro). Senão None."""
+    u = current_user()
+    if u and u.get('role') in SCOPED_ROLES:
+        return u.get('contratada')
+    return None
+
+
+def viewer_contrato():
+    """Se o usuário logado é vinculado a um contrato específico, retorna-o (filtro). Senão None."""
+    u = current_user()
+    if u and u.get('role') in SCOPED_ROLES:
+        return u.get('contrato')
+    return None
+
+
+def scope_registros(registros):
+    """Restringe a lista de registros ao escopo do usuário (contratada + contrato)."""
+    vc = viewer_contratada()
+    vk = viewer_contrato()
+    out = registros
+    if vc:
+        out = [r for r in out if r.get('contratada') == vc]
+    if vk:
+        out = [r for r in out if r.get('contrato') == vk]
+    return out
+
+
+# ── E-mail ───────────────────────────────────────────────────────────────────
+def _smtp_configured():
+    return bool(SMTP_HOST and SMTP_USER and SMTP_PASSWORD)
+
+
+def send_email(to, subject, html_body):
+    """Envia e-mail HTML. Retorna True se enviado; False se SMTP não configurado ou falhou."""
+    if not _smtp_configured():
+        return False
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = subject
+        msg['From'] = SMTP_FROM
+        msg['To'] = to
+        msg.set_content('Este e-mail requer um cliente compatível com HTML.')
+        msg.add_alternative(html_body, subtype='html')
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20) as s:
+            if SMTP_TLS:
+                s.starttls()
+            s.login(SMTP_USER, SMTP_PASSWORD)
+            s.send_message(msg)
+        return True
+    except Exception as e:
+        app.logger.warning(f'Falha ao enviar e-mail para {to}: {e}')
+        return False
+
+
+def _gen_password(n=10):
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(n))
+
+
+def _gen_token():
+    return secrets.token_urlsafe(32)
+
+
+def _set_reset_token(user):
+    """Gera token de redefinição com validade e persiste no usuário."""
+    token = _gen_token()
+    user['reset_token']  = token
+    user['reset_expira'] = (datetime.now() + timedelta(hours=RESET_TOKEN_TTL_H)).isoformat()
+    return token
+
+
+def _email_boas_vindas_html(nome, email, senha, login_url, reset_url):
+    return f"""
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#1a2b3c;">
+      <h2 style="color:#003366;">Bem-vindo(a) ao Monitoramento de Obras — TMS</h2>
+      <p>Olá{(' ' + nome) if nome else ''}, sua conta de acesso foi criada.</p>
+      <table style="border-collapse:collapse;margin:16px 0;">
+        <tr><td style="padding:6px 12px;color:#6b7c93;">E-mail</td>
+            <td style="padding:6px 12px;font-weight:bold;">{email}</td></tr>
+        <tr><td style="padding:6px 12px;color:#6b7c93;">Senha provisória</td>
+            <td style="padding:6px 12px;font-weight:bold;font-family:monospace;font-size:15px;">{senha}</td></tr>
+      </table>
+      <p>
+        <a href="{login_url}" style="background:#00AEEF;color:#fff;text-decoration:none;
+           padding:10px 20px;border-radius:8px;font-weight:bold;display:inline-block;">Entrar agora</a>
+      </p>
+      <p style="font-size:13px;color:#6b7c93;">Recomendamos trocar sua senha no primeiro acesso.
+         Use o link abaixo (válido por {RESET_TOKEN_TTL_H}h) para definir uma nova senha:</p>
+      <p style="font-size:13px;"><a href="{reset_url}">{reset_url}</a></p>
+    </div>"""
+
+
+def _email_reset_html(reset_url):
+    return f"""
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#1a2b3c;">
+      <h2 style="color:#003366;">Redefinição de senha — TMS</h2>
+      <p>Recebemos um pedido para redefinir sua senha. Clique no botão abaixo
+         (válido por {RESET_TOKEN_TTL_H} horas):</p>
+      <p>
+        <a href="{reset_url}" style="background:#00AEEF;color:#fff;text-decoration:none;
+           padding:10px 20px;border-radius:8px;font-weight:bold;display:inline-block;">Redefinir senha</a>
+      </p>
+      <p style="font-size:13px;color:#6b7c93;">Se você não fez este pedido, ignore este e-mail.</p>
+      <p style="font-size:13px;"><a href="{reset_url}">{reset_url}</a></p>
+    </div>"""
 
 
 def contrato_key(contratada, contrato):
@@ -158,7 +378,34 @@ app.jinja_env.globals['contract_status'] = contract_status
 
 @app.context_processor
 def inject_now():
-    return {'now': datetime.now()}
+    return {
+        'now': datetime.now(),
+        'current_user': current_user(),
+        'can_write': can_write(),
+        'can_create': can_create(),
+        'viewer_contratada': viewer_contratada(),
+        'viewer_contrato': viewer_contrato(),
+    }
+
+
+# Endpoints acessíveis sem login (capa, autenticação e assets)
+PUBLIC_ENDPOINTS = {
+    'capa', 'login', 'logout', 'esqueci_senha', 'redefinir_senha',
+    'admin_login', 'static',
+}
+
+
+@app.before_request
+def _require_login_global():
+    """Bloqueia o acesso a qualquer página (exceto a capa e fluxo de login) sem estar logado."""
+    endpoint = request.endpoint
+    if endpoint is None or endpoint in PUBLIC_ENDPOINTS:
+        return
+    if current_user() is None:
+        if endpoint.startswith('admin'):
+            return redirect(url_for('admin_login'))
+        flash('Faça login para acessar o sistema.', 'warning')
+        return redirect(url_for('login', next=request.path))
 
 
 def get_contratadas():
@@ -300,20 +547,24 @@ def parse_pluviometria(form):
     return {dia: form.get(f'pluv_{dia}', '').strip() for dia, _ in DIAS_SEMANA}
 
 
-def parse_acoes_realizadas(form):
-    """Lê o JSON {acao: valor} enviado pelo form; retorna {} se ausente/inválido."""
+def _parse_json_dict(form, field):
     try:
-        data = json.loads(form.get('acoes_realizadas_json', '{}'))
+        data = json.loads(form.get(field, '{}'))
         return data if isinstance(data, dict) else {}
     except Exception:
         return {}
 
+def parse_acoes_realizadas(form):
+    return _parse_json_dict(form, 'acoes_realizadas_json')
 
-def fin_base_curve(cfg, filtro_contratada, semanas_sorted):
+
+def fin_base_curve(cfg, filtro_contratada, semanas_sorted, filtro_contrato=None):
     """Linha de base financeira acumulada (mensal) alinhada ao eixo semanal do gráfico."""
     monthly = {}
     for _, cdata in cfg.items():
         if filtro_contratada and cdata.get('contratada') != filtro_contratada:
+            continue
+        if filtro_contrato and cdata.get('contrato') != filtro_contrato:
             continue
         for entry in cdata.get('linha_base_financeira', []):
             m = entry.get('semana', '')
@@ -347,7 +598,13 @@ def financeiro():
     filtro_de         = request.args.get('de', '')
     filtro_ate        = request.args.get('ate', '')
 
-    reg = registros[:]
+    vc = viewer_contratada()
+    if vc:
+        filtro_contratada = vc
+        todas_contratadas = [vc]
+    vk = viewer_contrato()   # contrato do usuário (segmentação)
+
+    reg = scope_registros(registros[:])
     if filtro_contratada:
         reg = [r for r in reg if r.get('contratada') == filtro_contratada]
     if filtro_de:
@@ -372,7 +629,8 @@ def financeiro():
     total_valor_contrato = sum(
         float(cdata.get('valor_contrato', 0) or 0)
         for cdata in cfg.values()
-        if not filtro_contratada or cdata.get('contratada') == filtro_contratada
+        if (not filtro_contratada or cdata.get('contratada') == filtro_contratada)
+        and (not vk or cdata.get('contrato') == vk)
     )
     total_medido  = sum(r.get('valor_medido', 0) for r in reg)
     saldo_global  = total_valor_contrato - total_medido
@@ -396,7 +654,7 @@ def financeiro():
         acum += semanas_data[s]
         curva_fin_acum.append(round(acum, 2))
 
-    curva_fin_base = fin_base_curve(cfg, filtro_contratada, semanas_sorted)
+    curva_fin_base = fin_base_curve(cfg, filtro_contratada, semanas_sorted, vk)
 
     # ── Tabela por contrato ──
     contratos_fin = []
@@ -404,6 +662,8 @@ def financeiro():
         contratada = cdata.get('contratada', '')
         contrato   = cdata.get('contrato', '')
         if filtro_contratada and contratada != filtro_contratada:
+            continue
+        if vk and contrato != vk:
             continue
         valor  = float(cdata.get('valor_contrato', 0) or 0)
         reg_c  = [r for r in reg if r.get('contratada') == contratada and r.get('contrato') == contrato]
@@ -470,12 +730,19 @@ def index():
     filtro_contratada = request.args.get('contratada', '')
     filtro_semana = request.args.get('semana', '')
 
+    # Usuário vinculado a uma contratada: vê apenas os dados dela
+    vc = viewer_contratada()
+    if vc:
+        filtro_contratada = vc
+        todas_contratadas = [vc]
+
     registros = todos
     if filtro_contratada:
         registros = [r for r in registros if filtro_contratada.lower() in r.get('contratada', '').lower()]
     if filtro_semana:
         registros = [r for r in registros if r.get('semana_referencia') == filtro_semana]
 
+    registros = scope_registros(registros)  # restringe ao contrato do usuário
     registros.sort(key=lambda r: r.get('semana_referencia', ''), reverse=True)
 
     return render_template('index.html',
@@ -487,6 +754,9 @@ def index():
 
 @app.route('/novo', methods=['GET', 'POST'])
 def novo():
+    if not can_create():
+        flash('Você não tem permissão para criar registros.', 'warning')
+        return redirect(url_for('index'))
     if request.method == 'POST':
         contratada = request.form.get('contratada', '').strip()
         contratada_custom = request.form.get('contratada_custom', '').strip()
@@ -496,6 +766,14 @@ def novo():
         semana_input = request.form.get('semana_referencia', '')
         semana_referencia = get_monday(semana_input)
         contrato = request.form.get('contrato', '').strip()
+
+        # Usuário vinculado a um contrato só cria registros do próprio escopo
+        _vc, _vk = viewer_contratada(), viewer_contrato()
+        if _vc:
+            contratada = _vc
+        if _vk:
+            contrato = _vk
+
         trabalhos_notaveis = request.form.get('trabalhos_notaveis', '').strip()
         pontos_atencao = request.form.get('pontos_atencao', '').strip()
         valor_medido_str = request.form.get('valor_medido', '0').strip().replace(',', '.')
@@ -531,7 +809,9 @@ def novo():
 
         efetivo, total_direto, total_indireto = parse_efetivo(request.form)
         equipamentos = parse_equipamentos(request.form)
-        acoes_realizadas = parse_acoes_realizadas(request.form)
+        acoes_realizadas        = parse_acoes_realizadas(request.form)
+        equipamentos_realizados = _parse_json_dict(request.form, 'equipamentos_realizados_json')
+        histograma_realizados   = _parse_json_dict(request.form, 'histograma_realizados_json')
 
         if erros:
             for e in erros:
@@ -544,6 +824,8 @@ def novo():
                                    form_data=request.form,
                                    pluviometria_data=pluviometria,
                                    acoes_realizadas=acoes_realizadas,
+                                   equipamentos_realizados=equipamentos_realizados,
+                                   histograma_realizados=histograma_realizados,
                                    contratos_cfg_json=json.dumps(load_contratos_config()))
 
         novo_registro = {
@@ -561,28 +843,43 @@ def novo():
             'avanco_fisico': avanco_fisico,
             'pluviometria': pluviometria,
             'acoes_realizadas': acoes_realizadas,
+            'equipamentos_realizados': equipamentos_realizados,
+            'histograma_realizados': histograma_realizados,
             'criado_em': datetime.now().isoformat(),
             'atualizado_em': datetime.now().isoformat(),
+            'criado_por': current_user_label(),
         }
 
         registros.append(novo_registro)
         save_data(registros)
+        audit_log('criar_registro', novo_registro['id'],
+                  f'{contratada} / {contrato} / {format_date_br(semana_referencia)}')
         flash(f'Registro de "{contratada}" para a semana de {format_date_br(semana_referencia)} salvo com sucesso!', 'success')
         return redirect(url_for('index'))
 
+    # Pré-seleciona contratada/contrato do usuário vinculado a um contrato
+    _vc, _vk = viewer_contratada(), viewer_contrato()
+    _form_inicial = {}
+    if _vc:
+        _form_inicial = {'contratada': _vc, 'contrato': _vk or ''}
     return render_template('form.html',
                            modo='novo',
-                           contratadas=get_contratadas(),
+                           contratadas=([_vc] if _vc else get_contratadas()),
                            pluviometria_opcoes=PLUVIOMETRIA_OPCOES,
                            dias_semana=DIAS_SEMANA,
-                           form_data={},
+                           form_data=_form_inicial,
                            pluviometria_data={},
                            acoes_realizadas={},
+                           equipamentos_realizados={},
+                           histograma_realizados={},
                            contratos_cfg_json=json.dumps(load_contratos_config()))
 
 
 @app.route('/editar/<id>', methods=['GET', 'POST'])
 def editar(id):
+    if not can_write():
+        flash('Você não tem permissão para editar registros.', 'warning')
+        return redirect(url_for('index'))
     registros = load_data()
     registro = next((r for r in registros if r['id'] == id), None)
 
@@ -633,7 +930,9 @@ def editar(id):
 
         efetivo, total_direto, total_indireto = parse_efetivo(request.form)
         equipamentos = parse_equipamentos(request.form)
-        acoes_realizadas = parse_acoes_realizadas(request.form)
+        acoes_realizadas        = parse_acoes_realizadas(request.form)
+        equipamentos_realizados = _parse_json_dict(request.form, 'equipamentos_realizados_json')
+        histograma_realizados   = _parse_json_dict(request.form, 'histograma_realizados_json')
 
         if erros:
             for e in erros:
@@ -647,6 +946,8 @@ def editar(id):
                                    form_data=request.form,
                                    pluviometria_data=pluviometria,
                                    acoes_realizadas=acoes_realizadas,
+                                   equipamentos_realizados=equipamentos_realizados,
+                                   histograma_realizados=histograma_realizados,
                                    contratos_cfg_json=json.dumps(load_contratos_config()))
 
         registro.update({
@@ -663,11 +964,16 @@ def editar(id):
             'avanco_fisico': avanco_fisico,
             'pluviometria': pluviometria,
             'acoes_realizadas': acoes_realizadas,
+            'equipamentos_realizados': equipamentos_realizados,
+            'histograma_realizados': histograma_realizados,
             'atualizado_em': datetime.now().isoformat(),
             'alterado_em': datetime.now().isoformat(),
+            'alterado_por': current_user_label(),
         })
 
         save_data(registros)
+        audit_log('editar_registro', id,
+                  f'{contratada} / {contrato} / {format_date_br(semana_referencia)}')
         flash('Registro atualizado com sucesso!', 'success')
         return redirect(url_for('index'))
 
@@ -684,17 +990,28 @@ def editar(id):
                            form_data=registro,
                            pluviometria_data=pluv_existente,
                            acoes_realizadas=registro.get('acoes_realizadas', {}),
+                           equipamentos_realizados=registro.get('equipamentos_realizados', {}),
+                           histograma_realizados=registro.get('histograma_realizados', {}),
                            contratos_cfg_json=json.dumps(load_contratos_config()))
 
 
 @app.route('/excluir/<id>', methods=['POST'])
 def excluir(id):
-    if request.form.get('senha') != ADMIN_PASSWORD and not _admin_required():
-        flash('Senha de administrador incorreta. Exclusão não realizada.', 'danger')
+    senha_ok = request.form.get('senha') == ADMIN_PASSWORD
+    if not can_write() and not senha_ok:
+        flash('Sem permissão. Faça login ou informe a senha de administrador.', 'danger')
         return redirect(url_for('index'))
+
     registros = load_data()
+    alvo = next((r for r in registros if r.get('id') == id), None)
     registros = [r for r in registros if r.get('id') != id]
     save_data(registros)
+
+    if alvo:
+        ator = current_user_label() if can_write() else 'Administrador (senha)'
+        audit_log('excluir_registro', id,
+                  f'{alvo.get("contratada","")} / {alvo.get("contrato","")} / '
+                  f'{format_date_br(alvo.get("semana_referencia",""))} — por {ator}')
     flash('Registro excluído com sucesso.', 'success')
     return redirect(url_for('index'))
 
@@ -708,7 +1025,12 @@ def dashboard():
     filtro_de        = request.args.get('de', '')
     filtro_ate       = request.args.get('ate', '')
 
-    reg = registros[:]
+    vc = viewer_contratada()
+    if vc:
+        filtro_contratada = vc
+        todas_contratadas = [vc]
+
+    reg = scope_registros(registros[:])  # restringe ao contrato do usuário
     if filtro_contratada:
         reg = [r for r in reg if r.get('contratada') == filtro_contratada]
     if filtro_de:
@@ -735,13 +1057,26 @@ def dashboard():
     ultima_semana   = reg_ord[-1].get('semana_referencia')
     reg_semana      = [r for r in reg if r.get('semana_referencia') == ultima_semana]
 
-    af_semana = (sum(r.get('avanco_fisico', 0) for r in reg_semana) / len(reg_semana)) if reg_semana else 0
-
+    # af_acumulado: último avanço registrado por contrato (valor cumulativo)
     ultimo_por_contrato = {}
     for r in reg_ord:
         chave = r.get('contrato') or r['id']
         ultimo_por_contrato[chave] = r.get('avanco_fisico', 0)
     af_acumulado = (sum(ultimo_por_contrato.values()) / len(ultimo_por_contrato)) if ultimo_por_contrato else 0
+
+    # af_semana: incremento da semana vigente = AF atual - AF semana anterior, por contrato
+    af_semana_vals = []
+    for r in reg_semana:
+        chave = r.get('contrato') or r['id']
+        af_atual = r.get('avanco_fisico', 0)
+        anterior = next(
+            (p.get('avanco_fisico', 0) for p in reversed(reg_ord)
+             if (p.get('contrato') or p['id']) == chave
+             and p.get('semana_referencia', '') < ultima_semana),
+            0
+        )
+        af_semana_vals.append(af_atual - anterior)
+    af_semana = (sum(af_semana_vals) / len(af_semana_vals)) if af_semana_vals else 0
 
     valor_semana = sum(r.get('valor_medido', 0) for r in reg_semana)
 
@@ -958,7 +1293,7 @@ def _excel_write_sheet(ws, headers, rows, col_widths, currency_cols=(), percent_
 
 @app.route('/export/excel')
 def export_excel():
-    registros = load_data()
+    registros = scope_registros(load_data())
     os.makedirs(EXPORT_DIR, exist_ok=True)
 
     wb = Workbook()
@@ -1076,13 +1411,117 @@ def visualizar(id):
     if not registro:
         flash('Registro não encontrado.', 'danger')
         return redirect(url_for('index'))
+    vc = viewer_contratada()
+    vk = viewer_contrato()
+    if (vc and registro.get('contratada') != vc) or (vk and registro.get('contrato') != vk):
+        flash('Você não tem acesso a este registro.', 'danger')
+        return redirect(url_for('index'))
     return render_template('visualizar.html', r=registro)
+
+
+# ── AUTENTICAÇÃO DE USUÁRIOS ────────────────────────────────────────────────
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        senha = request.form.get('senha', '')
+        user = find_user_by_email(email)
+        if user and user.get('ativo', True) and check_password_hash(user.get('senha_hash', ''), senha):
+            session.pop('admin_ok', None)
+            session['user_id'] = user['id']
+            user['ultimo_login'] = datetime.now().isoformat()
+            usuarios = load_usuarios()
+            for i, u in enumerate(usuarios):
+                if u.get('id') == user['id']:
+                    usuarios[i] = user
+                    break
+            save_usuarios(usuarios)
+            flash(f'Bem-vindo(a), {user.get("nome") or user.get("email")}!', 'success')
+            nxt = request.args.get('next', '')
+            if nxt.startswith('/') and not nxt.startswith('//'):
+                return redirect(nxt)
+            return redirect(url_for('dashboard'))
+        flash('E-mail ou senha inválidos.', 'danger')
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    session.pop('admin_ok', None)
+    flash('Sessão encerrada.', 'success')
+    return redirect(url_for('capa'))
+
+
+@app.route('/esqueci-senha', methods=['GET', 'POST'])
+def esqueci_senha():
+    reset_url_dev = None
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        user = find_user_by_email(email)
+        if user:
+            usuarios = load_usuarios()
+            for u in usuarios:
+                if u.get('id') == user['id']:
+                    token = _set_reset_token(u)
+                    save_usuarios(usuarios)
+                    reset_url = url_for('redefinir_senha', token=token, _external=True)
+                    enviado = send_email(u['email'], 'Redefinição de senha — TMS',
+                                         _email_reset_html(reset_url))
+                    audit_log('reset_senha_solicitado', u['email'])
+                    if not enviado:
+                        reset_url_dev = reset_url  # fallback: mostra o link na tela
+                    break
+        # Mensagem genérica (não revela se o e-mail existe)
+        if not reset_url_dev:
+            flash('Se o e-mail estiver cadastrado, enviamos um link de redefinição.', 'success')
+        return render_template('esqueci_senha.html', reset_url_dev=reset_url_dev)
+    return render_template('esqueci_senha.html', reset_url_dev=None)
+
+
+@app.route('/redefinir-senha/<token>', methods=['GET', 'POST'])
+def redefinir_senha(token):
+    usuarios = load_usuarios()
+    user = next((u for u in usuarios if u.get('reset_token') == token), None)
+
+    valido = False
+    if user:
+        exp = user.get('reset_expira')
+        try:
+            valido = bool(exp) and datetime.fromisoformat(exp) > datetime.now()
+        except Exception:
+            valido = False
+
+    if not valido:
+        return render_template('redefinir_senha.html', valido=False, token=token)
+
+    if request.method == 'POST':
+        s1 = request.form.get('senha', '')
+        s2 = request.form.get('senha2', '')
+        if len(s1) < 6:
+            flash('A senha deve ter ao menos 6 caracteres.', 'danger')
+        elif s1 != s2:
+            flash('As senhas não conferem.', 'danger')
+        else:
+            user['senha_hash']   = generate_password_hash(s1)
+            user['reset_token']  = None
+            user['reset_expira'] = None
+            save_usuarios(usuarios)
+            audit_log('reset_senha_concluido', user['email'])
+            flash('Senha redefinida com sucesso. Faça login.', 'success')
+            return redirect(url_for('login'))
+
+    return render_template('redefinir_senha.html', valido=True, token=token)
 
 
 # ── ADMIN ──────────────────────────────────────────────────────────────────
 
 def _admin_required():
-    return session.get('admin_ok') is True
+    if session.get('admin_ok') is True:
+        return True
+    u = current_user()
+    return bool(u) and u.get('role') == 'master'
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -1090,6 +1529,7 @@ def admin_login():
     erro = False
     if request.method == 'POST':
         if request.form.get('senha') == ADMIN_PASSWORD:
+            session.pop('user_id', None)
             session['admin_ok'] = True
             return redirect(url_for('admin'))
         erro = True
@@ -1100,6 +1540,147 @@ def admin_login():
 def admin_logout():
     session.pop('admin_ok', None)
     return redirect(url_for('index'))
+
+
+# ── ADMIN: GESTÃO DE USUÁRIOS ───────────────────────────────────────────────
+
+@app.route('/admin/usuarios')
+def admin_usuarios():
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    usuarios = sorted(load_usuarios(), key=lambda u: (u.get('contratada') or '', u.get('email', '')))
+    cred = session.pop('_nova_credencial', None)  # credenciais geradas (fallback sem SMTP)
+    cfg = load_contratos_config()
+    contratos_por_contratada = {}
+    for cdata in cfg.values():
+        c, k = cdata.get('contratada'), cdata.get('contrato')
+        if c and k:
+            contratos_por_contratada.setdefault(c, [])
+            if k not in contratos_por_contratada[c]:
+                contratos_por_contratada[c].append(k)
+    return render_template('usuarios.html',
+                           usuarios=usuarios,
+                           contratadas=get_contratadas(),
+                           contratos_por_contratada=contratos_por_contratada,
+                           smtp_ok=_smtp_configured(),
+                           cred=cred)
+
+
+@app.route('/admin/usuarios/novo', methods=['POST'])
+def admin_usuarios_novo():
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+
+    email      = request.form.get('email', '').strip().lower()
+    tipo       = request.form.get('tipo', 'contratada')   # contratada | contratada_rw | staff | master
+    contratada = request.form.get('contratada', '').strip()
+    contrato   = request.form.get('contrato', '').strip()
+
+    role = {'master': 'master', 'staff': 'staff',
+            'contratada_rw': 'contratada_rw'}.get(tipo, 'contratada')
+    is_scoped = role in SCOPED_ROLES
+
+    if not email or '@' not in email:
+        flash('Informe um e-mail válido.', 'danger')
+        return redirect(url_for('admin_usuarios'))
+    if is_scoped and (not contratada or not contrato):
+        flash('Selecione a contratada e o contrato vinculados ao usuário.', 'danger')
+        return redirect(url_for('admin_usuarios'))
+    if find_user_by_email(email):
+        flash(f'Já existe um usuário com o e-mail "{email}".', 'warning')
+        return redirect(url_for('admin_usuarios'))
+
+    senha = _gen_password()
+    usuarios = load_usuarios()
+    novo = {
+        'id':           str(uuid.uuid4()),
+        'email':        email,
+        'nome':         '',
+        'role':         role,
+        'contratada':   contratada if is_scoped else None,
+        'contrato':     contrato if is_scoped else None,
+        'senha_hash':   generate_password_hash(senha),
+        'ativo':        True,
+        'reset_token':  None,
+        'reset_expira': None,
+        'criado_em':    datetime.now().isoformat(),
+        'criado_por':   current_user_label(),
+        'ultimo_login': None,
+    }
+    token = _set_reset_token(novo)
+    usuarios.append(novo)
+    save_usuarios(usuarios)
+    audit_log('criar_usuario', email,
+              f'role={novo["role"]} contratada={contratada or "-"} contrato={contrato or "-"}')
+
+    login_url = url_for('login', _external=True)
+    reset_url = url_for('redefinir_senha', token=token, _external=True)
+    enviado = send_email(email, 'Seu acesso ao Monitoramento de Obras — TMS',
+                         _email_boas_vindas_html('', email, senha, login_url, reset_url))
+
+    if enviado:
+        flash(f'Usuário "{email}" criado e e-mail enviado com a senha e o link de redefinição.', 'success')
+    else:
+        # Fallback: SMTP não configurado — mostra as credenciais uma vez na tela
+        session['_nova_credencial'] = {
+            'email': email, 'senha': senha,
+            'login_url': login_url, 'reset_url': reset_url,
+        }
+        flash(f'Usuário "{email}" criado. E-mail não configurado — exibindo credenciais abaixo (copie agora).', 'warning')
+    return redirect(url_for('admin_usuarios'))
+
+
+@app.route('/admin/usuarios/<uid>/reenviar', methods=['POST'])
+def admin_usuarios_reenviar(uid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    usuarios = load_usuarios()
+    user = next((u for u in usuarios if u.get('id') == uid), None)
+    if not user:
+        flash('Usuário não encontrado.', 'danger')
+        return redirect(url_for('admin_usuarios'))
+    token = _set_reset_token(user)
+    save_usuarios(usuarios)
+    audit_log('reenviar_acesso', user['email'])
+    reset_url = url_for('redefinir_senha', token=token, _external=True)
+    enviado = send_email(user['email'], 'Redefinição de senha — TMS', _email_reset_html(reset_url))
+    if enviado:
+        flash(f'Link de redefinição enviado para "{user["email"]}".', 'success')
+    else:
+        session['_nova_credencial'] = {
+            'email': user['email'], 'senha': None,
+            'login_url': url_for('login', _external=True), 'reset_url': reset_url,
+        }
+        flash('E-mail não configurado — exibindo o link de redefinição abaixo.', 'warning')
+    return redirect(url_for('admin_usuarios'))
+
+
+@app.route('/admin/usuarios/<uid>/toggle', methods=['POST'])
+def admin_usuarios_toggle(uid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    usuarios = load_usuarios()
+    user = next((u for u in usuarios if u.get('id') == uid), None)
+    if user:
+        user['ativo'] = not user.get('ativo', True)
+        save_usuarios(usuarios)
+        audit_log('ativar_usuario' if user['ativo'] else 'desativar_usuario', user['email'])
+        flash(f'Usuário "{user["email"]}" {"ativado" if user["ativo"] else "desativado"}.', 'success')
+    return redirect(url_for('admin_usuarios'))
+
+
+@app.route('/admin/usuarios/<uid>/excluir', methods=['POST'])
+def admin_usuarios_excluir(uid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    usuarios = load_usuarios()
+    user = next((u for u in usuarios if u.get('id') == uid), None)
+    if user:
+        usuarios = [u for u in usuarios if u.get('id') != uid]
+        save_usuarios(usuarios)
+        audit_log('excluir_usuario', user['email'])
+        flash(f'Usuário "{user["email"]}" excluído.', 'success')
+    return redirect(url_for('admin_usuarios'))
 
 
 @app.route('/admin')
@@ -1150,6 +1731,7 @@ def admin_novo_contrato():
 
     cfg[key] = {'contratada': contratada, 'contrato': contrato_id}
     save_contratos_config(cfg)
+    audit_log('criar_contrato', key, f'{contratada} / {contrato_id}')
     flash(f'Contrato "{contrato_id}" criado com sucesso. Configure os dados abaixo.', 'success')
     return redirect(url_for('admin_contrato', key=key))
 
@@ -1207,6 +1789,7 @@ def admin_contrato(key):
 
         cfg[key] = data
         save_contratos_config(cfg)
+        audit_log('editar_contrato', key, f'{data.get("contratada","")} / {data.get("contrato","")}')
         flash('Configuração salva com sucesso.', 'success')
         return redirect(url_for('admin'))
 

@@ -102,6 +102,7 @@
         .nav-card.rdo   { background: rgba(141,198,63,.09); border-color: rgba(141,198,63,.25); }
         .nav-card.rdo:hover   { background: rgba(141,198,63,.16); border-color: rgba(141,198,63,.5); box-shadow: 0 20px 60px rgba(141,198,63,.15); }
 
+
         .card-icon {
             width: 62px; height: 62px;
             border-radius: 18px;
@@ -120,9 +121,9 @@
             text-transform: uppercase;
             letter-spacing: .08em;
         }
-        .dash  .card-title { color: #00d4ff; }
-        .fin   .card-title { color: #f0a500; }
-        .rdo   .card-title { color: #8DC63F; }
+        .dash   .card-title { color: #00d4ff; }
+        .fin    .card-title { color: #f0a500; }
+        .rdo    .card-title { color: #8DC63F; }
 
         .card-desc {
             font-size: .73rem;
@@ -138,9 +139,9 @@
             transition: opacity .2s, transform .2s;
         }
         .nav-card:hover .card-arrow { opacity: .9; transform: translateX(4px); }
-        .dash:hover  .card-arrow { color: #00d4ff; }
-        .fin:hover   .card-arrow { color: #f0a500; }
-        .rdo:hover   .card-arrow { color: #8DC63F; }
+        .dash:hover   .card-arrow { color: #00d4ff; }
+        .fin:hover    .card-arrow { color: #f0a500; }
+        .rdo:hover    .card-arrow { color: #8DC63F; }
 
         /* Footer */
         .capa-footer {
@@ -211,6 +212,25 @@
                 <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
             </a>
 
+
+        </div>
+
+        <div style="margin-top:1.75rem; display:flex; gap:1.25rem; align-items:center;">
+            {% if current_user %}
+            <span style="font-size:.74rem; color:rgba(255,255,255,.5);">
+                <i class="bi bi-person-circle me-1" style="color:#00d4ff;"></i>{{ current_user.nome or current_user.email }}
+            </span>
+            <a href="{{ url_for('logout') }}" style="font-size:.74rem; color:rgba(255,255,255,.5); text-decoration:none;">
+                <i class="bi bi-box-arrow-right me-1"></i>Sair
+            </a>
+            {% else %}
+            <a href="{{ url_for('login') }}" style="font-size:.78rem; color:rgba(255,255,255,.6); text-decoration:none;
+               border:1px solid rgba(255,255,255,.15); padding:.5rem 1.1rem; border-radius:10px; transition:all .2s;"
+               onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,.4)';"
+               onmouseout="this.style.color='rgba(255,255,255,.6)';this.style.borderColor='rgba(255,255,255,.15)';">
+                <i class="bi bi-person me-1"></i>Área do Cliente — Entrar
+            </a>
+            {% endif %}
         </div>
     </div>
 

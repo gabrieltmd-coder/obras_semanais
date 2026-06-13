@@ -132,6 +132,32 @@
         }
         .nav-link-rumo i { color: var(--tms-cyan); font-size: .9rem; }
 
+        .nav-user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            color: rgba(255,255,255,.78);
+            font-size: .72rem;
+            font-weight: 600;
+            padding: .4rem .8rem;
+            border-radius: var(--tms-radius-sm);
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.10);
+            max-width: 230px;
+        }
+        .nav-user-chip i { color: var(--tms-cyan); font-size: 1rem; }
+        .nav-user-tag {
+            font-size: .6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--tms-green);
+            background: rgba(141,198,63,.12);
+            padding: .12rem .4rem;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+
         .btn-export {
             background: linear-gradient(135deg, var(--tms-green) 0%, var(--tms-green-dark) 100%);
             color: #fff !important;
@@ -759,10 +785,37 @@
             font-style: italic;
         }
 
+        /* ── BACK BUTTON (page header) ── */
+        .btn-back-header {
+            background: rgba(255,255,255,.10);
+            color: rgba(255,255,255,.85);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: var(--tms-radius-sm);
+            font-size: .72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            padding: .48rem 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            cursor: pointer;
+            transition: all .18s var(--ease);
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+        .btn-back-header:hover {
+            background: rgba(255,255,255,.20);
+            color: #fff;
+            border-color: rgba(255,255,255,.45);
+        }
+
         @media (max-width: 768px) {
             .navbar-rumo { padding: 0 1rem; }
             .page-header h1 { font-size: 1.05rem; }
             .stat-card .stat-value { font-size: 1.4rem; }
+            .btn-back-header span { display: none; }
         }
     </style>
 </head>
@@ -787,23 +840,45 @@
             <i class="bi bi-grid-3x3-gap"></i>Registros
         </a>
         {% endif %}
+        {% if not current_user or current_user.role in ['admin', 'master'] %}
         <a href="{{ url_for('admin') }}"
            class="nav-link-rumo {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}"
            style="border-color:rgba(141,198,63,.25);">
             <i class="bi bi-shield-lock" style="color:var(--tms-green);"></i>Admin
         </a>
+        {% endif %}
+
+        {% if current_user %}
+        <span class="nav-user-chip" title="{{ current_user.email }}">
+            <i class="bi bi-person-circle"></i>{{ current_user.nome or current_user.email }}
+            {% if current_user.contratada %}<span class="nav-user-tag">{{ current_user.contratada }}{% if current_user.contrato %} · {{ current_user.contrato }}{% endif %}</span>{% endif %}
+        </span>
+        <a href="{{ url_for('logout') }}" class="nav-link-rumo" style="border-color:rgba(255,107,122,.3);">
+            <i class="bi bi-box-arrow-right" style="color:#ff6b7a;"></i>Sair
+        </a>
+        {% else %}
+        <a href="{{ url_for('login') }}"
+           class="nav-link-rumo {% if request.endpoint == 'login' %}active{% endif %}">
+            <i class="bi bi-person"></i>Entrar
+        </a>
+        {% endif %}
     </div>
 </nav>
 
 <!-- PAGE HEADER -->
 <div class="page-header">
-    <div class="container-fluid px-4">
-        <h1>{% block page_icon %}<i class="bi bi-building"></i>{% endblock %}{% block page_title %}Obras Semanais{% endblock %}</h1>
-        <div class="breadcrumb mb-0">
-            <span>TMS</span>
-            <span class="mx-1">›</span>
-            <span>{% block breadcrumb %}Dashboard{% endblock %}</span>
+    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+        <div>
+            <h1>{% block page_icon %}<i class="bi bi-building"></i>{% endblock %}{% block page_title %}Obras Semanais{% endblock %}</h1>
+            <div class="breadcrumb mb-0">
+                <span>TMS</span>
+                <span class="mx-1">›</span>
+                <span>{% block breadcrumb %}Dashboard{% endblock %}</span>
+            </div>
         </div>
+        <button onclick="history.back()" class="btn-back-header" title="Voltar">
+            <i class="bi bi-arrow-left"></i>Voltar
+        </button>
     </div>
 </div>
 
