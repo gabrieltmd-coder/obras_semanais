@@ -840,11 +840,11 @@
             <i class="bi bi-grid-3x3-gap"></i>Registros
         </a>
         {% endif %}
-        {% if not current_user or current_user.role in ['admin', 'master'] %}
+        {% if current_user and current_user.role in ['admin', 'master'] %}
         <a href="{{ url_for('admin') }}"
            class="nav-link-rumo {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}"
            style="border-color:rgba(141,198,63,.25);">
-            <i class="bi bi-shield-lock" style="color:var(--tms-green);"></i>Admin
+            <i class="bi bi-file-earmark-text" style="color:var(--tms-green);"></i>Contratos
         </a>
         {% endif %}
 
