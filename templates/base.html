@@ -842,9 +842,14 @@
         {% endif %}
         {% if current_user and current_user.role in ['admin', 'master'] %}
         <a href="{{ url_for('admin') }}"
-           class="nav-link-rumo {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}"
+           class="nav-link-rumo {% if request.endpoint in ['admin', 'admin_contrato', 'admin_novo_contrato'] %}active{% endif %}"
            style="border-color:rgba(141,198,63,.25);">
             <i class="bi bi-file-earmark-text" style="color:var(--tms-green);"></i>Contratos
+        </a>
+        <a href="{{ url_for('admin_usuarios') }}"
+           class="nav-link-rumo {% if request.endpoint and request.endpoint.startswith('admin_usuarios') %}active{% endif %}"
+           style="border-color:rgba(141,198,63,.25);">
+            <i class="bi bi-people" style="color:var(--tms-green);"></i>Usuários
         </a>
         {% endif %}
 
