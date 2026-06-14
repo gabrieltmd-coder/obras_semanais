@@ -88,6 +88,8 @@ Array de usuários (senha como hash scrypt via werkzeug):
 ```
 - **admin** (senha mestra `ADMIN_PASSWORD`): acesso total, gerencia contratos e usuários.
 - **master**: usuário com login próprio e **acesso total, sem restrições** (inclui Admin).
+- **rumo**: igual ao master, **exceto** que não pode alterar/criar usuários master
+  (`can_manage_user`/`_actor_is_rumo`). Cai no painel `/consolidado` ao logar. `ADMIN_ROLES=('master','rumo')`.
 - **staff**: pode criar/editar/excluir registros (auditado por e-mail), sem Admin.
 - **contratada**: somente leitura, vê apenas os dados do **contrato** vinculado.
 - **contratada_rw**: como contratada (escopo no contrato) + pode **criar novos registros**
@@ -117,10 +119,18 @@ Chave: `"Contratada||Contrato"`:
     "linha_base_fisica": [{"semana": "2026-01", "percentual": 10.0}],
     "linha_base_histograma": [{"funcao": "Pedreiro", "tipo": "direto", "semanas": {"2026-W12": 3}}],
     "linha_base_equipamentos": [{"equipamento": "Escavadeira", "semanas": {"2026-W12": 2}}],
-    "linha_base_acoes": [{"acao": "Concretagem bloco A", "unidade": "m³", "semanas": {"2026-W12": 45.5}}]
+    "linha_base_acoes": [{"acao": "Concretagem bloco A", "unidade": "m³", "semanas": {"2026-W12": 45.5}}],
+    "aditivos": [
+      {"tipo": "valor", "valor": 50000.0, "prazo": "", "data": "2026-06-13", "descricao": "Acréscimo de escopo"},
+      {"tipo": "prazo", "valor": 0.0, "prazo": "2026-W50", "data": "2026-06-13", "descricao": "Prorrogação"}
+    ]
   }
 }
 ```
+Aditivos são editados em "Configurar Contrato" (tipo **valor** ou **prazo**). A página mostra
+o valor efetivo (base + aditivos de valor) e o prazo vigente (último aditivo de prazo).
+Obs.: os KPIs financeiros globais ainda usam `valor_contrato` base (aditivos são registrados,
+não somados automaticamente aos totais — pendente de decisão).
 No admin, equipamentos são editados na tabela do Histograma com categoria "Equipamento";
 no POST o app separa essas linhas para `linha_base_equipamentos`.
 
@@ -134,6 +144,7 @@ no POST o app separa essas linhas para `linha_base_equipamentos`.
 | `/excluir/<id>` | POST | Excluir registro (exige `can_write` ou senha admin) |
 | `/dashboard` | GET | Dashboard com gráficos (filtra pela contratada do usuário) |
 | `/financeiro` | GET | Dashboard financeiro (filtra pela contratada do usuário) |
+| `/consolidado` | GET | Painel financeiro consolidado de todas as contratadas (admin/master/rumo) |
 | `/construcao` | GET | Página "em desenvolvimento" (RDO's) |
 | `/export/excel` | GET | Download Excel de registros (filtra por contratada) |
 | `/export/contratos` | GET | Download Excel de contratos (requer login admin) |

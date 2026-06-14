@@ -145,17 +145,6 @@
             max-width: 210px;
         }
         .nav-user-chip i { color: var(--tms-cyan); font-size: .9rem; }
-        .nav-user-tag {
-            font-size: .6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-            color: var(--tms-green);
-            background: rgba(141,198,63,.12);
-            padding: .12rem .4rem;
-            border-radius: 5px;
-            white-space: nowrap;
-        }
 
         .btn-export {
             background: linear-gradient(135deg, var(--tms-green) 0%, var(--tms-green-dark) 100%);
@@ -829,17 +818,24 @@
     </a>
 
     <div class="d-flex align-items-center gap-2">
+        {% if request.endpoint != 'financeiro' %}
         <a href="{{ url_for('dashboard') }}"
            class="nav-link-rumo {% if request.endpoint == 'dashboard' %}active{% endif %}">
             <i class="bi bi-speedometer2"></i>Dashboard
         </a>
+        {% endif %}
         {% if request.endpoint != 'financeiro' %}
         <a href="{{ url_for('index') }}"
            class="nav-link-rumo {% if request.endpoint == 'index' %}active{% endif %}">
             <i class="bi bi-grid-3x3-gap"></i>Registros
         </a>
         {% endif %}
-        {% if current_user and current_user.role in ['admin', 'master'] %}
+        {% if current_user and current_user.role in ['admin', 'master', 'rumo'] %}
+        <a href="{{ url_for('consolidado') }}"
+           class="nav-link-rumo {% if request.endpoint == 'consolidado' %}active{% endif %}"
+           style="border-color:rgba(0,174,239,.30);">
+            <i class="bi bi-grid-1x2" style="color:var(--tms-cyan);"></i>Consolidado
+        </a>
         <a href="{{ url_for('admin') }}"
            class="nav-link-rumo {% if request.endpoint in ['admin', 'admin_contrato', 'admin_novo_contrato'] %}active{% endif %}"
            style="border-color:rgba(141,198,63,.25);">
@@ -855,7 +851,6 @@
         {% if current_user %}
         <span class="nav-user-chip" title="{{ current_user.email }}">
             <i class="bi bi-person-circle"></i>{{ current_user.nome or current_user.email }}
-            {% if current_user.contratada %}<span class="nav-user-tag">{{ current_user.contratada }}{% if current_user.contrato %} · {{ current_user.contrato }}{% endif %}</span>{% endif %}
         </span>
         <a href="{{ url_for('logout') }}" class="nav-link-rumo" style="border-color:rgba(255,107,122,.3);">
             <i class="bi bi-box-arrow-right" style="color:#ff6b7a;"></i>Sair

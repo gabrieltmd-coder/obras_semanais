@@ -163,11 +163,34 @@ def is_admin():
 #   'contratada_rw' → leitura + criação de novos registros (não edita/exclui histórico)
 SCOPED_ROLES = ('contratada', 'contratada_rw')
 
+# Papéis com acesso total (admin): master e rumo. 'rumo' = master, exceto que não pode
+# alterar usuários master (ver can_manage_user).
+ADMIN_ROLES = ('master', 'rumo')
+
 
 def can_write():
-    """Admin (senha mestra), 'master' e 'staff' podem lançar/editar/excluir dados."""
+    """Admin (senha mestra), 'master', 'rumo' e 'staff' podem lançar/editar/excluir dados."""
     u = current_user()
-    return bool(u) and u.get('role') in ('admin', 'master', 'staff')
+    return bool(u) and u.get('role') in ('admin', 'master', 'rumo', 'staff')
+
+
+def can_manage_user(target):
+    """Quem pode gerenciar (editar/excluir/etc) o usuário 'target'.
+    Admin (senha) e master gerenciam qualquer um. 'rumo' gerencia todos, exceto masters."""
+    u = current_user()
+    if session.get('admin_ok') is True:
+        return True
+    if not u or u.get('role') not in ADMIN_ROLES:
+        return False
+    if u.get('role') == 'rumo' and target and target.get('role') == 'master':
+        return False
+    return True
+
+
+def _actor_is_rumo():
+    """True se o usuário atuante é 'rumo' (e não admin pela senha mestra)."""
+    u = current_user()
+    return bool(u) and u.get('role') == 'rumo' and not session.get('admin_ok')
 
 
 def can_create():
@@ -715,6 +738,102 @@ def financeiro():
                            bar_labels=bar_labels,
                            bar_vals=bar_vals,
                            bar_colors=bar_colors)
+
+
+@app.route('/consolidado')
+def consolidado():
+    """Painel financeiro consolidado de TODAS as contratadas (perfil RUMO/master)."""
+    u = current_user()
+    if not (session.get('admin_ok') or (u and u.get('role') in ADMIN_ROLES)):
+        flash('Acesso restrito ao painel consolidado.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    registros = load_data()
+    cfg = load_contratos_config()
+
+    # Universo de contratadas (config + registros)
+    contratadas = sorted(
+        {c.get('contratada', '') for c in cfg.values() if c.get('contratada')}
+        | {r.get('contratada', '') for r in registros if r.get('contratada')}
+    )
+
+    # ── KPIs consolidados ──
+    total_valor_contrato = sum(float(c.get('valor_contrato', 0) or 0) for c in cfg.values())
+    total_medido = sum(r.get('valor_medido', 0) for r in registros)
+    saldo        = total_valor_contrato - total_medido
+    pct_global   = round(total_medido / total_valor_contrato * 100, 1) if total_valor_contrato else 0
+
+    n_contratadas = len(contratadas)
+    pares_contrato = {(r.get('contratada', ''), r.get('contrato', '')) for r in registros if r.get('contrato')}
+    pares_contrato |= {(c.get('contratada', ''), c.get('contrato', '')) for c in cfg.values() if c.get('contrato')}
+    n_contratos = len(pares_contrato)
+
+    reg_ord = sorted(registros, key=lambda r: r.get('semana_referencia', ''))
+    ultima_semana = reg_ord[-1].get('semana_referencia', '') if reg_ord else ''
+    medido_semana = sum(r.get('valor_medido', 0) for r in registros if r.get('semana_referencia') == ultima_semana)
+
+    avancos = [r.get('avanco_fisico', 0) for r in registros]
+    # avanço físico médio considerando o último registro de cada contrato
+    ultimo_af = {}
+    for r in reg_ord:
+        ultimo_af[(r.get('contratada'), r.get('contrato'))] = r.get('avanco_fisico', 0)
+    af_medio = round(sum(ultimo_af.values()) / len(ultimo_af), 1) if ultimo_af else 0
+
+    # ── Curva S consolidada (acumulado semanal somando todas) ──
+    semanas = {}
+    for r in reg_ord:
+        s = r.get('semana_referencia', '')
+        semanas[s] = semanas.get(s, 0) + r.get('valor_medido', 0)
+    semanas_sorted = sorted(semanas)
+    chart_labels = [format_date_br(s) for s in semanas_sorted]
+    curva_acum, acum = [], 0
+    for s in semanas_sorted:
+        acum += semanas[s]
+        curva_acum.append(round(acum, 2))
+    curva_base = fin_base_curve(cfg, '', semanas_sorted)
+
+    # ── Por contratada ──
+    por_contratada = []
+    for ct in contratadas:
+        valor  = sum(float(c.get('valor_contrato', 0) or 0) for c in cfg.values() if c.get('contratada') == ct)
+        medido = sum(r.get('valor_medido', 0) for r in registros if r.get('contratada') == ct)
+        por_contratada.append({
+            'contratada': ct,
+            'valor':  valor,
+            'medido': medido,
+            'saldo':  valor - medido,
+            'pct':    round(medido / valor * 100, 1) if valor else 0,
+        })
+    por_contratada.sort(key=lambda x: -x['medido'])
+
+    _PALETTE = ['rgba(0,212,255,.85)', 'rgba(141,198,63,.85)', 'rgba(240,165,0,.85)',
+                'rgba(255,107,122,.85)', 'rgba(155,89,182,.85)', 'rgba(52,211,153,.85)',
+                'rgba(96,165,250,.85)']
+    cores = [_PALETTE[i % len(_PALETTE)] for i in range(len(por_contratada))]
+
+    kpis = dict(
+        total_valor_contrato=total_valor_contrato,
+        total_medido=total_medido,
+        saldo=saldo,
+        pct_global=pct_global,
+        medido_semana=medido_semana,
+        ultima_semana=ultima_semana,
+        n_contratadas=n_contratadas,
+        n_contratos=n_contratos,
+        af_medio=af_medio,
+    )
+
+    return render_template('consolidado.html',
+                           kpis=kpis,
+                           por_contratada=por_contratada,
+                           chart_labels=json.dumps(chart_labels),
+                           curva_acum=json.dumps(curva_acum),
+                           curva_base=json.dumps(curva_base),
+                           bar_labels=json.dumps([x['contratada'] for x in por_contratada]),
+                           bar_medido=json.dumps([round(x['medido'], 2) for x in por_contratada]),
+                           bar_valor=json.dumps([round(x['valor'], 2) for x in por_contratada]),
+                           bar_pct=json.dumps([x['pct'] for x in por_contratada]),
+                           cores=json.dumps(cores))
 
 
 @app.route('/construcao')
@@ -1441,6 +1560,9 @@ def login():
             nxt = request.args.get('next', '')
             if nxt.startswith('/') and not nxt.startswith('//'):
                 return redirect(nxt)
+            # RUMO cai no painel consolidado por padrão
+            if user.get('role') == 'rumo':
+                return redirect(url_for('consolidado'))
             return redirect(url_for('dashboard'))
         flash('E-mail ou senha inválidos.', 'danger')
     return render_template('login.html')
@@ -1521,7 +1643,7 @@ def _admin_required():
     if session.get('admin_ok') is True:
         return True
     u = current_user()
-    return bool(u) and u.get('role') == 'master'
+    return bool(u) and u.get('role') in ADMIN_ROLES
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -1572,16 +1694,19 @@ def admin_usuarios_novo():
         return redirect(url_for('admin_login'))
 
     email      = request.form.get('email', '').strip().lower()
-    tipo       = request.form.get('tipo', 'contratada')   # contratada | contratada_rw | staff | master
+    tipo       = request.form.get('tipo', 'contratada')   # contratada | contratada_rw | staff | master | rumo
     contratada = request.form.get('contratada', '').strip()
     contrato   = request.form.get('contrato', '').strip()
 
-    role = {'master': 'master', 'staff': 'staff',
+    role = {'master': 'master', 'rumo': 'rumo', 'staff': 'staff',
             'contratada_rw': 'contratada_rw'}.get(tipo, 'contratada')
     is_scoped = role in SCOPED_ROLES
 
     if not email or '@' not in email:
         flash('Informe um e-mail válido.', 'danger')
+        return redirect(url_for('admin_usuarios'))
+    if role == 'master' and _actor_is_rumo():
+        flash('Você não tem permissão para criar usuários master.', 'danger')
         return redirect(url_for('admin_usuarios'))
     if is_scoped and (not contratada or not contrato):
         flash('Selecione a contratada e o contrato vinculados ao usuário.', 'danger')
@@ -1639,6 +1764,9 @@ def admin_usuarios_reenviar(uid):
     if not user:
         flash('Usuário não encontrado.', 'danger')
         return redirect(url_for('admin_usuarios'))
+    if not can_manage_user(user):
+        flash('Você não tem permissão para alterar um usuário master.', 'danger')
+        return redirect(url_for('admin_usuarios'))
     token = _set_reset_token(user)
     save_usuarios(usuarios)
     audit_log('reenviar_acesso', user['email'])
@@ -1661,6 +1789,9 @@ def admin_usuarios_toggle(uid):
         return redirect(url_for('admin_login'))
     usuarios = load_usuarios()
     user = next((u for u in usuarios if u.get('id') == uid), None)
+    if user and not can_manage_user(user):
+        flash('Você não tem permissão para alterar um usuário master.', 'danger')
+        return redirect(url_for('admin_usuarios'))
     if user:
         user['ativo'] = not user.get('ativo', True)
         save_usuarios(usuarios)
@@ -1678,15 +1809,21 @@ def admin_usuarios_editar(uid):
     if not user:
         flash('Usuário não encontrado.', 'danger')
         return redirect(url_for('admin_usuarios'))
+    if not can_manage_user(user):
+        flash('Você não tem permissão para alterar um usuário master.', 'danger')
+        return redirect(url_for('admin_usuarios'))
 
     tipo       = request.form.get('tipo', user.get('role', 'contratada'))
     contratada = request.form.get('contratada', '').strip()
     contrato   = request.form.get('contrato', '').strip()
 
-    role = {'master': 'master', 'staff': 'staff',
+    role = {'master': 'master', 'rumo': 'rumo', 'staff': 'staff',
             'contratada_rw': 'contratada_rw'}.get(tipo, 'contratada')
     is_scoped = role in SCOPED_ROLES
 
+    if role == 'master' and _actor_is_rumo():
+        flash('Você não tem permissão para promover usuários a master.', 'danger')
+        return redirect(url_for('admin_usuarios'))
     if is_scoped and (not contratada or not contrato):
         flash('Selecione a contratada e o contrato vinculados ao usuário.', 'danger')
         return redirect(url_for('admin_usuarios'))
@@ -1708,6 +1845,9 @@ def admin_usuarios_excluir(uid):
         return redirect(url_for('admin_login'))
     usuarios = load_usuarios()
     user = next((u for u in usuarios if u.get('id') == uid), None)
+    if user and not can_manage_user(user):
+        flash('Você não tem permissão para excluir um usuário master.', 'danger')
+        return redirect(url_for('admin_usuarios'))
     if user:
         usuarios = [u for u in usuarios if u.get('id') != uid]
         save_usuarios(usuarios)
@@ -1799,6 +1939,27 @@ def admin_contrato(key):
         data['data_inicio_contrato'] = request.form.get('data_inicio_contrato', '')
         data['data_fim_contrato']    = request.form.get('data_fim_contrato', '')
         data['status_manual']        = request.form.get('status_manual', 'auto')
+
+        # ── Aditivos (valor / prazo) ──
+        adit_tipo  = request.form.getlist('adit_tipo[]')
+        adit_valor = request.form.getlist('adit_valor[]')
+        adit_prazo = request.form.getlist('adit_prazo[]')
+        adit_data  = request.form.getlist('adit_data[]')
+        adit_desc  = request.form.getlist('adit_desc[]')
+        aditivos = []
+        for t, v, p, d, ds in zip(adit_tipo, adit_valor, adit_prazo, adit_data, adit_desc):
+            if t not in ('valor', 'prazo'):
+                continue
+            valor = float((v or '0').replace('.', '').replace(',', '.')) if t == 'valor' else 0.0
+            prazo = p if t == 'prazo' else ''
+            # ignora linha totalmente vazia
+            if t == 'valor' and not valor and not ds.strip():
+                continue
+            if t == 'prazo' and not prazo and not ds.strip():
+                continue
+            aditivos.append({'tipo': t, 'valor': valor, 'prazo': prazo,
+                             'data': d, 'descricao': ds.strip()})
+        data['aditivos'] = aditivos
 
         hist_json = request.form.get('hist_json', '[]')
         try:

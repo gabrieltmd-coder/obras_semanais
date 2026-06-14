@@ -22,9 +22,16 @@
                 <div class="row g-3">
 
                     <div class="col-md-6">
-                        <label class="form-label" for="contratada">
+                        <label class="form-label" for="contratadaSelect">
                             <i class="bi bi-building me-1" style="color:var(--rumo-cyan)"></i>Contratada *
                         </label>
+                        {% if viewer_contratada %}
+                        <select class="form-select" id="contratadaSelect" disabled
+                                style="background:var(--rumo-gray-bg); cursor:not-allowed;">
+                            <option selected>{{ viewer_contratada }}</option>
+                        </select>
+                        <input type="hidden" name="contratada" value="{{ viewer_contratada }}">
+                        {% else %}
                         <select class="form-select" id="contratadaSelect" name="contratada"
                                 onchange="toggleCustomContratada(this)" required>
                             <option value="">Selecione...</option>
@@ -43,12 +50,18 @@
                                name="contratada_custom" placeholder="Nome da contratada"
                                style="display:none"
                                value="{{ form_data.get('contratada') if form_data.get('contratada') and form_data.get('contratada') not in contratadas else '' }}">
+                        {% endif %}
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label" for="contrato-text">
+                        <label class="form-label" for="contrato">
                             <i class="bi bi-file-earmark-text me-1" style="color:var(--rumo-cyan)"></i>Contrato *
                         </label>
+                        {% if viewer_contrato %}
+                        <input type="hidden" id="contrato" name="contrato" value="{{ viewer_contrato }}">
+                        <input type="text" class="form-control" value="{{ viewer_contrato }}" readonly
+                               style="background:var(--rumo-gray-bg); cursor:not-allowed;">
+                        {% else %}
                         <input type="hidden" id="contrato" name="contrato" value="{{ form_data.get('contrato', '') }}">
                         <input type="text" class="form-control" id="contrato-text"
                                placeholder="Ex: CT-2024-001"
@@ -59,6 +72,7 @@
                         <small id="contrato-hint" class="text-muted" style="font-size:.7rem; display:none;">
                             <i class="bi bi-info-circle me-1" style="color:var(--rumo-cyan);"></i>Esta contratada possui mais de um contrato ativo
                         </small>
+                        {% endif %}
                     </div>
 
                     <!-- Linha: Semana | Avanço Físico -->
@@ -566,21 +580,29 @@ document.addEventListener('DOMContentLoaded', () => {
         semanaInput.value = currentWeek;
     }
 
-    // Sincroniza texto/select → hidden
-    document.getElementById('contrato-text').addEventListener('input', function() {
-        document.getElementById('contrato').value = this.value;
-        atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
-    });
-    document.getElementById('contrato-select').addEventListener('change', function() {
-        document.getElementById('contrato').value = this.value;
-        atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
-    });
+    // Sincroniza texto/select → hidden (apenas quando os campos editáveis existem)
+    const contratoTextEl   = document.getElementById('contrato-text');
+    const contratoSelectEl = document.getElementById('contrato-select');
+    if (contratoTextEl) {
+        contratoTextEl.addEventListener('input', function() {
+            document.getElementById('contrato').value = this.value;
+            atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
+        });
+    }
+    if (contratoSelectEl) {
+        contratoSelectEl.addEventListener('change', function() {
+            document.getElementById('contrato').value = this.value;
+            atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
+        });
+    }
 
-    // Inicializa UI de contrato (modo editar: respeita valor existente; modo novo: '')
-    const initialContratada = contratadaSel?.value;
-    const initialContrato   = document.getElementById('contrato')?.value || '';
-    if (initialContratada && initialContratada !== '__outro__') {
-        updateContratoUI(initialContratada, initialContrato);
+    // Inicializa UI de contrato — só no modo editável (usuário vinculado já vem travado)
+    if (contratoTextEl) {
+        const initialContratada = contratadaSel?.value;
+        const initialContrato   = document.getElementById('contrato')?.value || '';
+        if (initialContratada && initialContratada !== '__outro__') {
+            updateContratoUI(initialContratada, initialContrato);
+        }
     }
 
     atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();

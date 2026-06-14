@@ -28,6 +28,7 @@
     background:#fff; transition:border-color .15s;
 }
 .adm-input:focus { outline:none; border-color:var(--tms-cyan); box-shadow:0 0 0 3px rgba(0,174,239,.12); }
+.adm-input[readonly] { background:#f0f4f8; color:#9aa7b4; cursor:not-allowed; }
 .adm-select {
     width:100%; border:1px solid var(--tms-border); border-radius:7px;
     padding:.35rem .65rem; font-size:.8rem; color:var(--tms-text);
@@ -118,6 +119,63 @@
                     </select>
                     <small style="color:var(--tms-muted); font-size:.68rem;">Substituir cálculo automático por data.</small>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADITIVOS -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-file-earmark-plus"></i>Aditivos do Contrato</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Registre aditivos de <strong>valor</strong> (acréscimo financeiro) ou de <strong>prazo</strong> (nova data de término).
+            </p>
+            <table class="adm-table" id="tblAdit">
+                <thead>
+                    <tr>
+                        <th style="width:120px;">Tipo</th>
+                        <th style="width:160px;">Valor (R$)</th>
+                        <th style="width:160px;">Novo Prazo</th>
+                        <th style="width:140px;">Data do Aditivo</th>
+                        <th>Descrição</th>
+                        <th style="width:40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="bodyAdit">
+                    {% for a in contrato.get('aditivos', []) %}
+                    <tr>
+                        <td>
+                            <select name="adit_tipo[]" class="adm-select" onchange="aditToggle(this)">
+                                <option value="valor" {% if a.tipo=='valor' %}selected{% endif %}>Valor</option>
+                                <option value="prazo" {% if a.tipo=='prazo' %}selected{% endif %}>Prazo</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="adit_valor[]" class="adm-input" placeholder="0,00"
+                                   value="{% if a.tipo=='valor' and a.valor %}{{ '%.2f'|format(a.valor)|replace('.', ',') }}{% endif %}"
+                                   {% if a.tipo != 'valor' %}readonly{% endif %}></td>
+                        <td><input type="week" name="adit_prazo[]" class="adm-input"
+                                   value="{{ a.prazo or '' }}" {% if a.tipo != 'prazo' %}readonly{% endif %}></td>
+                        <td><input type="date" name="adit_data[]" class="adm-input" value="{{ a.data or '' }}"></td>
+                        <td><input type="text" name="adit_desc[]" class="adm-input" value="{{ a.descricao or '' }}" placeholder="Observação..."></td>
+                        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="button" class="btn-add-row mt-2" onclick="addAditRow()">
+                <i class="bi bi-plus-lg"></i>Adicionar Aditivo
+            </button>
+
+            {% set base = contrato.get('valor_contrato', 0) or 0 %}
+            {% set add_valor = contrato.get('aditivos', [])|selectattr('tipo','equalto','valor')|map(attribute='valor')|sum %}
+            {% set prazos = contrato.get('aditivos', [])|selectattr('tipo','equalto','prazo')|map(attribute='prazo')|select|list %}
+            <div style="margin-top:1.1rem; padding-top:.9rem; border-top:1px dashed var(--tms-border); display:flex; gap:1.6rem; flex-wrap:wrap; font-size:.8rem;">
+                <div><span style="color:var(--tms-muted);">Valor base:</span> <strong>{{ base|currency }}</strong></div>
+                <div><span style="color:var(--tms-muted);">Aditivos de valor:</span> <strong style="color:#3a7a00;">+ {{ add_valor|currency }}</strong></div>
+                <div><span style="color:var(--tms-muted);">Valor efetivo:</span> <strong style="color:var(--tms-cyan);">{{ (base + add_valor)|currency }}</strong></div>
+                {% if prazos %}
+                <div><span style="color:var(--tms-muted);">Prazo vigente (último aditivo):</span> <strong>{{ prazos[-1] }}</strong></div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -294,6 +352,31 @@ function addRow(bodyId, prefix) {
     }
     tbody.appendChild(tr);
     tr.querySelector('input').focus();
+}
+
+// ── Aditivos (valor / prazo) ──────────────────────────────────────────────────
+function aditToggle(sel) {
+    const tr = sel.closest('tr');
+    const valorEl = tr.querySelector('[name="adit_valor[]"]');
+    const prazoEl = tr.querySelector('[name="adit_prazo[]"]');
+    const isValor = sel.value === 'valor';
+    valorEl.readOnly = !isValor; if (!isValor) valorEl.value = '';
+    prazoEl.readOnly = isValor;  if (isValor)  prazoEl.value = '';
+}
+
+function addAditRow() {
+    const tbody = document.getElementById('bodyAdit');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><select name="adit_tipo[]" class="adm-select" onchange="aditToggle(this)">
+          <option value="valor">Valor</option><option value="prazo">Prazo</option></select></td>
+      <td><input type="text" name="adit_valor[]" class="adm-input" placeholder="0,00"></td>
+      <td><input type="week" name="adit_prazo[]" class="adm-input" readonly></td>
+      <td><input type="date" name="adit_data[]" class="adm-input"></td>
+      <td><input type="text" name="adit_desc[]" class="adm-input" placeholder="Observação..."></td>
+      <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('select').focus();
 }
 
 // ── Histograma: estado ────────────────────────────────────────────────────────

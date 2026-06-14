@@ -26,5 +26,40 @@
     "acao": "editar_usuario",
     "alvo": "teste@validacao.com",
     "detalhe": "contratada/Construtora Alpha/CT-2024-001 -> contratada_rw/Construtora Alpha/CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-13T21:16:04.810898",
+    "usuario": "Administrador",
+    "acao": "reset_senha_admin",
+    "alvo": "teste@validacao.com",
+    "detalhe": "senha redefinida manualmente"
+  },
+  {
+    "data_hora": "2026-06-13T21:42:34.350596",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "criar_contrato",
+    "alvo": "bsnasns||5e6784567",
+    "detalhe": "bsnasns / 5e6784567"
+  },
+  {
+    "data_hora": "2026-06-13T21:43:33.555242",
+    "usuario": "Administrador",
+    "acao": "criar_usuario",
+    "alvo": "rumo@teste.com",
+    "detalhe": "role=rumo contratada=- contrato=-"
+  },
+  {
+    "data_hora": "2026-06-13T21:43:33.708491",
+    "usuario": "Público",
+    "acao": "reset_senha_concluido",
+    "alvo": "rumo@teste.com",
+    "detalhe": ""
+  },
+  {
+    "data_hora": "2026-06-13T21:48:29.997759",
+    "usuario": "Administrador",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
   }
 ]

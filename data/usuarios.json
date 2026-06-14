@@ -12,7 +12,7 @@
     "reset_expira": null,
     "criado_em": "2026-06-13T18:51:03.563369",
     "criado_por": "Administrador",
-    "ultimo_login": "2026-06-13T19:33:43.321159"
+    "ultimo_login": "2026-06-13T21:49:08.889974"
   },
   {
     "id": "3024271a-41d8-4bb8-8aa8-8e4c23cdc145",
@@ -21,12 +21,12 @@
     "role": "contratada_rw",
     "contratada": "Construtora Alpha",
     "contrato": "CT-2024-001",
-    "senha_hash": "scrypt:32768:8:1$oeU3hRSwvOLzp757$65d41927025698dcf01934c949a282626d382ca66539ec9bdad394c860f3d47c45363cb6adfa323825c01acd4ccbb96fc2b394160efa522fb580d845476f1781",
+    "senha_hash": "scrypt:32768:8:1$9ACAS3mv0OqGAonJ$a0fbbda617bb68e7f810d7ce63da1106d8e1b24b26e013b62649c51c31d022c2ba525df9de8b48b77450027596ea0700c10cd547bb96f4b91313fef4beeaa717",
     "ativo": true,
     "reset_token": null,
     "reset_expira": null,
     "criado_em": "2026-06-13T20:24:51.757801",
     "criado_por": "Administrador",
-    "ultimo_login": "2026-06-13T20:25:08.849163"
+    "ultimo_login": "2026-06-13T21:50:24.882634"
   }
 ]
