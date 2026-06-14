@@ -1560,10 +1560,8 @@ def login():
             nxt = request.args.get('next', '')
             if nxt.startswith('/') and not nxt.startswith('//'):
                 return redirect(nxt)
-            # RUMO cai no painel consolidado por padrão
-            if user.get('role') == 'rumo':
-                return redirect(url_for('consolidado'))
-            return redirect(url_for('dashboard'))
+            # Após login, vai para a capa (cards de navegação)
+            return redirect(url_for('capa'))
         flash('E-mail ou senha inválidos.', 'danger')
     return render_template('login.html')
 

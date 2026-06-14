@@ -817,14 +817,15 @@
              style="height:42px; filter:drop-shadow(0 2px 10px rgba(0,0,0,.4));">
     </a>
 
+    {% set auth_page = request.endpoint in ['login', 'esqueci_senha', 'redefinir_senha'] %}
     <div class="d-flex align-items-center gap-2">
-        {% if request.endpoint != 'financeiro' %}
+        {% if request.endpoint != 'financeiro' and not auth_page %}
         <a href="{{ url_for('dashboard') }}"
            class="nav-link-rumo {% if request.endpoint == 'dashboard' %}active{% endif %}">
             <i class="bi bi-speedometer2"></i>Dashboard
         </a>
         {% endif %}
-        {% if request.endpoint != 'financeiro' %}
+        {% if request.endpoint != 'financeiro' and not auth_page %}
         <a href="{{ url_for('index') }}"
            class="nav-link-rumo {% if request.endpoint == 'index' %}active{% endif %}">
             <i class="bi bi-grid-3x3-gap"></i>Registros
@@ -855,7 +856,7 @@
         <a href="{{ url_for('logout') }}" class="nav-link-rumo" style="border-color:rgba(255,107,122,.3);">
             <i class="bi bi-box-arrow-right" style="color:#ff6b7a;"></i>Sair
         </a>
-        {% else %}
+        {% elif not auth_page %}
         <a href="{{ url_for('login') }}"
            class="nav-link-rumo {% if request.endpoint == 'login' %}active{% endif %}">
             <i class="bi bi-person"></i>Entrar

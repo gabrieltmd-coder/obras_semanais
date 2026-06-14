@@ -89,7 +89,8 @@ Array de usuários (senha como hash scrypt via werkzeug):
 - **admin** (senha mestra `ADMIN_PASSWORD`): acesso total, gerencia contratos e usuários.
 - **master**: usuário com login próprio e **acesso total, sem restrições** (inclui Admin).
 - **rumo**: igual ao master, **exceto** que não pode alterar/criar usuários master
-  (`can_manage_user`/`_actor_is_rumo`). Cai no painel `/consolidado` ao logar. `ADMIN_ROLES=('master','rumo')`.
+  (`can_manage_user`/`_actor_is_rumo`). Acessa `/consolidado` pela navbar. `ADMIN_ROLES=('master','rumo')`.
+- Após login (`/login`), o usuário cai na **capa** (`/`), salvo `?next=` para deep-links.
 - **staff**: pode criar/editar/excluir registros (auditado por e-mail), sem Admin.
 - **contratada**: somente leitura, vê apenas os dados do **contrato** vinculado.
 - **contratada_rw**: como contratada (escopo no contrato) + pode **criar novos registros**

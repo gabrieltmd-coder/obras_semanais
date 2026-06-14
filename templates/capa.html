@@ -93,6 +93,14 @@
             text-decoration: none;
         }
 
+        /* Cards desativados enquanto o usuário não estiver logado */
+        .nav-card.locked {
+            opacity: .45;
+            filter: grayscale(.7);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         .nav-card.dash  { background: rgba(0,174,239,.09); border-color: rgba(0,174,239,.25); }
         .nav-card.dash:hover  { background: rgba(0,174,239,.16); border-color: rgba(0,174,239,.5); box-shadow: 0 20px 60px rgba(0,174,239,.18); }
 
@@ -191,25 +199,25 @@
         <!-- Cards -->
         <div class="cards-row">
 
-            <a href="{{ url_for('dashboard') }}" class="nav-card dash">
+            <a {% if current_user %}href="{{ url_for('dashboard') }}"{% endif %} class="nav-card dash{% if not current_user %} locked{% endif %}">
                 <div class="card-icon"><i class="bi bi-speedometer2"></i></div>
                 <div class="card-title">Contratadas</div>
                 <div class="card-desc">KPIs, curvas S, histograma e avanço físico consolidado</div>
-                <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+                <div class="card-arrow"><i class="bi bi-{% if current_user %}arrow-right{% else %}lock-fill{% endif %}"></i></div>
             </a>
 
-            <a href="{{ url_for('financeiro') }}" class="nav-card fin">
+            <a {% if current_user %}href="{{ url_for('financeiro') }}"{% endif %} class="nav-card fin{% if not current_user %} locked{% endif %}">
                 <div class="card-icon"><i class="bi bi-currency-dollar"></i></div>
                 <div class="card-title">Financeiro</div>
                 <div class="card-desc">Acompanhamento financeiro, medições e linha de base</div>
-                <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+                <div class="card-arrow"><i class="bi bi-{% if current_user %}arrow-right{% else %}lock-fill{% endif %}"></i></div>
             </a>
 
-            <a href="{{ url_for('construcao') }}" class="nav-card rdo">
+            <a {% if current_user %}href="{{ url_for('construcao') }}"{% endif %} class="nav-card rdo{% if not current_user %} locked{% endif %}">
                 <div class="card-icon"><i class="bi bi-file-earmark-text"></i></div>
                 <div class="card-title">RDO's</div>
                 <div class="card-desc">Relatórios semanais de obra — consulte, filtre e gerencie</div>
-                <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+                <div class="card-arrow"><i class="bi bi-{% if current_user %}arrow-right{% else %}lock-fill{% endif %}"></i></div>
             </a>
 
 
@@ -237,12 +245,14 @@
     <div class="capa-footer">TMS &mdash; Terminal Multimodal de Santos &copy; {{ now.year }}</div>
 
     <script>
-    // Teclado: 1=Dashboard, 2=Financeiro, 3=RDO's
+    {% if current_user %}
+    // Teclado: 1=Dashboard, 2=Financeiro, 3=RDO's (apenas logado)
     document.addEventListener('keydown', e => {
         if (e.key === '1') window.location = "{{ url_for('dashboard') }}";
         if (e.key === '2') window.location = "{{ url_for('financeiro') }}";
         if (e.key === '3') window.location = "{{ url_for('construcao') }}";
     });
+    {% endif %}
     </script>
 
 </body>
