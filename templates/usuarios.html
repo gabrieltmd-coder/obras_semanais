@@ -7,6 +7,26 @@
 
 {% block content %}
 
+<style>
+/* Tabela de usuários — compacta para caber sem rolagem horizontal */
+.tbl-usuarios { table-layout: fixed; width: 100%; }
+.tbl-usuarios th, .tbl-usuarios td {
+    padding: .5rem .55rem !important;
+    font-size: .74rem;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tbl-usuarios td:first-child { word-break: break-all; white-space: normal; }
+.tbl-usuarios .badge { font-size: .62rem !important; padding: .2rem .45rem !important; }
+.tbl-usuarios .acoes .btn {
+    padding: .28rem .42rem !important;
+    font-size: .72rem !important;
+    line-height: 1;
+}
+.tbl-usuarios .acoes form { margin: 0; }
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div style="font-size:.82rem; color:var(--tms-muted);">
         <i class="bi bi-info-circle me-1"></i>
@@ -186,7 +206,12 @@
         <i class="bi bi-people"></i>Usuários ({{ usuarios|length }})
     </div>
     <div class="table-responsive">
-        <table class="table table-rumo mb-0">
+        <table class="table table-rumo tbl-usuarios mb-0">
+            <colgroup>
+                <col style="width:21%"><col style="width:13%"><col style="width:16%">
+                <col style="width:12%"><col style="width:9%"><col style="width:13%">
+                <col style="width:16%">
+            </colgroup>
             <thead>
                 <tr>
                     <th>E-mail</th>
@@ -228,7 +253,7 @@
                         </small>
                     </td>
                     <td class="text-center">
-                        <div class="d-flex gap-1 justify-content-center">
+                        <div class="d-flex gap-1 justify-content-center acoes">
                             <button type="button" class="btn btn-secondary-rumo btn-sm" title="Editar permissões"
                                     onclick="abrirEditarUsuario(this)"
                                     data-uid="{{ u.id }}" data-email="{{ u.email }}"

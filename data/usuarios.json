@@ -18,7 +18,7 @@
     "id": "3024271a-41d8-4bb8-8aa8-8e4c23cdc145",
     "email": "teste@validacao.com",
     "nome": "",
-    "role": "contratada",
+    "role": "contratada_rw",
     "contratada": "Construtora Alpha",
     "contrato": "CT-2024-001",
     "senha_hash": "scrypt:32768:8:1$oeU3hRSwvOLzp757$65d41927025698dcf01934c949a282626d382ca66539ec9bdad394c860f3d47c45363cb6adfa323825c01acd4ccbb96fc2b394160efa522fb580d845476f1781",

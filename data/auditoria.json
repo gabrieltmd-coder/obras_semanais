@@ -19,5 +19,12 @@
     "acao": "editar_usuario",
     "alvo": "teste@validacao.com",
     "detalhe": "staff/-/- -> contratada/Construtora Alpha/CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-13T20:38:15.814326",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_usuario",
+    "alvo": "teste@validacao.com",
+    "detalhe": "contratada/Construtora Alpha/CT-2024-001 -> contratada_rw/Construtora Alpha/CT-2024-001"
   }
 ]
