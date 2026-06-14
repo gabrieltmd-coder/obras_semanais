@@ -20,7 +20,7 @@
             </select>
         </div>
         <div class="col-md-3">
-            <div class="filter-label"><i class="bi bi-calendar me-1"></i>Semana (segunda-feira)</div>
+            <div class="filter-label"><i class="bi bi-calendar me-1"></i>Data</div>
             <input type="date" name="semana" class="form-control form-control-sm"
                    value="{{ filtro_semana }}">
         </div>
@@ -34,22 +34,32 @@
                 </a>
             {% endif %}
         </div>
-        <div class="col-md-auto ms-auto">
-            <a href="{{ url_for('novo') }}" class="btn btn-primary-rumo">
-                <i class="bi bi-plus-lg me-1"></i>Novo Registro
-            </a>
-        </div>
     </form>
 </div>
 
 <!-- TABLE -->
 <div class="card-rumo">
-    <div class="card-header">
-        <i class="bi bi-table"></i>
-        Registros
-        {% if filtro_contratada or filtro_semana %}
-            <span style="color:rgba(255,255,255,.55); font-weight:400;"> — filtrado</span>
-        {% endif %}
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <i class="bi bi-table"></i>
+            Registros
+            {% if filtro_contratada or filtro_semana %}
+                <span style="color:rgba(255,255,255,.55); font-weight:400;"> — filtrado</span>
+            {% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            {% if can_create %}
+            <a href="{{ url_for('novo') }}" class="btn btn-primary-rumo btn-sm">
+                <i class="bi bi-plus-lg me-1" style="color:#fff;"></i>Novo Registro
+            </a>
+            {% endif %}
+            <a href="{{ url_for('export_excel') }}" class="btn-export" title="Exportar Excel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3v13M7 11l5 5 5-5"/>
+                    <line x1="4" y1="21" x2="20" y2="21"/>
+                </svg>
+            </a>
+        </div>
     </div>
 
     {% if registros %}
@@ -62,7 +72,6 @@
                     <th>Contrato</th>
                     <th class="text-center">Direto</th>
                     <th class="text-center">Indireto</th>
-                    <th class="text-end">Valor Medido da Semana</th>
                     <th>Alterado em</th>
                     <th class="text-center">Ações</th>
                 </tr>
@@ -86,9 +95,6 @@
                     <td class="text-center">
                         <span class="badge-indireto">{{ r.total_indireto }}</span>
                     </td>
-                    <td class="text-end" style="font-weight:700; color:#1a5c00;">
-                        {{ r.valor_medido|currency }}
-                    </td>
                     <td>
                         <small style="color:#8a9aaa; font-size:.72rem;">
                             {% if r.get('alterado_em') %}
@@ -105,6 +111,7 @@
                                title="Visualizar" target="_blank">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            {% if can_write %}
                             <a href="{{ url_for('editar', id=r.id) }}"
                                class="btn btn-secondary-rumo btn-sm"
                                title="Editar">
@@ -116,6 +123,7 @@
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -129,7 +137,7 @@
         <p>Nenhum registro encontrado.
             {% if filtro_contratada or filtro_semana %}
                 Tente remover os filtros.
-            {% else %}
+            {% elif can_create %}
                 <a href="{{ url_for('novo') }}" style="color:var(--rumo-cyan);">Criar o primeiro registro</a>.
             {% endif %}
         </p>
@@ -138,6 +146,7 @@
 </div>
 
 <!-- MODAL EXCLUSÃO -->
+{% if can_write %}
 <div class="modal fade" id="modalExclusao" tabindex="-1" aria-labelledby="modalExclusaoLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content" style="border-radius:6px; border:none; box-shadow:0 8px 32px rgba(0,51,102,.18);">
@@ -153,9 +162,6 @@
                 </p>
                 <input type="password" id="senhaExclusao" class="form-control"
                        placeholder="••••••••••" autocomplete="new-password">
-                <div id="senhaErro" style="display:none; color:#dc3545; font-size:.75rem; margin-top:.45rem;">
-                    <i class="bi bi-exclamation-circle me-1"></i>Senha incorreta. Tente novamente.
-                </div>
             </div>
             <div class="modal-footer" style="padding:.75rem 1.2rem; border-top:1px solid var(--rumo-gray-border);">
                 <button type="button" class="btn btn-secondary-rumo btn-sm" data-bs-dismiss="modal">Cancelar</button>
@@ -166,10 +172,12 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 {% endblock %}
 
 {% block scripts %}
+{% if can_write %}
 <script>
 let _formExclusao = null;
 let _modalInstance = null;
@@ -177,7 +185,6 @@ let _modalInstance = null;
 function abrirModalExclusao(form) {
     _formExclusao = form;
     document.getElementById('senhaExclusao').value = '';
-    document.getElementById('senhaErro').style.display = 'none';
     _modalInstance = new bootstrap.Modal(document.getElementById('modalExclusao'));
     _modalInstance.show();
     document.getElementById('modalExclusao').addEventListener('shown.bs.modal', function() {
@@ -185,19 +192,24 @@ function abrirModalExclusao(form) {
     }, { once: true });
 }
 
+// A senha é validada no servidor (rota /excluir); nada de segredo no front-end.
 document.getElementById('btnConfirmarExclusao').addEventListener('click', function() {
+    if (!_formExclusao) return;
     const senha = document.getElementById('senhaExclusao').value;
-    if (senha === 'Pipoc@2407') {
-        if (_formExclusao) _formExclusao.submit();
-    } else {
-        document.getElementById('senhaErro').style.display = 'block';
-        document.getElementById('senhaExclusao').value = '';
-        document.getElementById('senhaExclusao').focus();
+    let hidden = _formExclusao.querySelector('input[name="senha"]');
+    if (!hidden) {
+        hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'senha';
+        _formExclusao.appendChild(hidden);
     }
+    hidden.value = senha;
+    _formExclusao.submit();
 });
 
 document.getElementById('senhaExclusao').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') document.getElementById('btnConfirmarExclusao').click();
 });
 </script>
+{% endif %}
 {% endblock %}

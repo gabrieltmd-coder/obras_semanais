@@ -93,14 +93,23 @@
             text-decoration: none;
         }
 
+        /* Cards desativados enquanto o usuário não estiver logado */
+        .nav-card.locked {
+            opacity: .45;
+            filter: grayscale(.7);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         .nav-card.dash  { background: rgba(0,174,239,.09); border-color: rgba(0,174,239,.25); }
         .nav-card.dash:hover  { background: rgba(0,174,239,.16); border-color: rgba(0,174,239,.5); box-shadow: 0 20px 60px rgba(0,174,239,.18); }
 
-        .nav-card.reg   { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.12); }
-        .nav-card.reg:hover   { background: rgba(255,255,255,.10); }
+        .nav-card.fin   { background: rgba(240,165,0,.09); border-color: rgba(240,165,0,.25); }
+        .nav-card.fin:hover   { background: rgba(240,165,0,.16); border-color: rgba(240,165,0,.5); box-shadow: 0 20px 60px rgba(240,165,0,.15); }
 
-        .nav-card.novo  { background: rgba(141,198,63,.09); border-color: rgba(141,198,63,.25); }
-        .nav-card.novo:hover  { background: rgba(141,198,63,.16); border-color: rgba(141,198,63,.5); box-shadow: 0 20px 60px rgba(141,198,63,.15); }
+        .nav-card.rdo   { background: rgba(141,198,63,.09); border-color: rgba(141,198,63,.25); }
+        .nav-card.rdo:hover   { background: rgba(141,198,63,.16); border-color: rgba(141,198,63,.5); box-shadow: 0 20px 60px rgba(141,198,63,.15); }
+
 
         .card-icon {
             width: 62px; height: 62px;
@@ -110,8 +119,8 @@
             margin-bottom: .25rem;
         }
         .dash  .card-icon { background: rgba(0,174,239,.18); color: #00d4ff; }
-        .reg   .card-icon { background: rgba(255,255,255,.10); color: rgba(255,255,255,.8); }
-        .novo  .card-icon { background: rgba(141,198,63,.18); color: #8DC63F; }
+        .fin   .card-icon { background: rgba(240,165,0,.18); color: #f0a500; }
+        .rdo   .card-icon { background: rgba(141,198,63,.18); color: #8DC63F; }
 
         .card-title {
             font-family: 'Montserrat', sans-serif;
@@ -120,9 +129,9 @@
             text-transform: uppercase;
             letter-spacing: .08em;
         }
-        .dash  .card-title { color: #00d4ff; }
-        .reg   .card-title { color: rgba(255,255,255,.85); }
-        .novo  .card-title { color: #8DC63F; }
+        .dash   .card-title { color: #00d4ff; }
+        .fin    .card-title { color: #f0a500; }
+        .rdo    .card-title { color: #8DC63F; }
 
         .card-desc {
             font-size: .73rem;
@@ -138,8 +147,9 @@
             transition: opacity .2s, transform .2s;
         }
         .nav-card:hover .card-arrow { opacity: .9; transform: translateX(4px); }
-        .dash:hover  .card-arrow { color: #00d4ff; }
-        .novo:hover  .card-arrow { color: #8DC63F; }
+        .dash:hover   .card-arrow { color: #00d4ff; }
+        .fin:hover    .card-arrow { color: #f0a500; }
+        .rdo:hover    .card-arrow { color: #8DC63F; }
 
         /* Footer */
         .capa-footer {
@@ -189,39 +199,60 @@
         <!-- Cards -->
         <div class="cards-row">
 
-            <a href="{{ url_for('dashboard') }}" class="nav-card dash">
+            <a {% if current_user %}href="{{ url_for('dashboard') }}"{% endif %} class="nav-card dash{% if not current_user %} locked{% endif %}">
                 <div class="card-icon"><i class="bi bi-speedometer2"></i></div>
-                <div class="card-title">Dashboard</div>
-                <div class="card-desc">KPIs, curvas S financeira e física, histograma consolidado</div>
-                <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+                <div class="card-title">Contratadas</div>
+                <div class="card-desc">KPIs, curvas S, histograma e avanço físico consolidado</div>
+                <div class="card-arrow"><i class="bi bi-{% if current_user %}arrow-right{% else %}lock-fill{% endif %}"></i></div>
             </a>
 
-            <a href="{{ url_for('index') }}" class="nav-card reg">
-                <div class="card-icon"><i class="bi bi-grid-3x3-gap"></i></div>
-                <div class="card-title">Registros</div>
-                <div class="card-desc">Consulte, filtre e gerencie os registros semanais</div>
-                <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+            <a {% if current_user %}href="{{ url_for('financeiro') }}"{% endif %} class="nav-card fin{% if not current_user %} locked{% endif %}">
+                <div class="card-icon"><i class="bi bi-currency-dollar"></i></div>
+                <div class="card-title">Financeiro</div>
+                <div class="card-desc">Acompanhamento financeiro, medições e linha de base</div>
+                <div class="card-arrow"><i class="bi bi-{% if current_user %}arrow-right{% else %}lock-fill{% endif %}"></i></div>
             </a>
 
-            <a href="{{ url_for('novo') }}" class="nav-card novo">
-                <div class="card-icon"><i class="bi bi-plus-circle"></i></div>
-                <div class="card-title">Novo Registro</div>
-                <div class="card-desc">Cadastre a evolução da semana para um contrato</div>
-                <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+            <a {% if current_user %}href="{{ url_for('construcao') }}"{% endif %} class="nav-card rdo{% if not current_user %} locked{% endif %}">
+                <div class="card-icon"><i class="bi bi-file-earmark-text"></i></div>
+                <div class="card-title">RDO's</div>
+                <div class="card-desc">Relatórios semanais de obra — consulte, filtre e gerencie</div>
+                <div class="card-arrow"><i class="bi bi-{% if current_user %}arrow-right{% else %}lock-fill{% endif %}"></i></div>
             </a>
 
+
+        </div>
+
+        <div style="margin-top:1.75rem; display:flex; gap:1.25rem; align-items:center;">
+            {% if current_user %}
+            <span style="font-size:.74rem; color:rgba(255,255,255,.5);">
+                <i class="bi bi-person-circle me-1" style="color:#00d4ff;"></i>{{ current_user.nome or current_user.email }}
+            </span>
+            <a href="{{ url_for('logout') }}" style="font-size:.74rem; color:rgba(255,255,255,.5); text-decoration:none;">
+                <i class="bi bi-box-arrow-right me-1"></i>Sair
+            </a>
+            {% else %}
+            <a href="{{ url_for('login') }}" style="font-size:.78rem; color:rgba(255,255,255,.6); text-decoration:none;
+               border:1px solid rgba(255,255,255,.15); padding:.5rem 1.1rem; border-radius:10px; transition:all .2s;"
+               onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,.4)';"
+               onmouseout="this.style.color='rgba(255,255,255,.6)';this.style.borderColor='rgba(255,255,255,.15)';">
+                <i class="bi bi-person me-1"></i>Área do Cliente — Entrar
+            </a>
+            {% endif %}
         </div>
     </div>
 
     <div class="capa-footer">TMS &mdash; Terminal Multimodal de Santos &copy; {{ now.year }}</div>
 
     <script>
-    // Teclado: 1=Dashboard, 2=Registros, 3=Novo
+    {% if current_user %}
+    // Teclado: 1=Dashboard, 2=Financeiro, 3=RDO's (apenas logado)
     document.addEventListener('keydown', e => {
         if (e.key === '1') window.location = "{{ url_for('dashboard') }}";
-        if (e.key === '2') window.location = "{{ url_for('index') }}";
-        if (e.key === '3') window.location = "{{ url_for('novo') }}";
+        if (e.key === '2') window.location = "{{ url_for('financeiro') }}";
+        if (e.key === '3') window.location = "{{ url_for('construcao') }}";
     });
+    {% endif %}
     </script>
 
 </body>
