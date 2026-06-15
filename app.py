@@ -133,6 +133,31 @@ def audit_log(acao, alvo, detalhe=''):
         app.logger.warning(f'Falha ao gravar auditoria: {e}')
 
 
+def _audit_descricao(a):
+    """Texto curto e legível resumindo a ação registrada na auditoria."""
+    acao    = a.get('acao', '')
+    detalhe = (a.get('detalhe') or '').strip()
+    alvo    = (a.get('alvo') or '').strip()
+    _, _, tipo = acao.partition('_')   # criar_registro -> tipo='registro'
+
+    if tipo == 'registro':
+        base  = detalhe.split(' — por ')[0]
+        parts = [p.strip() for p in base.split('/') if p.strip()]
+        if len(parts) >= 3:
+            return f'Registro de {parts[0]} — contrato {parts[1]}, semana {parts[2]}'
+        return f'Registro ({base})' if base else 'Registro'
+    if tipo == 'usuario':
+        if acao == 'editar_usuario':
+            return f'Permissões do usuário {alvo}'
+        return f'Usuário {alvo}'
+    if tipo == 'contrato':
+        parts = [p.strip() for p in detalhe.split('/') if p.strip()]
+        if len(parts) >= 2:
+            return f'Contrato {parts[1]} de {parts[0]}'
+        return f'Contrato {alvo}'
+    return detalhe or alvo or '—'
+
+
 # ── Sessão / controle de acesso ──────────────────────────────────────────────
 def current_user():
     """Retorna o usuário atuante: admin (senha mestra), usuário cadastrado, ou None."""
@@ -1241,7 +1266,7 @@ def dashboard():
     TOP = 15
     hist_labels = [k for k, _ in hist_list[:TOP]]
     hist_qtd    = [v['total'] for _, v in hist_list[:TOP]]
-    _COLOR_MAP  = {'direto': 'rgba(34,211,238,.85)', 'indireto': 'rgba(37,99,235,.85)', 'classificar': 'rgba(100,116,139,.7)'}
+    _COLOR_MAP  = {'direto': 'rgba(141,198,63,.85)', 'indireto': 'rgba(0,174,239,.85)', 'classificar': 'rgba(240,165,0,.85)'}
     hist_colors = [_COLOR_MAP.get(v['tipo'], '#ccc') for _, v in hist_list[:TOP]]
 
     # ── Saldo = Valor do Contrato (ADM) − Total Medido ──
@@ -1549,7 +1574,11 @@ def login():
         if user and user.get('ativo', True) and check_password_hash(user.get('senha_hash', ''), senha):
             session.pop('admin_ok', None)
             session['user_id'] = user['id']
-            user['ultimo_login'] = datetime.now().isoformat()
+            agora = datetime.now().isoformat()
+            user['ultimo_login'] = agora
+            historico = user.get('historico_logins') or []
+            historico.append(agora)
+            user['historico_logins'] = historico[-50:]  # mantém os 50 logins mais recentes
             usuarios = load_usuarios()
             for i, u in enumerate(usuarios):
                 if u.get('id') == user['id']:
@@ -1678,11 +1707,26 @@ def admin_usuarios():
             contratos_por_contratada.setdefault(c, [])
             if k not in contratos_por_contratada[c]:
                 contratos_por_contratada[c].append(k)
+
+    # Log de atividade — somente criação, edição e exclusão (mais recentes primeiro).
+    # Visível apenas para o usuário master.
+    cu = current_user()
+    auditoria = []
+    if cu and cu.get('role') == 'master':
+        auditoria = [
+            a for a in load_auditoria()
+            if str(a.get('acao', '')).startswith(('criar_', 'editar_', 'excluir_'))
+        ]
+        auditoria = sorted(auditoria, key=lambda a: a.get('data_hora', ''), reverse=True)[:200]
+        for a in auditoria:
+            a['descricao'] = _audit_descricao(a)
+
     return render_template('usuarios.html',
                            usuarios=usuarios,
                            contratadas=get_contratadas(),
                            contratos_por_contratada=contratos_por_contratada,
                            smtp_ok=_smtp_configured(),
+                           auditoria=auditoria,
                            cred=cred)
 
 
@@ -1729,6 +1773,7 @@ def admin_usuarios_novo():
         'criado_em':    datetime.now().isoformat(),
         'criado_por':   current_user_label(),
         'ultimo_login': None,
+        'historico_logins': [],
     }
     token = _set_reset_token(novo)
     usuarios.append(novo)

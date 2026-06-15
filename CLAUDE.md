@@ -83,7 +83,8 @@ Array de usuários (senha como hash scrypt via werkzeug):
   "ativo": true,
   "reset_token": null,           // token de redefinição (esqueci minha senha)
   "reset_expira": "ISO datetime",
-  "criado_em": "ISO datetime", "criado_por": "...", "ultimo_login": "ISO datetime"
+  "criado_em": "ISO datetime", "criado_por": "...", "ultimo_login": "ISO datetime",
+  "historico_logins": ["ISO datetime", ...]  // acumula cada login (mantém os 50 mais recentes)
 }
 ```
 - **admin** (senha mestra `ADMIN_PASSWORD`): acesso total, gerencia contratos e usuários.

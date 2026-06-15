@@ -300,6 +300,56 @@
         </table>
     </div>
 </div>
+
+<!-- LOG DE ATIVIDADE (somente criação, edição e exclusão) — visível apenas ao MASTER -->
+{% if current_user and current_user.role == 'master' %}
+<div class="card-rumo mt-3">
+    <div class="card-header">
+        <i class="bi bi-clock-history"></i>Log de Atividade ({{ auditoria|length }})
+        <small style="font-weight:500; color:#8a9aaa; font-size:.72rem; margin-left:.4rem;">criação · edição · exclusão</small>
+    </div>
+    {% if auditoria %}
+    <div class="table-responsive">
+        <table class="table table-rumo mb-0">
+            <colgroup>
+                <col style="width:16%"><col style="width:22%"><col style="width:12%"><col style="width:50%">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Data / Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Detalhe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in auditoria %}
+                {% set verbo = a.acao.split('_')[0] %}
+                <tr>
+                    <td><small style="color:#8a9aaa; font-size:.74rem;">{{ a.data_hora[:16].replace('T',' ') }}</small></td>
+                    <td style="font-size:.82rem;">{{ a.usuario or '—' }}</td>
+                    <td>
+                        {% if verbo == 'criar' %}
+                        <span class="badge" style="background:rgba(141,198,63,.14); color:#3a7a00; font-size:.68rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">Criou</span>
+                        {% elif verbo == 'editar' %}
+                        <span class="badge" style="background:rgba(0,174,239,.14); color:#0092c8; font-size:.68rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">Editou</span>
+                        {% else %}
+                        <span class="badge" style="background:rgba(220,53,69,.12); color:#dc3545; font-size:.68rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">Excluiu</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:.82rem; color:#4a5a6a;">
+                        {{ a.descricao or '—' }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="padding:1rem; margin:0; color:#8a9aaa; font-size:.85rem;">Nenhuma atividade registrada ainda.</p>
+    {% endif %}
+</div>
+{% endif %}
 {% endif %}
 
 {% endblock %}
