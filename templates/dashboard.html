@@ -7,61 +7,63 @@
 
 {% block content %}
 <style>
-/* ── DARK THEME OVERRIDE ── */
-body { background: #0b1828 !important; }
-.page-header { background: linear-gradient(135deg,#040c18 0%,#0b1828 100%) !important; padding:1rem 0 .85rem !important; margin-bottom:.85rem !important; }
-.app-footer  { background: #040c18 !important; margin-top:0 !important; padding:.6rem !important; }
+/* ── CYAN / ELECTRIC-BLUE HUD THEME (ref. mockup) ── */
+body { background: #070b1f !important; background-image: radial-gradient(1100px 600px at 85% -10%, rgba(34,211,238,.12), transparent 60%), radial-gradient(900px 500px at 0% 110%, rgba(37,99,235,.14), transparent 55%) !important; }
+.page-header { background: linear-gradient(135deg,#081230 0%,#0d2a5e 100%) !important; padding:1rem 0 .85rem !important; margin-bottom:.85rem !important; }
+.app-footer  { background: #060a1a !important; margin-top:0 !important; padding:.6rem !important; }
 
 /* ── GLASS CARD ── */
 .gc {
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.09);
+    background: linear-gradient(160deg, rgba(34,211,238,.06), rgba(37,99,235,.05));
+    border: 1px solid rgba(34,211,238,.18);
     border-radius: 16px;
     padding: .85rem 1rem;
     backdrop-filter: blur(10px);
+    box-shadow: 0 8px 30px rgba(2,8,28,.45), inset 0 0 0 1px rgba(34,211,238,.03);
 }
 .gc-title {
     font-size: .6rem; font-weight:800; text-transform:uppercase;
-    letter-spacing:.10em; color:rgba(255,255,255,.4);
+    letter-spacing:.10em; color:rgba(255,255,255,.5);
     margin-bottom: .6rem;
     display:flex; align-items:center; justify-content:space-between;
 }
-.gc-title i { color:#00AEEF; margin-right:.3rem; }
-.gc-sub { font-size:.58rem; color:rgba(255,255,255,.25); }
+.gc-title i { color:#22d3ee; margin-right:.3rem; }
+.gc-sub { font-size:.58rem; color:rgba(255,255,255,.3); }
 
 /* ── FILTER BAR ── */
 .d-filter {
-    background: linear-gradient(135deg, #001f4d 0%, #003a80 50%, #005099 100%);
-    border: 1px solid rgba(0,174,239,.40);
-    border-left: 4px solid #00AEEF;
+    background: linear-gradient(135deg, #0a2a6b 0%, #1366c4 55%, #22d3ee 100%);
+    border: 1px solid rgba(34,211,238,.5);
+    border-left: 4px solid #22d3ee;
     border-radius: 12px;
     padding: .65rem 1rem;
     margin-bottom: .7rem;
     display: flex; align-items: flex-end; gap: .85rem; flex-wrap: wrap;
-    box-shadow: 0 4px 24px rgba(0,31,77,.55);
+    box-shadow: 0 4px 24px rgba(13,42,94,.6);
 }
-.d-filter .filter-label { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.70); margin-bottom:.18rem; }
+.d-filter .filter-label { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.82); margin-bottom:.18rem; }
 .d-filter .form-control,
 .d-filter .form-select {
-    background: rgba(255,255,255,.07) !important;
-    border: 1px solid rgba(255,255,255,.12) !important;
+    background: rgba(255,255,255,.12) !important;
+    border: 1px solid rgba(255,255,255,.22) !important;
     color: #fff !important; border-radius: 8px !important;
     font-size:.76rem !important; padding:.28rem .65rem !important; height:30px !important;
 }
-.d-filter .form-select option { background:#0b1828; }
+.d-filter .form-select option { background:#0d2a5e; }
 .d-filter .btn { height:30px; border-radius:8px; font-size:.68rem; padding:.28rem .75rem; display:inline-flex; align-items:center; gap:.3rem; }
-.d-filter .btn-f { background:rgba(0,174,239,.18); border:1px solid rgba(0,174,239,.35); color:#00d4ff; }
-.d-filter .btn-x { background:rgba(220,53,69,.15); border:1px solid rgba(220,53,69,.25); color:#ff6b7a; }
+.d-filter .btn-f { background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.4); color:#fff; }
+.d-filter .btn-x { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.28); color:#fff; }
 
 /* ── KPI STRIP ── */
 .kpi-strip { display:flex; gap:.55rem; margin-bottom:.7rem; }
 .kpi-mini {
-    background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09);
+    background: linear-gradient(160deg, rgba(34,211,238,.06), rgba(37,99,235,.05));
+    border:1px solid rgba(34,211,238,.16);
     border-radius:12px; padding:.55rem .8rem; flex:1; min-width:0;
     border-left:3px solid rgba(255,255,255,.15);
 }
-.kpi-mini.c  { border-left-color:#00AEEF; }
-.kpi-mini.g  { border-left-color:#8DC63F; }
+.kpi-mini.c  { border-left-color:#22d3ee; }
+.kpi-mini.g  { border-left-color:#3b82f6; }
 .kpi-mini.nd { border-left-color:rgba(255,255,255,.12); }
 .kpi-ml { font-size:.56rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.38); margin-bottom:.18rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .kpi-mv { font-family:'Montserrat',sans-serif; font-size:.95rem; font-weight:800; color:#fff; line-height:1; }
@@ -81,7 +83,7 @@ body { background: #0b1828 !important; }
 {% if not kpis %}
 <div class="gc text-center py-4">
     <i class="bi bi-bar-chart" style="font-size:2rem;color:rgba(255,255,255,.15);display:block;margin-bottom:.5rem;"></i>
-    <p style="color:rgba(255,255,255,.35);font-size:.82rem;margin:0;">Nenhum registro. <a href="{{ url_for('novo') }}" style="color:#00AEEF;">Criar registro</a>.</p>
+    <p style="color:rgba(255,255,255,.35);font-size:.82rem;margin:0;">Nenhum registro. <a href="{{ url_for('novo') }}" style="color:#22d3ee;">Criar registro</a>.</p>
 </div>
 
 {% else %}
@@ -129,7 +131,7 @@ body { background: #0b1828 !important; }
     {% endif %}
         <div class="kpi-ml">Saldo</div>
         {% if kpis.total_valor_contrato %}
-        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#7dda24{% else %}#ff6b7a{% endif %};">
+        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#22d3ee{% else %}#ff6b7a{% endif %};">
             {{ kpis.saldo|currency }}
         </div>
         {% else %}
@@ -175,22 +177,17 @@ body { background: #0b1828 !important; }
                 <canvas id="chartPrevDonut" width="90" height="90" style="max-width:90px;flex-shrink:0;"></canvas>
                 <div style="flex:1;min-width:0;">
                     <div class="leg">
-                        <div class="leg-dot" style="background:rgba(141,198,63,.85);"></div>
+                        <div class="leg-dot" style="background:rgba(34,211,238,.85);"></div>
                         <span class="leg-name">Direto</span>
                         {% set tot = prev_direto + prev_indireto %}
-                        <span class="leg-val" style="color:#8DC63F;">{{ (prev_direto / tot * 100)|round|int if tot else 0 }}%</span>
+                        <span class="leg-val" style="color:#22d3ee;">{{ (prev_direto / tot * 100)|round|int if tot else 0 }}%</span>
                     </div>
                     <div class="leg">
-                        <div class="leg-dot" style="background:rgba(0,174,239,.85);"></div>
+                        <div class="leg-dot" style="background:rgba(37,99,235,.85);"></div>
                         <span class="leg-name">Indireto</span>
-                        <span class="leg-val" style="color:#00AEEF;">{{ (prev_indireto / tot * 100)|round|int if tot else 0 }}%</span>
+                        <span class="leg-val" style="color:#3b82f6;">{{ (prev_indireto / tot * 100)|round|int if tot else 0 }}%</span>
                     </div>
                 </div>
-            </div>
-            <!-- Ações Notáveis — progresso -->
-            <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:.55rem;">
-                <div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.28);margin-bottom:.45rem;">Ações Notáveis — Evolução</div>
-                <canvas id="chartAcoes" height="110"></canvas>
             </div>
             {% else %}
             <div style="text-align:center;padding:1.5rem;color:rgba(255,255,255,.25);font-size:.8rem;">
@@ -198,6 +195,15 @@ body { background: #0b1828 !important; }
                 Sem dados de histograma previsto.<br>Configure o histograma na área Admin.
             </div>
             {% endif %}
+            <!-- Efetivo por Função -->
+            <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:.55rem;margin-top:.55rem;">
+                <div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.28);margin-bottom:.45rem;">Efetivo por Função</div>
+                {% if hist_list %}
+                <canvas id="chartHistograma" height="110"></canvas>
+                {% else %}
+                <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.25);font-size:.8rem;">Sem dados.</div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -217,9 +223,9 @@ body { background: #0b1828 !important; }
 
     <div class="col-lg-6 d-flex">
         <div class="gc w-100">
-            <div class="gc-title"><span><i class="bi bi-people"></i>Efetivo por Função</span><span class="gc-sub">Top {{ hist_list|length }}</span></div>
-            {% if hist_list %}
-            <canvas id="chartHistograma" height="120"></canvas>
+            <div class="gc-title"><span><i class="bi bi-graph-up-arrow"></i>Ações Notáveis — Evolução</span></div>
+            {% if acoes_labels and acoes_labels != '[]' %}
+            <canvas id="chartAcoes" height="120"></canvas>
             {% else %}
             <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.25);font-size:.8rem;">Sem dados.</div>
             {% endif %}
@@ -244,6 +250,11 @@ const FIS_BASE  = {{ curva_fis_base|safe }};
 const HIST_LABELS = {{ hist_labels|safe }};
 const HIST_QTD    = {{ hist_qtd|safe }};
 const HIST_COLORS = {{ hist_colors|safe }};
+const HIST_TIPOS  = [
+    { text:'Direto',         color:'rgba(34,211,238,.85)' },
+    { text:'Indireto',       color:'rgba(37,99,235,.85)' },
+    { text:'A classificar',  color:'rgba(100,116,139,.7)' }
+];
 const ACOES_LABELS  = {{ acoes_labels|safe }};
 const ACOES_PCT     = {{ acoes_pct|safe }};
 const PREV_DIRETO   = {{ prev_direto }};
@@ -272,14 +283,14 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
             datasets: [{
                 label: 'Realizado (R$)',
                 data: FIN_ACUM,
-                borderColor: '#7dda24',
-                backgroundColor: 'rgba(125,218,36,.08)',
+                borderColor: '#22d3ee',
+                backgroundColor: 'rgba(34,211,238,.14)',
                 borderWidth: 2,
-                pointRadius: 3, pointBackgroundColor: '#7dda24',
+                pointRadius: 3, pointBackgroundColor: '#22d3ee',
                 fill: true, tension: 0.45,
             },{
                 label: 'Linha de Base',
-                data: FIN_BASE, borderColor: '#00d4ff',
+                data: FIN_BASE, borderColor: '#3b82f6',
                 borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
             }]
         },
@@ -290,7 +301,7 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
                 tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
                 datalabels:{
                     display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
-                    align:'top', anchor:'end', color:'#7dda24',
+                    align:'top', anchor:'end', color:'#67e8f9',
                     formatter: v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'
                 }
             },
@@ -311,14 +322,14 @@ if (document.getElementById('chartFisico') && LABELS.length) {
             datasets: [{
                 label: 'Avanço Real (%)',
                 data: FIS_REAL,
-                borderColor: '#7dda24',
-                backgroundColor: 'rgba(125,218,36,.08)',
+                borderColor: '#22d3ee',
+                backgroundColor: 'rgba(34,211,238,.14)',
                 borderWidth: 2,
-                pointRadius: 3, pointBackgroundColor: '#7dda24',
+                pointRadius: 3, pointBackgroundColor: '#22d3ee',
                 fill: true, tension: 0.45,
             },{
                 label: 'Linha de Base',
-                data: FIS_BASE, borderColor: '#00d4ff',
+                data: FIS_BASE, borderColor: '#3b82f6',
                 borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false,
             }]
         },
@@ -329,7 +340,7 @@ if (document.getElementById('chartFisico') && LABELS.length) {
                 tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':` ${ctx.parsed.y}%` }},
                 datalabels:{
                     display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
-                    align:'top', anchor:'end', color:'#7dda24',
+                    align:'top', anchor:'end', color:'#67e8f9',
                     formatter: v => v+'%'
                 }
             },
@@ -353,7 +364,7 @@ if (document.getElementById('chartHistograma') && HIST_LABELS.length) {
             indexAxis:'y', responsive:true, animation:{ duration:600 },
             layout:{ padding:{ right: 36 } },
             plugins:{
-                legend:{display:false},
+                legend:{ display:false },
                 tooltip:{ callbacks:{ label: ctx=>` ${ctx.parsed.x} trabalhadores` }},
                 datalabels:{ anchor:'end', align:'end', color:'#fff', clip:false, formatter: v => v }
             },
@@ -372,7 +383,7 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
         data:{
             labels:['Direto','Indireto'],
             datasets:[{ data:[PREV_DIRETO, PREV_INDIRETO],
-                backgroundColor:['rgba(141,198,63,.85)','rgba(0,174,239,.85)'],
+                backgroundColor:['rgba(34,211,238,.85)','rgba(37,99,235,.85)'],
                 borderWidth:2, borderColor:'rgba(255,255,255,.05)', hoverOffset:4 }]
         },
         options:{
@@ -397,9 +408,9 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
 // ── Ações Notáveis — evolução % ──
 if (document.getElementById('chartAcoes') && ACOES_LABELS.length) {
     const acoesBg = ACOES_PCT.map(p =>
-        p >= 80 ? 'rgba(141,198,63,.85)' :
-        p >= 40 ? 'rgba(0,174,239,.85)'  :
-                  'rgba(240,165,0,.85)'
+        p >= 80 ? 'rgba(34,211,238,.9)'  :
+        p >= 40 ? 'rgba(59,130,246,.9)'  :
+                  'rgba(30,64,175,.9)'
     );
     new Chart(document.getElementById('chartAcoes'), {
         type:'bar',

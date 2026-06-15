@@ -28,5 +28,20 @@
     "criado_em": "2026-06-13T20:24:51.757801",
     "criado_por": "Administrador",
     "ultimo_login": "2026-06-13T21:50:24.882634"
+  },
+  {
+    "id": "4908f20b-4228-457c-8a34-00efd5d5d7a2",
+    "email": "monique.shiraishi@rumolog.com",
+    "nome": "",
+    "role": "rumo",
+    "contratada": null,
+    "contrato": null,
+    "senha_hash": "scrypt:32768:8:1$xZeiFltIsCfU8yQL$03510a942e59d0a8a1ea40c73bb8299d476e58cf7a2603707c7484a3b6231b29ada3978e4f147b38ebd74023906698e4572304b869cd9fe42be3b4c9dbf31dae",
+    "ativo": true,
+    "reset_token": "oIjEzeeEphjWZDOdohWHoZk7Vx_yyt8IRN9Z8LPD-hA",
+    "reset_expira": "2026-06-15T11:10:21.011002",
+    "criado_em": "2026-06-15T09:10:21.010936",
+    "criado_por": "Administrador",
+    "ultimo_login": null
   }
 ]

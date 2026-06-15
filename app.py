@@ -1241,7 +1241,7 @@ def dashboard():
     TOP = 15
     hist_labels = [k for k, _ in hist_list[:TOP]]
     hist_qtd    = [v['total'] for _, v in hist_list[:TOP]]
-    _COLOR_MAP  = {'direto': 'rgba(141,198,63,.85)', 'indireto': 'rgba(0,174,239,.85)', 'classificar': 'rgba(240,165,0,.85)'}
+    _COLOR_MAP  = {'direto': 'rgba(34,211,238,.85)', 'indireto': 'rgba(37,99,235,.85)', 'classificar': 'rgba(100,116,139,.7)'}
     hist_colors = [_COLOR_MAP.get(v['tipo'], '#ccc') for _, v in hist_list[:TOP]]
 
     # ── Saldo = Valor do Contrato (ADM) − Total Medido ──
