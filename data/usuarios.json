@@ -12,22 +12,30 @@
     "reset_expira": null,
     "criado_em": "2026-06-13T18:51:03.563369",
     "criado_por": "Administrador",
-    "ultimo_login": "2026-06-14T00:47:19.366870"
+    "ultimo_login": "2026-06-15T15:08:30.634658",
+    "historico_logins": [
+      "2026-06-15T10:43:32.524692",
+      "2026-06-15T11:55:50.401619",
+      "2026-06-15T15:08:30.634658"
+    ]
   },
   {
     "id": "3024271a-41d8-4bb8-8aa8-8e4c23cdc145",
     "email": "teste@validacao.com",
     "nome": "",
-    "role": "rumo",
-    "contratada": null,
-    "contrato": null,
+    "role": "contratada_rw",
+    "contratada": "Infratech Obras",
+    "contrato": "CT-2024-002",
     "senha_hash": "scrypt:32768:8:1$9ACAS3mv0OqGAonJ$a0fbbda617bb68e7f810d7ce63da1106d8e1b24b26e013b62649c51c31d022c2ba525df9de8b48b77450027596ea0700c10cd547bb96f4b91313fef4beeaa717",
     "ativo": true,
     "reset_token": null,
     "reset_expira": null,
     "criado_em": "2026-06-13T20:24:51.757801",
     "criado_por": "Administrador",
-    "ultimo_login": "2026-06-13T21:50:24.882634"
+    "ultimo_login": "2026-06-15T11:50:43.057856",
+    "historico_logins": [
+      "2026-06-15T11:50:43.057856"
+    ]
   },
   {
     "id": "4908f20b-4228-457c-8a34-00efd5d5d7a2",

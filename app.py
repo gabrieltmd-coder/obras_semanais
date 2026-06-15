@@ -1673,6 +1673,12 @@ def _admin_required():
     return bool(u) and u.get('role') in ADMIN_ROLES
 
 
+def _is_master():
+    """True apenas para usuário com role 'master' (exclui admin por senha e rumo)."""
+    u = current_user()
+    return bool(u) and u.get('role') == 'master'
+
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     erro = False
@@ -1950,6 +1956,36 @@ def admin_novo_contrato():
     audit_log('criar_contrato', key, f'{contratada} / {contrato_id}')
     flash(f'Contrato "{contrato_id}" criado com sucesso. Configure os dados abaixo.', 'success')
     return redirect(url_for('admin_contrato', key=key))
+
+
+@app.route('/admin/contrato/<path:key>/excluir', methods=['POST'])
+def admin_contrato_excluir(key):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    if not _is_master():
+        flash('Apenas o usuário master pode excluir contratos.', 'danger')
+        return redirect(url_for('admin'))
+
+    cfg = load_contratos_config()
+    data = cfg.get(key, {})
+    contratada  = data.get('contratada') or key.split('||')[0]
+    contrato_id = data.get('contrato') or (key.split('||')[1] if '||' in key else '')
+
+    # Bloqueia exclusão se houver registros vinculados (evita órfãos)
+    registros = load_data()
+    n_reg = sum(1 for r in registros
+                if contrato_key(r.get('contratada', ''), r.get('contrato', '')) == key)
+    if n_reg:
+        flash(f'Não é possível excluir: há {n_reg} registro(s) vinculado(s) a este contrato. '
+              f'Exclua os registros antes.', 'danger')
+        return redirect(url_for('admin'))
+
+    if key in cfg:
+        del cfg[key]
+        save_contratos_config(cfg)
+    audit_log('excluir_contrato', key, f'{contratada} / {contrato_id}')
+    flash(f'Contrato "{contrato_id}" de "{contratada}" excluído.', 'success')
+    return redirect(url_for('admin'))
 
 
 @app.route('/admin/contrato/<path:key>', methods=['GET', 'POST'])

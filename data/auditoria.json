@@ -75,5 +75,19 @@
     "acao": "criar_usuario",
     "alvo": "monique.shiraishi@rumolog.com",
     "detalhe": "role=rumo contratada=- contrato=-"
+  },
+  {
+    "data_hora": "2026-06-15T10:46:24.164383",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "excluir_contrato",
+    "alvo": "bsnasns||5e6784567",
+    "detalhe": "bsnasns / 5e6784567"
+  },
+  {
+    "data_hora": "2026-06-15T11:50:12.515995",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_usuario",
+    "alvo": "teste@validacao.com",
+    "detalhe": "rumo/-/- -> contratada_rw/Infratech Obras/CT-2024-002"
   }
 ]

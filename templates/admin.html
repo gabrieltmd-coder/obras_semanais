@@ -66,6 +66,40 @@
     </div>
 </div>
 
+{% if current_user and current_user.role == 'master' %}
+<!-- Modal: Excluir Contrato -->
+<div class="modal fade" id="modalExcluirContrato" tabindex="-1" aria-labelledby="modalExcluirContratoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--tms-radius); border:1px solid var(--tms-border); overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#7a1420 0%,#b02a37 100%); border-bottom:none; padding:1.1rem 1.4rem;">
+                <h5 class="modal-title" id="modalExcluirContratoLabel"
+                    style="font-family:'Montserrat',sans-serif; font-size:.82rem; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:#fff; margin:0;">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Excluir Contrato
+                </h5>
+                <button type="button" class="btn-close btn-close-white btn-close-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="formExcluirContrato">
+                <div class="modal-body" style="padding:1.5rem;">
+                    <p style="font-size:.9rem; color:var(--tms-dark); margin-bottom:.6rem;">
+                        Tem certeza que deseja excluir o contrato
+                        <strong id="exclContratoNome" style="color:#b02a37;"></strong>?
+                    </p>
+                    <div style="background:rgba(220,53,69,.08); border:1px solid rgba(220,53,69,.25); border-radius:8px; padding:.6rem .8rem; font-size:.78rem; color:#8a1c27;">
+                        <i class="bi bi-info-circle me-1"></i>Esta ação não pode ser desfeita.
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--tms-border); padding:.85rem 1.4rem; gap:.6rem;">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger-rumo">
+                        <i class="bi bi-trash me-1"></i>Excluir Contrato
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% if not contratos %}
 <div class="card-rumo">
     <div class="empty-state">
@@ -153,10 +187,21 @@
                         {% endif %}
                     </td>
                     <td class="text-center">
-                        <a href="{{ url_for('admin_contrato', key=c.key) }}"
-                           class="btn btn-secondary-rumo btn-sm">
-                            <i class="bi bi-sliders me-1"></i>Configurar
-                        </a>
+                        <div class="d-flex gap-1 justify-content-center">
+                            <a href="{{ url_for('admin_contrato', key=c.key) }}"
+                               class="btn btn-secondary-rumo btn-sm">
+                                <i class="bi bi-sliders me-1"></i>Configurar
+                            </a>
+                            {% if current_user and current_user.role == 'master' %}
+                            <button type="button" class="btn btn-danger-rumo btn-sm" title="Excluir contrato"
+                                    onclick="abrirExcluirContrato(this)"
+                                    data-action="{{ url_for('admin_contrato_excluir', key=c.key) }}"
+                                    data-contrato="{{ c.contrato }}"
+                                    data-contratada="{{ c.contratada }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -166,4 +211,18 @@
 </div>
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+function abrirExcluirContrato(btn) {
+    const acao       = btn.dataset.action;
+    const contrato   = btn.dataset.contrato || '';
+    const contratada = btn.dataset.contratada || '';
+    document.getElementById('formExcluirContrato').action = acao;
+    document.getElementById('exclContratoNome').textContent =
+        (contrato ? contrato : '(sem identificador)') + ' — ' + contratada;
+    new bootstrap.Modal(document.getElementById('modalExcluirContrato')).show();
+}
+</script>
 {% endblock %}
