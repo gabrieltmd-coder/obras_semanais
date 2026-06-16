@@ -1,0 +1,966 @@
+[
+  {
+    "id": "a1b2c3d4-0001-4001-8001-100000000001",
+    "contrato": "CT-2024-001",
+    "contratada": "Construtora Alpha",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Início da concretagem dos pilares do bloco A. Mobilização de equipe de alvenaria.",
+    "efetivo": [
+      {
+        "funcao": "Pedreiro",
+        "quantidade": 15,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Servente",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Encarregado",
+        "quantidade": 3,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Mestre de Obras",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 25,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Betoneira",
+        "quantidade": 2
+      },
+      {
+        "descricao": "Andaime Tubular",
+        "quantidade": 10
+      }
+    ],
+    "pontos_atencao": "Solo com umidade elevada na área do bloco B — aguardar condições para fundação.",
+    "valor_medido": 45000.0,
+    "avanco_fisico": 12.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Chuva Parcial",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-15T09:30:00.000000",
+    "atualizado_em": "2026-05-15T09:30:00.000000"
+  },
+  {
+    "id": "a1b2c3d4-0001-4001-8001-100000000002",
+    "contrato": "CT-2024-001",
+    "contratada": "Construtora Alpha",
+    "semana_referencia": "2026-05-18",
+    "trabalhos_notaveis": "Concretagem dos pilares P1 a P8 concluída. Início da alvenaria de vedação bloco A.",
+    "efetivo": [
+      {
+        "funcao": "Pedreiro",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Servente",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Encarregado",
+        "quantidade": 4,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Mestre de Obras",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 30,
+    "total_indireto": 5,
+    "equipamentos": [
+      {
+        "descricao": "Betoneira",
+        "quantidade": 3
+      },
+      {
+        "descricao": "Andaime Tubular",
+        "quantidade": 15
+      },
+      {
+        "descricao": "Caminhão Munck",
+        "quantidade": 1
+      }
+    ],
+    "pontos_atencao": "Aguardar entrega de blocos cerâmicos prevista para próxima semana.",
+    "valor_medido": 52000.0,
+    "avanco_fisico": 18.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Produtiva",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-22T10:00:00.000000",
+    "atualizado_em": "2026-05-22T10:00:00.000000"
+  },
+  {
+    "id": "a1b2c3d4-0001-4001-8001-100000000003",
+    "contrato": "CT-2024-001",
+    "contratada": "Construtora Alpha",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Alvenaria bloco A atingiu 3° pavimento. Concretagem da laje do 1° pavimento iniciada.",
+    "efetivo": [
+      {
+        "funcao": "Pedreiro",
+        "quantidade": 20,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Servente",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Encarregado",
+        "quantidade": 5,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Mestre de Obras",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 34,
+    "total_indireto": 7,
+    "equipamentos": [
+      {
+        "descricao": "Betoneira",
+        "quantidade": 3
+      },
+      {
+        "descricao": "Andaime Tubular",
+        "quantidade": 20
+      },
+      {
+        "descricao": "Guindaste sobre Esteiras",
+        "quantidade": 1
+      }
+    ],
+    "pontos_atencao": "Verificar alinhamento das formas antes da concretagem da laje.",
+    "valor_medido": 61000.0,
+    "avanco_fisico": 26.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Chuva Parcial",
+      "quarta": "Chuva Parcial",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Chuva Produtiva",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-29T11:15:00.000000",
+    "atualizado_em": "2026-05-29T11:15:00.000000"
+  },
+  {
+    "id": "a1b2c3d4-0001-4001-8001-100000000004",
+    "contrato": "CT-2024-001",
+    "contratada": "Construtora Alpha",
+    "semana_referencia": "2026-06-01",
+    "trabalhos_notaveis": "Laje do 1° pavimento concluída. Elevação da alvenaria do 2° pavimento em andamento.",
+    "efetivo": [
+      {
+        "funcao": "Pedreiro",
+        "quantidade": 22,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Servente",
+        "quantidade": 15,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Encarregado",
+        "quantidade": 5,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Mestre de Obras",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 37,
+    "total_indireto": 7,
+    "equipamentos": [
+      {
+        "descricao": "Betoneira",
+        "quantidade": 4
+      },
+      {
+        "descricao": "Andaime Tubular",
+        "quantidade": 25
+      },
+      {
+        "descricao": "Guindaste sobre Esteiras",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Compactador de Placa",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "Chuva intensa na quarta-feira causou paralisação de 4 horas.",
+    "valor_medido": 68000.0,
+    "avanco_fisico": 34.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Chuva Improdutiva",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-05T09:45:00.000000",
+    "atualizado_em": "2026-06-05T09:45:00.000000"
+  },
+  {
+    "id": "a1b2c3d4-0001-4001-8001-100000000005",
+    "contrato": "CT-2024-001",
+    "contratada": "Construtora Alpha",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Alvenaria do 2° pavimento em ritmo acelerado. Preparação da armação para laje do 2° pavimento.",
+    "efetivo": [],
+    "total_direto": 0,
+    "total_indireto": 0,
+    "equipamentos": [],
+    "pontos_atencao": "Nenhuma ocorrência relevante.",
+    "valor_medido": 0.0,
+    "avanco_fisico": 41.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Chuva Parcial",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-12T08:30:00.000000",
+    "atualizado_em": "2026-06-12T17:57:12.164715",
+    "acoes_realizadas": {
+      "Concretagem de Pilares": 15,
+      "Alvenaria de Vedação": 50
+    },
+    "alterado_em": "2026-06-12T17:57:12.164723"
+  },
+  {
+    "id": "b2c3d4e5-0002-4002-8002-200000000001",
+    "contrato": "CT-2024-002",
+    "contratada": "Infratech Obras",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Início da montagem da estrutura metálica — tramo 1 a 3.",
+    "efetivo": [
+      {
+        "funcao": "Soldador",
+        "quantidade": 8,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Operador de Máquinas",
+        "quantidade": 3,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 11,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Guindaste sobre Esteiras",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Máquina de Solda",
+        "quantidade": 4
+      }
+    ],
+    "pontos_atencao": "Entrega de perfis metálicos com 2 dias de atraso — fornecedor notificado.",
+    "valor_medido": 22000.0,
+    "avanco_fisico": 8.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-15T14:00:00.000000",
+    "atualizado_em": "2026-05-15T14:00:00.000000"
+  },
+  {
+    "id": "b2c3d4e5-0002-4002-8002-200000000002",
+    "contrato": "CT-2024-002",
+    "contratada": "Infratech Obras",
+    "semana_referencia": "2026-05-18",
+    "trabalhos_notaveis": "Soldagem dos tramos 4 a 7. Içamento das vigas principais do vão central.",
+    "efetivo": [
+      {
+        "funcao": "Soldador",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Operador de Máquinas",
+        "quantidade": 3,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 13,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Guindaste sobre Esteiras",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Máquina de Solda",
+        "quantidade": 5
+      },
+      {
+        "descricao": "Plataforma Elevatória",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "Incidência de raio na sexta-feira causou paralisação de 3 horas.",
+    "valor_medido": 28000.0,
+    "avanco_fisico": 15.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Incidência de Raio",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-22T15:00:00.000000",
+    "atualizado_em": "2026-05-22T15:00:00.000000"
+  },
+  {
+    "id": "b2c3d4e5-0002-4002-8002-200000000003",
+    "contrato": "CT-2024-002",
+    "contratada": "Infratech Obras",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Conclusão do tramo principal. Início da pintura anticorrosiva na estrutura.",
+    "efetivo": [
+      {
+        "funcao": "Soldador",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Operador de Máquinas",
+        "quantidade": 3,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 13,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Guindaste sobre Esteiras",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Máquina de Solda",
+        "quantidade": 4
+      },
+      {
+        "descricao": "Plataforma Elevatória",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "Chuva no sábado impediu trabalho de pintura — reprogramar para semana seguinte.",
+    "valor_medido": 31000.0,
+    "avanco_fisico": 23.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Chuva Parcial",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Chuva Improdutiva",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-29T13:30:00.000000",
+    "atualizado_em": "2026-05-29T13:30:00.000000"
+  },
+  {
+    "id": "b2c3d4e5-0002-4002-8002-200000000004",
+    "contrato": "CT-2024-002",
+    "contratada": "Infratech Obras",
+    "semana_referencia": "2026-06-01",
+    "trabalhos_notaveis": "Pintura anticorrosiva 70% concluída. Montagem das conexões de travamento.",
+    "efetivo": [
+      {
+        "funcao": "Soldador",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Operador de Máquinas",
+        "quantidade": 3,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 15,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Guindaste sobre Esteiras",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Máquina de Solda",
+        "quantidade": 5
+      },
+      {
+        "descricao": "Plataforma Elevatória",
+        "quantidade": 3
+      }
+    ],
+    "pontos_atencao": "Nenhuma ocorrência relevante.",
+    "valor_medido": 35000.0,
+    "avanco_fisico": 31.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-05T10:00:00.000000",
+    "atualizado_em": "2026-06-05T10:00:00.000000"
+  },
+  {
+    "id": "b2c3d4e5-0002-4002-8002-200000000005",
+    "contrato": "CT-2024-002",
+    "contratada": "Infratech Obras",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Pintura anticorrosiva concluída. Início da instalação das telhas metálicas.",
+    "efetivo": [
+      {
+        "funcao": "Soldador",
+        "quantidade": 11,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Operador de Máquinas",
+        "quantidade": 2,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 13,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Guindaste sobre Esteiras",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Plataforma Elevatória",
+        "quantidade": 3
+      },
+      {
+        "descricao": "Rolo Compactador Liso",
+        "quantidade": 1
+      }
+    ],
+    "pontos_atencao": "Atenção ao prazo de entrega das telhas — previsão de chegada na W25.",
+    "valor_medido": 38000.0,
+    "avanco_fisico": 38.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-12T09:00:00.000000",
+    "atualizado_em": "2026-06-12T09:00:00.000000"
+  },
+  {
+    "id": "b2c3d4e5-0007-4007-8007-700000000001",
+    "contrato": "CT-2024-007",
+    "contratada": "Infratech Obras",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Mobilização de maquinário e início da fresagem do trecho A — Av. Central entre estacas 10 e 25.",
+    "efetivo": [
+      {
+        "funcao": "Operador de Máquinas",
+        "quantidade": 4,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Motorista",
+        "quantidade": 3,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Encarregado",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 7,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Motoniveladora (Patrol)",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Rolo Compactador Liso",
+        "quantidade": 2
+      },
+      {
+        "descricao": "Caminhão Basculante",
+        "quantidade": 3
+      }
+    ],
+    "pontos_atencao": "Sinalização viária reforçada — trecho com tráfego intenso.",
+    "valor_medido": 24000.0,
+    "avanco_fisico": 6.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-29T16:00:00.000000",
+    "atualizado_em": "2026-05-29T16:00:00.000000"
+  },
+  {
+    "id": "b2c3d4e5-0007-4007-8007-700000000002",
+    "contrato": "CT-2024-007",
+    "contratada": "Infratech Obras",
+    "semana_referencia": "2026-06-01",
+    "trabalhos_notaveis": "Fresagem do trecho A concluída. Aplicação de CBUQ (1ª camada) no trecho A — 420 m².",
+    "efetivo": [
+      {
+        "funcao": "Operador de Máquinas",
+        "quantidade": 6,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Motorista",
+        "quantidade": 5,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Encarregado",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 11,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Motoniveladora (Patrol)",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Rolo Compactador Liso",
+        "quantidade": 2
+      },
+      {
+        "descricao": "Rolo Vibratório",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Caminhão Basculante",
+        "quantidade": 5
+      }
+    ],
+    "pontos_atencao": "Temperatura do asfalto monitorada — conformidade com especificação técnica.",
+    "valor_medido": 38000.0,
+    "avanco_fisico": 16.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Chuva Improdutiva",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-05T16:30:00.000000",
+    "atualizado_em": "2026-06-05T16:30:00.000000"
+  },
+  {
+    "id": "b2c3d4e5-0007-4007-8007-700000000003",
+    "contrato": "CT-2024-007",
+    "contratada": "Infratech Obras",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Aplicação de CBUQ (2ª camada) trecho A concluída. Início da fresagem do trecho B — Rua das Flores.",
+    "efetivo": [
+      {
+        "funcao": "Operador de Máquinas",
+        "quantidade": 6,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Motorista",
+        "quantidade": 5,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Encarregado",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 11,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Motoniveladora (Patrol)",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Rolo Compactador Liso",
+        "quantidade": 2
+      },
+      {
+        "descricao": "Rolo Vibratório",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Caminhão Basculante",
+        "quantidade": 5
+      }
+    ],
+    "pontos_atencao": "Interferência com tubulação de gás no ponto E-07 — aguardar visita técnica da concessionária.",
+    "valor_medido": 45000.0,
+    "avanco_fisico": 25.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Chuva Produtiva",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-12T11:00:00.000000",
+    "atualizado_em": "2026-06-12T11:00:00.000000"
+  },
+  {
+    "id": "c3d4e5f6-0003-4003-8003-300000000001",
+    "contrato": "CT-2024-003",
+    "contratada": "TechBuild Engenharia",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Mobilização da equipe de elétrica. Início do mapeamento de rotas de cabos.",
+    "efetivo": [
+      {
+        "funcao": "Eletricista",
+        "quantidade": 6,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Engenheiro Civil",
+        "quantidade": 2,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 6,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Caminhão Munck",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Compactador de Placa",
+        "quantidade": 1
+      }
+    ],
+    "pontos_atencao": "Aguardar aprovação do projeto executivo para início das escavações.",
+    "valor_medido": 18000.0,
+    "avanco_fisico": 5.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Chuva Parcial",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-15T16:00:00.000000",
+    "atualizado_em": "2026-05-15T16:00:00.000000"
+  },
+  {
+    "id": "c3d4e5f6-0003-4003-8003-300000000002",
+    "contrato": "CT-2024-003",
+    "contratada": "TechBuild Engenharia",
+    "semana_referencia": "2026-05-18",
+    "trabalhos_notaveis": "Escavação de valas trecho A concluída. Instalação do eletroduto PVC 100mm.",
+    "efetivo": [
+      {
+        "funcao": "Eletricista",
+        "quantidade": 8,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Engenheiro Civil",
+        "quantidade": 2,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 8,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Retroescavadeira",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Caminhão Munck",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Compactador de Placa",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "Solo argiloso no trecho B — necessário reforço de escoramento.",
+    "valor_medido": 25000.0,
+    "avanco_fisico": 12.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Chuva Produtiva",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-22T16:30:00.000000",
+    "atualizado_em": "2026-05-22T16:30:00.000000"
+  },
+  {
+    "id": "c3d4e5f6-0003-4003-8003-300000000003",
+    "contrato": "CT-2024-003",
+    "contratada": "TechBuild Engenharia",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Lançamento de cabos de força no trecho A. Escavação do trecho B iniciada.",
+    "efetivo": [
+      {
+        "funcao": "Eletricista",
+        "quantidade": 9,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Engenheiro Civil",
+        "quantidade": 2,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 9,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Retroescavadeira",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Caminhão Munck",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Compactador de Placa",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "Interferência com tubulação de água no ponto 14 — aguardar relocação pela SAAE.",
+    "valor_medido": 32000.0,
+    "avanco_fisico": 20.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Chuva Parcial",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-29T14:00:00.000000",
+    "atualizado_em": "2026-05-29T14:00:00.000000"
+  },
+  {
+    "id": "c3d4e5f6-0003-4003-8003-300000000004",
+    "contrato": "CT-2024-003",
+    "contratada": "TechBuild Engenharia",
+    "semana_referencia": "2026-06-01",
+    "trabalhos_notaveis": "Cabos lançados no trecho B. Início das conexões no quadro de distribuição principal.",
+    "efetivo": [
+      {
+        "funcao": "Eletricista",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Engenheiro Civil",
+        "quantidade": 3,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 10,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Retroescavadeira",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Caminhão Munck",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Plataforma Elevatória",
+        "quantidade": 1
+      }
+    ],
+    "pontos_atencao": "Interferência SAAE resolvida — retomada normal do trecho B.",
+    "valor_medido": 37000.0,
+    "avanco_fisico": 28.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Chuva Produtiva",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-05T11:00:00.000000",
+    "atualizado_em": "2026-06-05T11:00:00.000000"
+  },
+  {
+    "id": "c3d4e5f6-0003-4003-8003-300000000005",
+    "contrato": "CT-2024-003",
+    "contratada": "TechBuild Engenharia",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Quadro de distribuição principal 80% conectado. Testes de continuidade nos cabos do trecho A aprovados.",
+    "efetivo": [
+      {
+        "funcao": "Eletricista",
+        "quantidade": 11,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Engenheiro Civil",
+        "quantidade": 3,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 11,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Plataforma Elevatória",
+        "quantidade": 2
+      },
+      {
+        "descricao": "Caminhão Munck",
+        "quantidade": 1
+      }
+    ],
+    "pontos_atencao": "Aguardar inspeção da concessionária para liberação da energização parcial.",
+    "valor_medido": 42000.0,
+    "avanco_fisico": 35.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-12T10:00:00.000000",
+    "atualizado_em": "2026-06-12T10:00:00.000000"
+  }
+]
