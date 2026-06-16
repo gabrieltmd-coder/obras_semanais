@@ -172,6 +172,47 @@
 </div>
 {% endif %}
 
+<!-- AÇÕES NOTÁVEIS REALIZADAS -->
+{% set acoes_real = r.get('acoes_realizadas', {}) %}
+{% if acoes_real %}
+<div class="card-rumo mb-3">
+    <div class="card-header"><i class="bi bi-list-check"></i>Ações Notáveis — Realizado na Semana</div>
+    <div class="table-responsive">
+        <table class="vis-table">
+            <thead>
+                <tr>
+                    <th>Ação Notável</th>
+                    <th class="text-center" style="width:100px;">Previsto</th>
+                    <th class="text-center" style="width:140px;">Realizado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acao, val in acoes_real.items() %}
+                {% set plan = acoes_planejado.get(acao) %}
+                {% set unid = acoes_unidade.get(acao, '') %}
+                {% set abaixo = plan is not none and val|float < plan %}
+                <tr>
+                    <td>{{ acao }}</td>
+                    <td class="text-center" style="color:var(--tms-muted); font-size:.8rem;">
+                        {% if plan is not none %}{{ plan }}{% if unid %} {{ unid }}{% endif %}{% else %}—{% endif %}
+                    </td>
+                    <td class="text-center" style="font-weight:700;
+                        {% if abaixo %}color:#dc3545;{% else %}color:var(--tms-cyan);{% endif %}">
+                        {{ val }}{% if unid %} {{ unid }}{% endif %}
+                        {% if abaixo %}
+                        <span style="display:block; font-size:.65rem; font-weight:600; color:#dc3545; margin-top:.1rem;">
+                            <i class="bi bi-arrow-down-short"></i>{{ (plan - val|float)|round(1) }}{% if unid %} {{ unid }}{% endif %} abaixo
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
 <!-- EQUIPAMENTOS -->
 {% set equip = r.get('equipamentos', []) %}
 {% if equip %}

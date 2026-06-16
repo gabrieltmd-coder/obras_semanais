@@ -19,6 +19,10 @@ env/
 exports/
 *.xlsx
 
+# Dados sensíveis / runtime (NÃO versionar credenciais nem logs)
+data/usuarios.json
+data/auditoria.json
+
 # OS
 .DS_Store
 Thumbs.db

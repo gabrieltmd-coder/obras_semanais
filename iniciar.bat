@@ -1,4 +1,4 @@
 @echo off
-cd /d C:\Users\Admin\Desktop\PROJECTS\obras_semanais-master
+cd /d "%~dp0"
 py app.py
 pause

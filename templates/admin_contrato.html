@@ -28,6 +28,7 @@
     background:#fff; transition:border-color .15s;
 }
 .adm-input:focus { outline:none; border-color:var(--tms-cyan); box-shadow:0 0 0 3px rgba(0,174,239,.12); }
+.adm-input[readonly] { background:#f0f4f8; color:#9aa7b4; cursor:not-allowed; }
 .adm-select {
     width:100%; border:1px solid var(--tms-border); border-radius:7px;
     padding:.35rem .65rem; font-size:.8rem; color:var(--tms-text);
@@ -45,8 +46,24 @@
     font-size:.95rem; padding:.15rem .3rem; border-radius:5px; transition:background .15s;
 }
 .btn-del-row:hover { background:rgba(220,53,69,.08); }
-.badge-tipo-d { background:rgba(141,198,63,.15); color:#4a7c1a; border-radius:5px; padding:.15rem .45rem; font-size:.68rem; font-weight:700; }
-.badge-tipo-i { background:rgba(0,174,239,.13); color:#005f8a; border-radius:5px; padding:.15rem .45rem; font-size:.68rem; font-weight:700; }
+
+/* Histograma matriz */
+#histTableWrap {
+    overflow-x:auto; border:1px solid var(--tms-border);
+    border-radius:8px; max-height:460px; overflow-y:auto;
+}
+#histTable { border-collapse:collapse; min-width:100%; }
+.hth {
+    font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--tms-muted); padding:.38rem .45rem; background:#eef2f7;
+    border-bottom:2px solid var(--tms-dark); border-right:1px solid #dce6f0;
+    white-space:nowrap; text-align:center; position:sticky; top:0; z-index:2;
+}
+.hth-fix { text-align:left; z-index:4 !important; }
+.htd {
+    padding:.25rem .3rem; border-bottom:1px solid #f0f4f8;
+    border-right:1px solid #eef2f7; vertical-align:middle;
+}
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -62,126 +79,237 @@
     </a>
 </div>
 
-<form method="post">
+<form method="post" id="adminForm">
     <input type="hidden" name="contratada" value="{{ contrato.contratada }}">
     <input type="hidden" name="contrato"   value="{{ contrato.contrato }}">
 
-    <!-- ── VALOR DO CONTRATO ── -->
+    <!-- VALOR DO CONTRATO -->
     <div class="card-rumo mb-3">
         <div style="padding:1.25rem 1.4rem;">
             <div class="sec-title"><i class="bi bi-currency-dollar"></i>Valor do Contrato</div>
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">
-                        Valor Total (R$)
-                    </label>
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Valor Total (R$)</label>
                     <input type="text" name="valor_contrato" class="adm-input"
                            placeholder="0,00"
                            value="{{ '%.2f'|format(contrato.get('valor_contrato', 0) or 0)|replace('.', ',') }}"
                            id="inputValorContrato">
                     <small style="color:var(--tms-muted); font-size:.68rem;">Use vírgula como separador decimal.</small>
                 </div>
+                <div class="col-md-4">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Início do Contrato</label>
+                    <input type="week" name="data_inicio_contrato" id="dataInicio" class="adm-input"
+                           value="{{ contrato.get('data_inicio_contrato', '') }}"
+                           onchange="onContractDateChange()">
+                </div>
+                <div class="col-md-4">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Término do Contrato</label>
+                    <input type="week" name="data_fim_contrato" id="dataFim" class="adm-input"
+                           value="{{ contrato.get('data_fim_contrato', '') }}"
+                           onchange="onContractDateChange()">
+                </div>
+            </div>
+            <div class="row g-3 mt-1">
+                <div class="col-md-4">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Status do Contrato</label>
+                    <select name="status_manual" class="adm-select">
+                        <option value="auto" {% if contrato.get('status_manual', 'auto') == 'auto' %}selected{% endif %}>Automático (por data)</option>
+                        <option value="ativo" {% if contrato.get('status_manual') == 'ativo' %}selected{% endif %}>Ativo</option>
+                        <option value="encerrado" {% if contrato.get('status_manual') == 'encerrado' %}selected{% endif %}>Encerrado</option>
+                    </select>
+                    <small style="color:var(--tms-muted); font-size:.68rem;">Substituir cálculo automático por data.</small>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- ── LINHA BASE FINANCEIRA ── -->
+    <!-- ADITIVOS -->
     <div class="card-rumo mb-3">
         <div style="padding:1.25rem 1.4rem;">
-            <div class="sec-title"><i class="bi bi-graph-up-arrow"></i>Linha de Base Financeira por Mês</div>
+            <div class="sec-title"><i class="bi bi-file-earmark-plus"></i>Aditivos do Contrato</div>
             <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
-                Valor planejado acumulado mês a mês. Usado na Curva S Financeira.
+                Registre aditivos de <strong>valor</strong> (acréscimo financeiro) ou de <strong>prazo</strong> (nova data de término).
             </p>
-            <table class="adm-table" id="tblFin">
+            <table class="adm-table" id="tblAdit">
                 <thead>
                     <tr>
-                        <th style="width:180px;">Mês</th>
-                        <th>Valor Planejado (R$)</th>
+                        <th style="width:120px;">Tipo</th>
+                        <th style="width:160px;">Valor (R$)</th>
+                        <th style="width:160px;">Novo Prazo</th>
+                        <th style="width:140px;">Data do Aditivo</th>
+                        <th>Descrição</th>
                         <th style="width:40px;"></th>
                     </tr>
                 </thead>
-                <tbody id="bodyFin">
-                    {% for item in contrato.get('linha_base_financeira', []) %}
+                <tbody id="bodyAdit">
+                    {% for a in contrato.get('aditivos', []) %}
                     <tr>
-                        <td><input type="month" name="fin_mes[]" class="adm-input" value="{{ item.mes }}" required></td>
-                        <td><input type="text"  name="fin_valor[]" class="adm-input" value="{{ '%.2f'|format(item.valor)|replace('.', ',') }}" placeholder="0,00"></td>
-                        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFin','fin')">
-                <i class="bi bi-plus-lg"></i>Adicionar Mês
-            </button>
-        </div>
-    </div>
-
-    <!-- ── LINHA BASE FÍSICA ── -->
-    <div class="card-rumo mb-3">
-        <div style="padding:1.25rem 1.4rem;">
-            <div class="sec-title"><i class="bi bi-bar-chart-line"></i>Linha de Base Física por Mês</div>
-            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
-                Percentual de avanço físico planejado mês a mês. Usado na Curva S Física.
-            </p>
-            <table class="adm-table" id="tblFis">
-                <thead>
-                    <tr>
-                        <th style="width:180px;">Mês</th>
-                        <th>Avanço Planejado (%)</th>
-                        <th style="width:40px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="bodyFis">
-                    {% for item in contrato.get('linha_base_fisica', []) %}
-                    <tr>
-                        <td><input type="month" name="fis_mes[]" class="adm-input" value="{{ item.mes }}" required></td>
-                        <td><input type="number" name="fis_perc[]" class="adm-input" value="{{ item.percentual }}" placeholder="0.00" min="0" max="100" step="0.01"></td>
-                        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFis','fis')">
-                <i class="bi bi-plus-lg"></i>Adicionar Mês
-            </button>
-        </div>
-    </div>
-
-    <!-- ── LINHA BASE HISTOGRAMA ── -->
-    <div class="card-rumo mb-3">
-        <div style="padding:1.25rem 1.4rem;">
-            <div class="sec-title"><i class="bi bi-people"></i>Linha de Base — Histograma de Mão de Obra</div>
-            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
-                Efetivo planejado por função, com classificação Direto / Indireto. Usado no histograma do Dashboard.
-            </p>
-            <table class="adm-table" id="tblHist">
-                <thead>
-                    <tr>
-                        <th>Função / Cargo</th>
-                        <th style="width:110px;">Qtd. Planejada</th>
-                        <th style="width:130px;">Categoria</th>
-                        <th style="width:40px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="bodyHist">
-                    {% for item in contrato.get('linha_base_histograma', []) %}
-                    <tr>
-                        <td><input type="text" name="hist_funcao[]" class="adm-input" value="{{ item.funcao }}" placeholder="Ex: Operador de Máquinas" required></td>
-                        <td><input type="number" name="hist_qtd[]" class="adm-input" value="{{ item.quantidade }}" placeholder="0" min="0" step="1"></td>
                         <td>
-                            <select name="hist_tipo[]" class="adm-select">
-                                <option value="direto"   {% if item.tipo=='direto'   %}selected{% endif %}>Direto</option>
-                                <option value="indireto" {% if item.tipo=='indireto' %}selected{% endif %}>Indireto</option>
+                            <select name="adit_tipo[]" class="adm-select" onchange="aditToggle(this)">
+                                <option value="valor" {% if a.tipo=='valor' %}selected{% endif %}>Valor</option>
+                                <option value="prazo" {% if a.tipo=='prazo' %}selected{% endif %}>Prazo</option>
                             </select>
                         </td>
+                        <td><input type="text" name="adit_valor[]" class="adm-input" placeholder="0,00"
+                                   value="{% if a.tipo=='valor' and a.valor %}{{ '%.2f'|format(a.valor)|replace('.', ',') }}{% endif %}"
+                                   {% if a.tipo != 'valor' %}readonly{% endif %}></td>
+                        <td><input type="week" name="adit_prazo[]" class="adm-input"
+                                   value="{{ a.prazo or '' }}" {% if a.tipo != 'prazo' %}readonly{% endif %}></td>
+                        <td><input type="date" name="adit_data[]" class="adm-input" value="{{ a.data or '' }}"></td>
+                        <td><input type="text" name="adit_desc[]" class="adm-input" value="{{ a.descricao or '' }}" placeholder="Observação..."></td>
                         <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyHist','hist')">
-                <i class="bi bi-plus-lg"></i>Adicionar Função
+            <button type="button" class="btn-add-row mt-2" onclick="addAditRow()">
+                <i class="bi bi-plus-lg"></i>Adicionar Aditivo
             </button>
+
+            {% set base = contrato.get('valor_contrato', 0) or 0 %}
+            {% set add_valor = contrato.get('aditivos', [])|selectattr('tipo','equalto','valor')|map(attribute='valor')|sum %}
+            {% set prazos = contrato.get('aditivos', [])|selectattr('tipo','equalto','prazo')|map(attribute='prazo')|select|list %}
+            <div style="margin-top:1.1rem; padding-top:.9rem; border-top:1px dashed var(--tms-border); display:flex; gap:1.6rem; flex-wrap:wrap; font-size:.8rem;">
+                <div><span style="color:var(--tms-muted);">Valor base:</span> <strong>{{ base|currency }}</strong></div>
+                <div><span style="color:var(--tms-muted);">Aditivos de valor:</span> <strong style="color:#3a7a00;">+ {{ add_valor|currency }}</strong></div>
+                <div><span style="color:var(--tms-muted);">Valor efetivo:</span> <strong style="color:var(--tms-cyan);">{{ (base + add_valor)|currency }}</strong></div>
+                {% if prazos %}
+                <div><span style="color:var(--tms-muted);">Prazo vigente (último aditivo):</span> <strong>{{ prazos[-1] }}</strong></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- LINHAS BASE FINANCEIRA + FÍSICA -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="card-rumo" style="height:100%;">
+                <div style="padding:1.25rem 1.4rem;">
+                    <div class="sec-title"><i class="bi bi-graph-up-arrow"></i>Linha de Base Financeira por Mês</div>
+                    <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                        Valor planejado mês a mês. Usado na Curva S Financeira.
+                    </p>
+                    <table class="adm-table" id="tblFin">
+                        <thead>
+                            <tr>
+                                <th style="width:160px;">Mês</th>
+                                <th>Valor Planejado (R$)</th>
+                                <th style="width:40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyFin">
+                            {% for item in contrato.get('linha_base_financeira', []) %}
+                            <tr>
+                                <td><input type="month" name="fin_semana[]" class="adm-input" value="{{ item.semana }}" required></td>
+                                <td><input type="text" name="fin_valor[]" class="adm-input" value="{{ '%.2f'|format(item.valor)|replace('.', ',') }}" placeholder="0,00"></td>
+                                <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFin','fin')">
+                        <i class="bi bi-plus-lg"></i>Adicionar Mês
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-rumo" style="height:100%;">
+                <div style="padding:1.25rem 1.4rem;">
+                    <div class="sec-title"><i class="bi bi-bar-chart-line"></i>Linha de Base Física por Mês</div>
+                    <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                        Percentual de avanço físico planejado mês a mês. Usado na Curva S Física.
+                    </p>
+                    <table class="adm-table" id="tblFis">
+                        <thead>
+                            <tr>
+                                <th style="width:160px;">Mês</th>
+                                <th>Avanço Planejado (%)</th>
+                                <th style="width:40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyFis">
+                            {% for item in contrato.get('linha_base_fisica', []) %}
+                            <tr>
+                                <td><input type="month" name="fis_semana[]" class="adm-input" value="{{ item.semana }}" required></td>
+                                <td><input type="number" name="fis_perc[]" class="adm-input" value="{{ item.percentual }}" placeholder="0.00" min="0" step="0.01"></td>
+                                <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFis','fis')">
+                        <i class="bi bi-plus-lg"></i>Adicionar Mês
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTOGRAMA DE MÃO DE OBRA — PREVISTO (matriz semanal) -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-people"></i>Histograma de Mão de Obra — Previsto</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Efetivo planejado por função para cada semana do contrato.
+                Defina o <strong>Início</strong> e o <strong>Término do Contrato</strong> acima para gerar as colunas de semana.
+            </p>
+
+            <div id="histNoDates" style="padding:1.5rem; text-align:center; color:var(--tms-muted);
+                 font-size:.82rem; background:var(--tms-bg); border-radius:8px;
+                 border:1px dashed var(--tms-border);">
+                <i class="bi bi-calendar-range" style="font-size:1.8rem; display:block;
+                   margin-bottom:.5rem; color:var(--tms-border);"></i>
+                Defina o Início e o Término do Contrato para gerar o histograma semanal.
+            </div>
+
+            <div id="histWrap" style="display:none;">
+                <div id="histTableWrap">
+                    <table id="histTable">
+                        <thead id="histThead"></thead>
+                        <tbody id="histTbody"></tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn-add-row mt-2" onclick="addHistRow()">
+                    <i class="bi bi-plus-lg"></i>Adicionar Função
+                </button>
+            </div>
+
+            <input type="hidden" name="hist_json" id="histJson">
+        </div>
+    </div>
+
+    <!-- AÇÕES NOTÁVEIS — PREVISTO (matriz semanal) -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-list-check"></i>Ações Notáveis — Previsto por Semana</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Ações planejadas e percentual de execução previsto por semana do contrato.
+                As semanas são geradas automaticamente a partir do <strong>Início</strong> e do <strong>Término do Contrato</strong>.
+            </p>
+
+            <div id="acoesNoDates" style="padding:1.5rem; text-align:center; color:var(--tms-muted);
+                 font-size:.82rem; background:var(--tms-bg); border-radius:8px;
+                 border:1px dashed var(--tms-border);">
+                <i class="bi bi-calendar-range" style="font-size:1.8rem; display:block;
+                   margin-bottom:.5rem; color:var(--tms-border);"></i>
+                Defina o Início e o Término do Contrato para gerar as colunas de semana.
+            </div>
+
+            <div id="acoesWrap" style="display:none;">
+                <div id="acoesTableWrap" style="overflow-x:auto; border:1px solid var(--tms-border);
+                     border-radius:8px; max-height:400px; overflow-y:auto;">
+                    <table id="acoesTable" style="border-collapse:collapse; min-width:100%;">
+                        <thead id="acoesThead"></thead>
+                        <tbody id="acoesTbody"></tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn-add-row mt-2" onclick="addAcaoRow()">
+                    <i class="bi bi-plus-lg"></i>Adicionar Ação
+                </button>
+            </div>
+
+            <input type="hidden" name="acoes_json" id="acoesJson">
         </div>
     </div>
 
@@ -193,42 +321,466 @@
         </button>
     </div>
 </form>
+
+<script>
+const _HIST_INIT    = {{ contrato.get('linha_base_histograma', [])|tojson }};
+const _HIST_INICIO  = {{ contrato.get('data_inicio_contrato', '')|tojson }};
+const _HIST_FIM     = {{ contrato.get('data_fim_contrato',    '')|tojson }};
+const _HIST_FUNCOES = {{ funcoes_mao_obra|tojson }};
+const _ACOES_INIT   = {{ contrato.get('linha_base_acoes', [])|tojson }};
+const ACOES_REAL_MAP = {{ acoes_real_map|tojson }};
+</script>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function delRow(btn) {
-    btn.closest('tr').remove();
-}
+// ── Financeira / Física ───────────────────────────────────────────────────────
+function delRow(btn) { btn.closest('tr').remove(); }
 
 function addRow(bodyId, prefix) {
     const tbody = document.getElementById(bodyId);
     const tr = document.createElement('tr');
-
     if (prefix === 'fin') {
         tr.innerHTML = `
-          <td><input type="month" name="fin_mes[]" class="adm-input" required></td>
-          <td><input type="text"  name="fin_valor[]" class="adm-input" placeholder="0,00"></td>
-          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
-    } else if (prefix === 'fis') {
-        tr.innerHTML = `
-          <td><input type="month" name="fis_mes[]" class="adm-input" required></td>
-          <td><input type="number" name="fis_perc[]" class="adm-input" placeholder="0.00" min="0" max="100" step="0.01"></td>
+          <td><input type="month" name="fin_semana[]" class="adm-input" required></td>
+          <td><input type="text"   name="fin_valor[]" class="adm-input" placeholder="0,00"></td>
           <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
     } else {
         tr.innerHTML = `
-          <td><input type="text" name="hist_funcao[]" class="adm-input" placeholder="Ex: Operador de Máquinas" required></td>
-          <td><input type="number" name="hist_qtd[]" class="adm-input" placeholder="0" min="0" step="1"></td>
-          <td>
-            <select name="hist_tipo[]" class="adm-select">
-              <option value="direto">Direto</option>
-              <option value="indireto">Indireto</option>
-            </select>
-          </td>
+          <td><input type="month"  name="fis_semana[]" class="adm-input" required></td>
+          <td><input type="number" name="fis_perc[]"   class="adm-input" placeholder="0.00" min="0" step="0.01"></td>
           <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
     }
     tbody.appendChild(tr);
-    tr.querySelector('input,select').focus();
+    tr.querySelector('input').focus();
 }
+
+// ── Aditivos (valor / prazo) ──────────────────────────────────────────────────
+function aditToggle(sel) {
+    const tr = sel.closest('tr');
+    const valorEl = tr.querySelector('[name="adit_valor[]"]');
+    const prazoEl = tr.querySelector('[name="adit_prazo[]"]');
+    const isValor = sel.value === 'valor';
+    valorEl.readOnly = !isValor; if (!isValor) valorEl.value = '';
+    prazoEl.readOnly = isValor;  if (isValor)  prazoEl.value = '';
+}
+
+function addAditRow() {
+    const tbody = document.getElementById('bodyAdit');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><select name="adit_tipo[]" class="adm-select" onchange="aditToggle(this)">
+          <option value="valor">Valor</option><option value="prazo">Prazo</option></select></td>
+      <td><input type="text" name="adit_valor[]" class="adm-input" placeholder="0,00"></td>
+      <td><input type="week" name="adit_prazo[]" class="adm-input" readonly></td>
+      <td><input type="date" name="adit_data[]" class="adm-input"></td>
+      <td><input type="text" name="adit_desc[]" class="adm-input" placeholder="Observação..."></td>
+      <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('select').focus();
+}
+
+// ── Histograma: estado ────────────────────────────────────────────────────────
+let _hWeeks = [];
+let _hRows  = [];
+
+// Constrói opções <select> agrupadas por grupo a partir de _HIST_FUNCOES
+function _buildFuncaoOptions(selectedCargo) {
+    let html = '<option value="">Selecione...</option>';
+    const grupos = [];
+    const porGrupo = {};
+    _HIST_FUNCOES.forEach(f => {
+        const g = f.grupo || 'Outros';
+        if (!porGrupo[g]) { porGrupo[g] = []; grupos.push(g); }
+        porGrupo[g].push(f);
+    });
+    grupos.forEach(g => {
+        html += `<optgroup label="── ${_esc(g)} ──">`;
+        porGrupo[g].forEach(f => {
+            const sel = f.cargo === selectedCargo ? 'selected' : '';
+            html += `<option value="${_esc(f.cargo)}" ${sel}>${_esc(f.cargo)}</option>`;
+        });
+        html += '</optgroup>';
+    });
+    return html;
+}
+
+// Calcula a segunda-feira da semana ISO "YYYY-Wnn"
+function _monOfWeek(yw) {
+    const [y, w] = yw.split('-W').map(Number);
+    const jan4 = new Date(Date.UTC(y, 0, 4));
+    const dow  = jan4.getUTCDay() || 7;
+    return new Date(jan4.getTime() - (dow - 1) * 864e5 + (w - 1) * 7 * 864e5);
+}
+
+// Formata Date UTC → "DD/MM"
+function _fmtDate(d) {
+    return String(d.getUTCDate()).padStart(2,'0') + '/' +
+           String(d.getUTCMonth() + 1).padStart(2,'0');
+}
+
+// Formata Date UTC → "YYYY-Wnn"
+function _toISOWeek(d) {
+    const dt  = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    const dow = dt.getUTCDay() || 7;
+    dt.setUTCDate(dt.getUTCDate() + 4 - dow);
+    const y1  = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+    const w   = Math.ceil(((dt - y1) / 864e5 + 1) / 7);
+    return `${dt.getUTCFullYear()}-W${String(w).padStart(2,'0')}`;
+}
+
+// Lista todas as semanas entre startYW e endYW (inclusive)
+function _genWeeks(startYW, endYW) {
+    const weeks = [];
+    const endMs = _monOfWeek(endYW).getTime();
+    let cur = _monOfWeek(startYW);
+    while (cur.getTime() <= endMs) {
+        weeks.push(_toISOWeek(cur));
+        cur = new Date(cur.getTime() + 7 * 864e5);
+    }
+    return weeks;
+}
+
+// Salva valores do DOM em _hRows antes de recriar a tabela
+function _syncFromDOM() {
+    document.querySelectorAll('[data-hf]').forEach(el => {
+        const i = +el.dataset.hf;
+        if (_hRows[i]) _hRows[i].funcao = el.value;
+    });
+    document.querySelectorAll('[data-ht]').forEach(el => {
+        const i = +el.dataset.ht;
+        if (_hRows[i]) _hRows[i].tipo = el.value;
+    });
+    document.querySelectorAll('[data-hq]').forEach(el => {
+        const parts = el.dataset.hq.split(':');
+        const ri = +parts[0], wi = +parts[1];
+        if (_hRows[ri] && _hWeeks[wi] !== undefined) {
+            if (!_hRows[ri].semanas) _hRows[ri].semanas = {};
+            _hRows[ri].semanas[_hWeeks[wi]] = parseInt(el.value) || 0;
+        }
+    });
+}
+
+function _esc(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+// Reconstrói o DOM da tabela a partir de _hWeeks e _hRows
+function _rebuildHist() {
+    const wrap    = document.getElementById('histWrap');
+    const noDates = document.getElementById('histNoDates');
+
+    if (_hWeeks.length === 0) {
+        wrap.style.display    = 'none';
+        noDates.style.display = '';
+        return;
+    }
+    wrap.style.display    = '';
+    noDates.style.display = 'none';
+
+    // Cabeçalho: Função | Categoria | W01\n06/01\n'25 | ... | del
+    let hHtml = '<tr>';
+    hHtml += `<th class="hth hth-fix" style="position:sticky;left:0;min-width:210px;background:#eef2f7;">Função / Cargo</th>`;
+    hHtml += `<th class="hth hth-fix" style="position:sticky;left:210px;min-width:110px;background:#eef2f7;">Categoria</th>`;
+    _hWeeks.forEach(yw => {
+        const [yr, wn] = yw.split('-W');
+        const monday   = _monOfWeek(yw);
+        const dateStr  = _fmtDate(monday);
+        hHtml += `<th class="hth" style="min-width:62px;">W${wn}` +
+                 `<br><span style="font-size:.58rem;color:#00AEEF;font-weight:700;">${dateStr}</span>` +
+                 `<br><span style="font-size:.52rem;color:#b0bece;">'${yr.slice(2)}</span></th>`;
+    });
+    hHtml += `<th class="hth" style="min-width:36px;border-right:none;"></th></tr>`;
+    document.getElementById('histThead').innerHTML = hHtml;
+
+    // Corpo: select de função | select categoria | qty inputs | del
+    let bHtml = '';
+    _hRows.forEach((row, ri) => {
+        const bg = ri % 2 === 0 ? '#fff' : '#f8fafc';
+        bHtml += `<tr>`;
+
+        // Função → select com opções do Excel
+        bHtml += `<td class="htd" style="position:sticky;left:0;z-index:1;background:${bg};min-width:210px;">` +
+                 `<select class="adm-select" data-hf="${ri}" onchange="autoSetTipo(${ri},this.value)" style="min-width:200px;">` +
+                 _buildFuncaoOptions(row.funcao) +
+                 `</select></td>`;
+
+        // Categoria → Direto/Indireto
+        bHtml += `<td class="htd" style="position:sticky;left:210px;z-index:1;background:${bg};min-width:110px;">` +
+                 `<select class="adm-select" data-ht="${ri}" style="min-width:100px;">` +
+                 `<option value="direto"      ${row.tipo==='direto'      ?'selected':''}>Direto</option>` +
+                 `<option value="indireto"   ${row.tipo==='indireto'   ?'selected':''}>Indireto</option>` +
+                 `<option value="equipamento"${row.tipo==='equipamento'?'selected':''}>Equipamento</option>` +
+                 `</select></td>`;
+
+        // Células por semana
+        _hWeeks.forEach((yw, wi) => {
+            const v = (row.semanas && row.semanas[yw]) ? row.semanas[yw] : 0;
+            bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                     `<input type="number" class="adm-input" data-hq="${ri}:${wi}" value="${v}" ` +
+                     `min="0" step="1" style="width:58px;text-align:center;padding:.22rem .1rem;font-size:.78rem;">` +
+                     `</td>`;
+        });
+
+        bHtml += `<td class="htd" style="background:${bg};border-right:none;">` +
+                 `<button type="button" class="btn-del-row" onclick="delHistRow(${ri})">` +
+                 `<i class="bi bi-x-circle"></i></button></td></tr>`;
+    });
+    document.getElementById('histTbody').innerHTML = bHtml;
+}
+
+// Auto-preenche Categoria com base na função selecionada
+function autoSetTipo(ri, cargo) {
+    const match = _HIST_FUNCOES.find(f => f.cargo === cargo);
+    if (match && _hRows[ri]) {
+        _hRows[ri].funcao = cargo;
+        _hRows[ri].tipo   = match.tipo;
+        _rebuildHist();
+    }
+}
+
+// Chamado quando as datas do contrato mudam
+function onContractDateChange() {
+    _syncFromDOM();
+    _syncAcoesFromDOM();
+    const s = document.getElementById('dataInicio').value;
+    const e = document.getElementById('dataFim').value;
+    _hWeeks = (s && e && s <= e) ? _genWeeks(s, e) : [];
+    _rebuildHist();
+    _rebuildAcoes();
+}
+
+function addHistRow() {
+    _syncFromDOM();
+    _hRows.push({ funcao: '', tipo: 'direto', semanas: {} });
+    _rebuildHist();
+}
+
+function delHistRow(ri) {
+    _syncFromDOM();
+    _hRows.splice(ri, 1);
+    _rebuildHist();
+}
+
+function serializeHist() {
+    _syncFromDOM();
+    document.getElementById('histJson').value = JSON.stringify(_hRows);
+}
+
+// ── Ações Notáveis: estado ────────────────────────────────────────────────────
+let _aRows = [];
+
+function _syncAcoesFromDOM() {
+    document.querySelectorAll('[data-af]').forEach(el => {
+        const i = +el.dataset.af;
+        if (_aRows[i]) _aRows[i].acao = el.value;
+    });
+    document.querySelectorAll('[data-au]').forEach(el => {
+        const i = +el.dataset.au;
+        if (_aRows[i]) _aRows[i].unidade = el.value;
+    });
+    document.querySelectorAll('[data-aq]').forEach(el => {
+        const [rs, ws] = el.dataset.aq.split(':');
+        const ri = +rs, wi = +ws;
+        if (_aRows[ri] && _hWeeks[wi] !== undefined) {
+            if (!_aRows[ri].semanas) _aRows[ri].semanas = {};
+            const v = parseFloat(el.value);
+            _aRows[ri].semanas[_hWeeks[wi]] = isNaN(v) ? 0 : v;
+        }
+    });
+    document.querySelectorAll('[data-afc]').forEach(el => {
+        const [rs, ws] = el.dataset.afc.split(':');
+        const ri = +rs, wi = +ws;
+        if (_aRows[ri] && _hWeeks[wi] !== undefined) {
+            if (!_aRows[ri].forecast_semanal) _aRows[ri].forecast_semanal = {};
+            const v = parseFloat(el.value);
+            _aRows[ri].forecast_semanal[_hWeeks[wi]] = isNaN(v) ? null : v;
+        }
+    });
+}
+
+// ── Helpers de estilo Forecast ───────────────────────────────────────────────
+function _fcstDelta(ri, wi) {
+    // >0 aumentou (déficit), <0 reduziu (superávit), 0 igual ao baseline
+    const baseEl = document.querySelector(`[data-aq="${ri}:${wi}"]`);
+    const fcstEl = document.querySelector(`[data-afc="${ri}:${wi}"]`);
+    if (!baseEl || !fcstEl) return 0;
+    const b = parseFloat(baseEl.value), f = parseFloat(fcstEl.value);
+    if (isNaN(b) || isNaN(f)) return 0;
+    return f - b;
+}
+
+function _applyFcstStyle(ri, wi) {
+    const delta = _fcstDelta(ri, wi);
+    const input = document.querySelector(`[data-afc="${ri}:${wi}"]`);
+    const cell  = document.getElementById(`afc-${ri}-${wi}`);
+    const bgF   = ri % 2 === 0 ? '#fffbf0' : '#fff8e8';
+
+    const isUp   = delta > 0.001;   // déficit → laranja
+    const isDown = delta < -0.001;  // superávit → verde
+
+    if (input) {
+        input.style.borderColor = isUp ? '#f0a500' : isDown ? '#2e7d32' : '';
+        input.style.color       = isUp ? '#b35c00' : isDown ? '#2e7d32' : '';
+        input.style.fontWeight  = (isUp || isDown) ? '700' : '';
+    }
+    if (cell) {
+        cell.style.background = isUp   ? 'rgba(240,165,0,.13)' :
+                                isDown ? 'rgba(46,125,50,.08)'  : bgF;
+    }
+}
+
+function _onBaselineChange(ri, wi) { _applyFcstStyle(ri, wi); }
+function _onForecastChange(ri, wi) { _applyFcstStyle(ri, wi); }
+
+function _rebuildAcoes() {
+    const wrap    = document.getElementById('acoesWrap');
+    const noDates = document.getElementById('acoesNoDates');
+
+    if (_hWeeks.length === 0) {
+        wrap.style.display    = 'none';
+        noDates.style.display = '';
+        return;
+    }
+    wrap.style.display    = '';
+    noDates.style.display = 'none';
+
+    // Cabeçalho
+    let hHtml = '<tr>';
+    hHtml += `<th class="hth hth-fix" style="position:sticky;left:0;min-width:260px;background:#eef2f7;">Ação Notável</th>`;
+    hHtml += `<th class="hth" style="min-width:90px;background:#eef2f7;">Unidade</th>`;
+    hHtml += `<th class="hth" style="min-width:52px;background:#eef2f7;"></th>`;
+    _hWeeks.forEach(yw => {
+        const [yr, wn] = yw.split('-W');
+        const monday   = _monOfWeek(yw);
+        const dateStr  = _fmtDate(monday);
+        hHtml += `<th class="hth" style="min-width:72px;">W${wn}` +
+                 `<br><span style="font-size:.58rem;color:#00AEEF;font-weight:700;">${dateStr}</span>` +
+                 `<br><span style="font-size:.52rem;color:#b0bece;">'${yr.slice(2)}</span></th>`;
+    });
+    hHtml += `<th class="hth" style="min-width:36px;border-right:none;"></th></tr>`;
+    document.getElementById('acoesThead').innerHTML = hHtml;
+
+    let bHtml = '';
+    _aRows.forEach((row, ri) => {
+        const bg  = ri % 2 === 0 ? '#fff'    : '#f8fafc';
+        const bgF = ri % 2 === 0 ? '#fffbf0' : '#fff8e8';
+        const _unOpts = ['m²','m³','m','Unid'].map(u =>
+            `<option value="${u}" ${row.unidade===u?'selected':''}>${u}</option>`).join('');
+
+        const bgR = ri % 2 === 0 ? '#f0f7f0' : '#e8f5e9';
+
+        // ── Linha 1: Planejado (baseline) ──
+        bHtml += `<tr>`;
+        bHtml += `<td class="htd" rowspan="3" style="position:sticky;left:0;z-index:1;background:${bg};min-width:260px;vertical-align:middle;">` +
+                 `<input type="text" class="adm-input" data-af="${ri}" value="${_esc(row.acao)}" ` +
+                 `placeholder="Descreva a ação..." style="min-width:248px;"></td>`;
+        bHtml += `<td class="htd" rowspan="3" style="background:${bg};min-width:90px;vertical-align:middle;">` +
+                 `<select class="adm-select" data-au="${ri}" style="min-width:82px;">` +
+                 `<option value="">—</option>${_unOpts}</select></td>`;
+        bHtml += `<td class="htd" style="background:${bg};text-align:center;padding:.12rem .2rem;">` +
+                 `<span style="font-size:.58rem;font-weight:800;letter-spacing:.04em;color:var(--tms-dark);` +
+                 `background:rgba(0,51,102,.07);padding:.12rem .32rem;border-radius:4px;">Plan.</span></td>`;
+        _hWeeks.forEach((yw, wi) => {
+            const v = (row.semanas && row.semanas[yw] !== undefined && row.semanas[yw] !== '') ? row.semanas[yw] : '';
+            bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                     `<input type="number" class="adm-input" data-aq="${ri}:${wi}" value="${v}" ` +
+                     `min="0" step="0.1" ` +
+                     `style="width:68px;text-align:center;padding:.22rem .1rem;font-size:.78rem;" ` +
+                     `placeholder="" onchange="_onBaselineChange(${ri},${wi})"></td>`;
+        });
+        bHtml += `<td class="htd" rowspan="3" style="background:${bg};border-right:none;vertical-align:middle;">` +
+                 `<button type="button" class="btn-del-row" onclick="delAcaoRow(${ri})">` +
+                 `<i class="bi bi-x-circle"></i></button></td></tr>`;
+
+        // ── Linha 2: Forecast ──
+        bHtml += `<tr>`;
+        bHtml += `<td class="htd" style="background:${bgF};text-align:center;padding:.12rem .2rem;border-top:1px dashed rgba(240,165,0,.35);">` +
+                 `<span style="font-size:.58rem;font-weight:800;letter-spacing:.04em;color:#b35c00;` +
+                 `background:rgba(240,165,0,.12);padding:.12rem .32rem;border-radius:4px;">Fcst</span></td>`;
+        _hWeeks.forEach((yw, wi) => {
+            const baseline = (row.semanas && row.semanas[yw] !== undefined && row.semanas[yw] !== '')
+                             ? parseFloat(row.semanas[yw]) : null;
+            const saved    = (row.forecast_semanal && row.forecast_semanal[yw] !== undefined && row.forecast_semanal[yw] !== null)
+                             ? row.forecast_semanal[yw] : null;
+            const fv       = saved !== null ? saved : (baseline !== null ? baseline : '');
+            const delta    = (fv !== '' && baseline !== null) ? parseFloat(fv) - baseline : 0;
+            const isUp     = delta > 0.001;
+            const isDown   = delta < -0.001;
+            const cellBg   = isUp   ? 'rgba(240,165,0,.13)' :
+                             isDown ? 'rgba(46,125,50,.08)'  : bgF;
+            const inp      = `width:68px;text-align:center;padding:.22rem .1rem;font-size:.78rem;` +
+                             (isUp   ? 'border-color:#f0a500;color:#b35c00;font-weight:700;' :
+                              isDown ? 'border-color:#2e7d32;color:#2e7d32;font-weight:700;' : '');
+            bHtml += `<td class="htd" id="afc-${ri}-${wi}" ` +
+                     `style="background:${cellBg};padding:.18rem .12rem;border-top:1px dashed rgba(240,165,0,.35);">` +
+                     `<input type="number" class="adm-input" data-afc="${ri}:${wi}" value="${fv}" ` +
+                     `min="0" step="0.1" style="${inp}" placeholder="" ` +
+                     `onchange="_onForecastChange(${ri},${wi})"></td>`;
+        });
+        bHtml += `</tr>`;
+
+        // ── Linha 3: Realizado ──
+        bHtml += `<tr>`;
+        bHtml += `<td class="htd" style="background:${bgR};text-align:center;padding:.12rem .2rem;border-top:1px dashed rgba(46,125,50,.35);">` +
+                 `<span style="font-size:.58rem;font-weight:800;letter-spacing:.04em;color:#1b5e20;` +
+                 `background:rgba(46,125,50,.12);padding:.12rem .32rem;border-radius:4px;">Real.</span></td>`;
+        _hWeeks.forEach(yw => {
+            const realMap = ACOES_REAL_MAP[row.acao] || {};
+            const rv      = realMap[yw] !== undefined ? realMap[yw] : '';
+            const plan    = (row.semanas && row.semanas[yw] !== undefined && row.semanas[yw] !== '')
+                            ? parseFloat(row.semanas[yw]) : null;
+            const isAbove = rv !== '' && plan !== null && parseFloat(rv) > plan;
+            const isBelow = rv !== '' && plan !== null && parseFloat(rv) < plan;
+            const valStyle = isAbove ? 'color:#2e7d32;font-weight:700;' :
+                             isBelow ? 'color:#c62828;font-weight:700;' :
+                             rv !== '' ? 'color:#1b5e20;font-weight:600;' : 'color:#ccc;';
+            bHtml += `<td class="htd" style="background:${bgR};padding:.18rem .12rem;text-align:center;` +
+                     `border-top:1px dashed rgba(46,125,50,.35);">` +
+                     `<span style="font-size:.78rem;${valStyle}">${rv !== '' ? rv : '—'}</span></td>`;
+        });
+        bHtml += `</tr>`;
+    });
+    document.getElementById('acoesTbody').innerHTML = bHtml;
+}
+
+function addAcaoRow() {
+    _syncAcoesFromDOM();
+    _aRows.push({ acao: '', unidade: '', semanas: {} });
+    _rebuildAcoes();
+}
+
+function delAcaoRow(ri) {
+    _syncAcoesFromDOM();
+    _aRows.splice(ri, 1);
+    _rebuildAcoes();
+}
+
+function serializeAcoes() {
+    _syncAcoesFromDOM();
+    document.getElementById('acoesJson').value = JSON.stringify(_aRows);
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function () {
+    _hRows = (_HIST_INIT || []).map(r => ({
+        funcao:  r.funcao  || '',
+        tipo:    r.tipo    || 'direto',
+        semanas: r.semanas || {},
+    }));
+    _aRows = (_ACOES_INIT || []).map(a => ({
+        acao:             a.acao             || '',
+        unidade:          a.unidade          || '',
+        semanas:          a.semanas          || {},
+        forecast_semanal: a.forecast_semanal || {},
+    }));
+    document.getElementById('adminForm').addEventListener('submit', function() {
+        serializeHist();
+        serializeAcoes();
+    });
+    if (_HIST_INICIO) document.getElementById('dataInicio').value = _HIST_INICIO;
+    if (_HIST_FIM)    document.getElementById('dataFim').value    = _HIST_FIM;
+    onContractDateChange();
+});
 </script>
 {% endblock %}
