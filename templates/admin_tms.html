@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações TMS{% endblock %}
+{% block page_icon %}<i class="bi bi-gear-wide-connected"></i>{% endblock %}
+{% block page_title %}Configurações TMS{% endblock %}
+{% block breadcrumb %}Programa Mãe — configurações globais{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{{ url_for('admin') }}" class="btn btn-secondary-rumo btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar a Contratos
+    </a>
+</div>
+
+<form method="post" id="tmsForm">
+    <!-- IDENTIDADE DO PROGRAMA -->
+    <div class="card-rumo mb-4">
+        <div class="card-header">
+            <i class="bi bi-briefcase"></i>Identidade do Programa
+        </div>
+        <div class="p-4">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">Nome do Programa</label>
+                    <input type="text" name="nome_programa" class="form-control"
+                           value="{{ cfg.get('nome_programa', '') }}"
+                           placeholder="Ex: Programa de Obras Ferroviárias TMS">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Sigla</label>
+                    <input type="text" name="sigla" class="form-control"
+                           value="{{ cfg.get('sigla', '') }}"
+                           placeholder="Ex: TMS">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Cliente / Contratante</label>
+                    <input type="text" name="cliente" class="form-control"
+                           value="{{ cfg.get('cliente', '') }}"
+                           placeholder="Nome do cliente ou órgão contratante">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Local / Região</label>
+                    <input type="text" name="local" class="form-control"
+                           value="{{ cfg.get('local', '') }}"
+                           placeholder="Ex: São Paulo — SP">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Objeto / Descrição</label>
+                    <textarea name="objeto" class="form-control" rows="3"
+                              placeholder="Descrição resumida do escopo do programa">{{ cfg.get('objeto', '') }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATAS E VALOR -->
+    <div class="card-rumo mb-4">
+        <div class="card-header">
+            <i class="bi bi-calendar-range"></i>Prazo e Valor
+        </div>
+        <div class="p-4">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Data de Início</label>
+                    <input type="month" name="data_inicio" class="form-control"
+                           value="{{ cfg.get('data_inicio', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data de Término Prevista</label>
+                    <input type="month" name="data_fim" class="form-control"
+                           value="{{ cfg.get('data_fim', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Valor Total do Programa (R$)</label>
+                    <input type="number" name="valor_programa" class="form-control"
+                           step="0.01" min="0"
+                           value="{{ cfg.get('valor_programa', '') }}"
+                           placeholder="0,00">
+                    <small class="text-muted" style="font-size:.7rem;">Referência geral — independe do somatório dos contratos.</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Responsável Técnico</label>
+                    <input type="text" name="responsavel" class="form-control"
+                           value="{{ cfg.get('responsavel', '') }}"
+                           placeholder="Nome do gerente ou responsável técnico">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MILESTONES -->
+    <div class="card-rumo mb-4">
+        <div class="card-header" style="display:flex; align-items:center; justify-content:space-between;">
+            <span><i class="bi bi-flag-fill"></i>Milestones do Projeto</span>
+            <button type="button" onclick="addMsRow()" class="btn btn-primary-rumo btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>Adicionar
+            </button>
+        </div>
+        <div class="p-3">
+            <table style="width:100%; border-collapse:collapse; font-size:.82rem;" id="ms-table">
+                <thead>
+                    <tr style="background:var(--tms-bg);">
+                        <th style="padding:.4rem .6rem; font-size:.65rem; text-transform:uppercase; color:var(--tms-muted); font-weight:700; letter-spacing:.06em; width:148px;">Data Planejada</th>
+                        <th style="padding:.4rem .6rem; font-size:.65rem; text-transform:uppercase; color:#b35309; font-weight:700; letter-spacing:.06em; width:148px;"><i class="bi bi-arrow-right me-1"></i>Forecast</th>
+                        <th style="padding:.4rem .6rem; font-size:.65rem; text-transform:uppercase; color:#1f9e4a; font-weight:700; letter-spacing:.06em; width:148px;"><i class="bi bi-check-circle me-1"></i>Entregue</th>
+                        <th style="padding:.4rem .6rem; font-size:.65rem; text-transform:uppercase; color:var(--tms-muted); font-weight:700; letter-spacing:.06em;">Descrição</th>
+                        <th style="width:36px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="ms-tbody"></tbody>
+            </table>
+            <div id="ms-vazio" style="text-align:center; padding:1.5rem; color:var(--tms-muted); font-size:.8rem; display:none;">
+                <i class="bi bi-flag" style="font-size:1.4rem; display:block; margin-bottom:.35rem; opacity:.3;"></i>
+                Nenhum milestone cadastrado. Clique em "Adicionar" para começar.
+            </div>
+            <input type="hidden" name="milestones_json" id="milestones-json" value="">
+        </div>
+    </div>
+
+    {% if cfg.get('atualizado_em') %}
+    <p style="font-size:.7rem; color:var(--tms-muted);">
+        <i class="bi bi-clock me-1"></i>Última atualização: {{ cfg.atualizado_em[:16].replace('T',' ') }}
+        por <strong>{{ cfg.get('atualizado_por', '—') }}</strong>
+    </p>
+    {% endif %}
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary-rumo">
+            <i class="bi bi-floppy me-1"></i>Salvar Configurações
+        </button>
+        <a href="{{ url_for('admin') }}" class="btn btn-secondary-rumo">Cancelar</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MS_INIT = {{ cfg.get('milestones', [])|tojson }};
+
+function addMsRow(ms) {
+    const mes      = ms ? ms.mes       : '';
+    const desc     = ms ? ms.descricao : '';
+    const forecast = ms ? (ms.forecast  || '') : '';
+    const entregue = ms ? (ms.entregue  || '') : '';
+    const fcStyle  = forecast && forecast !== mes ? 'border-color:#f59e0b;background:rgba(245,158,11,.06);' : '';
+    const enStyle  = entregue ? 'border-color:#1f9e4a;background:rgba(31,158,74,.06);' : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td style="padding:.3rem .4rem;">
+            <input type="month" class="form-control form-control-sm ms-mes" value="${mes}" required style="min-width:140px;">
+        </td>
+        <td style="padding:.3rem .4rem;">
+            <input type="month" class="form-control form-control-sm ms-forecast" value="${forecast}"
+                   style="min-width:140px;${fcStyle}" oninput="updateFcStyle(this)">
+        </td>
+        <td style="padding:.3rem .4rem;">
+            <input type="month" class="form-control form-control-sm ms-entregue" value="${entregue}"
+                   style="min-width:140px;${enStyle}" oninput="updateEntregueStyle(this)">
+        </td>
+        <td style="padding:.3rem .4rem;">
+            <input type="text" class="form-control form-control-sm ms-desc" value="${desc ? desc.replace(/"/g,'&quot;') : ''}" placeholder="Descrição do milestone" required>
+        </td>
+        <td style="padding:.3rem .2rem; text-align:center;">
+            <button type="button" onclick="this.closest('tr').remove(); _refreshEmpty();"
+                    class="btn btn-danger-rumo btn-sm" title="Remover">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>`;
+    document.getElementById('ms-tbody').appendChild(tr);
+    _refreshEmpty();
+}
+
+function updateFcStyle(inp) {
+    const mes = inp.closest('tr').querySelector('.ms-mes').value;
+    if (inp.value && inp.value !== mes) {
+        inp.style.borderColor = '#f59e0b'; inp.style.background = 'rgba(245,158,11,.06)';
+    } else { inp.style.borderColor = ''; inp.style.background = ''; }
+}
+
+function updateEntregueStyle(inp) {
+    if (inp.value) {
+        inp.style.borderColor = '#1f9e4a'; inp.style.background = 'rgba(31,158,74,.06)';
+    } else { inp.style.borderColor = ''; inp.style.background = ''; }
+}
+
+function _refreshEmpty() {
+    const rows = document.getElementById('ms-tbody').rows.length;
+    document.getElementById('ms-vazio').style.display = rows ? 'none' : '';
+    document.querySelector('#ms-table thead').style.display = rows ? '' : 'none';
+}
+
+
+// Serialize on submit
+document.getElementById('tmsForm').addEventListener('submit', function() {
+    const rows = document.querySelectorAll('#ms-tbody tr');
+    const data = [];
+    rows.forEach(tr => {
+        const mes      = tr.querySelector('.ms-mes').value.trim();
+        const desc     = tr.querySelector('.ms-desc').value.trim();
+        const forecast = tr.querySelector('.ms-forecast').value.trim();
+        const entregue = tr.querySelector('.ms-entregue').value.trim();
+        if (mes && desc) {
+            const obj = { mes, descricao: desc };
+            if (forecast) obj.forecast = forecast;
+            if (entregue) obj.entregue = entregue;
+            data.push(obj);
+        }
+    });
+    // Sort by month
+    data.sort((a, b) => a.mes.localeCompare(b.mes));
+    document.getElementById('milestones-json').value = JSON.stringify(data);
+});
+
+// Init
+MS_INIT.forEach(ms => addMsRow(ms));
+if (!MS_INIT.length) _refreshEmpty();
+</script>
+{% endblock %}

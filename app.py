@@ -1,4 +1,5 @@
 import json
+import math
 import uuid
 import os
 import string
@@ -6,7 +7,7 @@ import secrets
 import smtplib
 from email.message import EmailMessage
 from datetime import datetime, date, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
@@ -405,6 +406,147 @@ def format_date_to_week(date_str):
 app.jinja_env.filters['date_to_week'] = format_date_to_week
 
 
+def recompute_forecast_acoes(contratada, contrato, overrides=None):
+    """Recalcula o forecast das Ações Notáveis de um contrato.
+
+    O desvio acumulado (planejado − real) das semanas ENTREGUES é
+    redistribuído, proporcionalmente ao planejado, SOMENTE entre as semanas
+    futuras (após a última semana com realizado). O forecast de semanas
+    passadas/presentes NUNCA é alterado pelo sistema (= planejado). Atraso
+    aumenta as futuras; adiantamento as reduz. `overrides` permite o reajuste
+    manual do forecast pelo usuário (aplicado apenas a semanas futuras)."""
+    cfg = load_contratos_config()
+    key = contrato_key(contratada, contrato)
+    entry = cfg.get(key)
+    if not entry or not entry.get('linha_base_acoes'):
+        return
+
+    # Realizado por ação/semana ISO, a partir dos registros do contrato
+    reais = {}
+    for r in load_data():
+        if r.get('contratada') != contratada or r.get('contrato') != contrato:
+            continue
+        wk = format_date_to_week(r.get('semana_referencia', ''))
+        if not wk:
+            continue
+        for acao, val in (r.get('acoes_realizadas') or {}).items():
+            try:
+                reais.setdefault(acao, {})[wk] = float(val)
+            except (TypeError, ValueError):
+                continue
+
+    for acao in entry['linha_base_acoes']:
+        nome = acao.get('acao', '')
+        planejado = {k: float(v or 0) for k, v in (acao.get('semanas') or {}).items()}
+        real = reais.get(nome, {})
+
+        # Reajustes manuais TRAVADOS — persistem e nunca são recalculados.
+        # Novos ajustes vindos do formulário são mesclados aos já existentes.
+        manual = dict(acao.get('forecast_manual') or {})
+        if overrides and nome in overrides:
+            for w, val in (overrides[nome] or {}).items():
+                if w in planejado:
+                    try:
+                        manual[w] = math.ceil(float(val))
+                    except (TypeError, ValueError):
+                        pass
+        acao['forecast_manual'] = manual
+
+        # fronteira passado/futuro = última semana COM realizado (a que notificou o desvio)
+        entregues = [w for w in real if w in planejado]
+        limite = max(entregues) if entregues else None
+        # distribui SOMENTE o desvio dessa última semana (não o acumulado)
+        net = (planejado[limite] - real[limite]) if limite is not None else 0.0
+        futuras = [w for w in planejado if limite is not None and w > limite]
+        # semanas futuras travadas manualmente (não entram no recálculo)
+        manual_fut = {w: float(manual[w]) for w in manual if w in futuras}
+        absorvido = sum(manual_fut[w] - planejado[w] for w in manual_fut)
+        restante = net - absorvido            # desvio a distribuir entre as NÃO travadas
+        auto_fut = [w for w in futuras if w not in manual_fut]
+        base = sum(planejado[w] for w in auto_fut)
+
+        forecast = {}
+        for w in planejado:
+            if w in manual_fut:
+                forecast[w] = math.ceil(manual_fut[w])           # travado (manual)
+            elif w in auto_fut:
+                if base > 0:
+                    share = restante * (planejado[w] / base)
+                else:
+                    share = restante / len(auto_fut) if auto_fut else 0.0
+                forecast[w] = math.ceil(max(0.0, planejado[w] + share))
+            else:
+                forecast[w] = math.ceil(planejado[w])            # passado/presente = planejado
+        acao['forecast'] = forecast
+
+    save_contratos_config(cfg)
+
+
+def acoes_acumulado_map(exclude_id=None):
+    """Realizado acumulado por contrato/ação somando todos os registros
+    (opcionalmente excluindo um registro — usado na edição para não contar
+    duas vezes a semana que está sendo editada). Alimenta a coluna "Evol."
+    do formulário: acumulado ÷ total planejado da ação."""
+    acum = {}
+    for r in load_data():
+        if exclude_id and r.get('id') == exclude_id:
+            continue
+        k = contrato_key(r.get('contratada', ''), r.get('contrato', ''))
+        for acao, val in (r.get('acoes_realizadas') or {}).items():
+            try:
+                acum.setdefault(k, {})
+                acum[k][acao] = acum[k].get(acao, 0) + float(val)
+            except (TypeError, ValueError):
+                continue
+    return acum
+
+
+def acoes_real_semanas_map(exclude_id=None):
+    """Realizado por contrato/ação/semana ISO (para a prévia de reajuste do
+    forecast no formulário). Exclui opcionalmente um registro (edição)."""
+    m = {}
+    for r in load_data():
+        if exclude_id and r.get('id') == exclude_id:
+            continue
+        k = contrato_key(r.get('contratada', ''), r.get('contrato', ''))
+        wk = format_date_to_week(r.get('semana_referencia', ''))
+        if not wk:
+            continue
+        for acao, val in (r.get('acoes_realizadas') or {}).items():
+            try:
+                m.setdefault(k, {}).setdefault(acao, {})[wk] = float(val)
+            except (TypeError, ValueError):
+                continue
+    return m
+
+
+def acoes_forecast_manual_map():
+    """Reajustes manuais de forecast travados, por contrato/ação/semana.
+    Usado no formulário para exibir as semanas já travadas pelo usuário."""
+    m = {}
+    for key, entry in load_contratos_config().items():
+        for a in entry.get('linha_base_acoes', []):
+            fm = a.get('forecast_manual')
+            if fm:
+                m.setdefault(key, {})[a.get('acao', '')] = fm
+    return m
+
+
+def avanco_fisico_fc_manual_map(exclude_id=None):
+    """Forecast manual do Avanço Físico por contratada||contrato → mês → %.
+    Agrega o campo 'avanco_fisico_forecast' dos registros mais recentes."""
+    result = {}
+    for r in load_data():
+        if exclude_id and r.get('id') == exclude_id:
+            continue
+        fc = r.get('avanco_fisico_forecast', {})
+        if not fc:
+            continue
+        key = f"{r.get('contratada', '')}||{r.get('contrato', '')}"
+        result.setdefault(key, {}).update(fc)
+    return result
+
+
 def contract_status(data):
     manual = data.get('status_manual', 'auto')
     if manual in ('ativo', 'encerrado'):
@@ -773,8 +915,9 @@ def consolidado():
         flash('Acesso restrito ao painel consolidado.', 'danger')
         return redirect(url_for('dashboard'))
 
-    registros = load_data()
-    cfg = load_contratos_config()
+    registros  = load_data()
+    cfg        = load_contratos_config()
+    tms_cfg    = load_tms_config()
 
     # Universo de contratadas (config + registros)
     contratadas = sorted(
@@ -797,7 +940,16 @@ def consolidado():
     ultima_semana = reg_ord[-1].get('semana_referencia', '') if reg_ord else ''
     medido_semana = sum(r.get('valor_medido', 0) for r in registros if r.get('semana_referencia') == ultima_semana)
 
-    avancos = [r.get('avanco_fisico', 0) for r in registros]
+    # Medição agregada numa única passada (reuso em por_contratada / por_área / contratos)
+    medido_por_par = {}         # (contratada, contrato) → medido acumulado
+    medido_por_contratada = {}  # contratada → medido acumulado
+    for r in registros:
+        ct = r.get('contratada', '')
+        co = r.get('contrato', '')
+        v  = r.get('valor_medido', 0) or 0
+        medido_por_par[(ct, co)] = medido_por_par.get((ct, co), 0) + v
+        medido_por_contratada[ct] = medido_por_contratada.get(ct, 0) + v
+
     # avanço físico médio considerando o último registro de cada contrato
     ultimo_af = {}
     for r in reg_ord:
@@ -817,11 +969,52 @@ def consolidado():
         curva_acum.append(round(acum, 2))
     curva_base = fin_base_curve(cfg, '', semanas_sorted)
 
+    # ── Curva S Física consolidada (média ponderada por valor contratado) ──
+    _af_hist = {}  # (contratada, contrato) → {semana: avanco_fisico}
+    for r in reg_ord:
+        _k = (r.get('contratada'), r.get('contrato'))
+        _s = r.get('semana_referencia', '')
+        if _s:
+            _af_hist.setdefault(_k, {})[_s] = r.get('avanco_fisico') or 0
+    _ct_val = {(c.get('contratada'), c.get('contrato')): float(c.get('valor_contrato') or 0)
+               for c in cfg.values()}
+    curva_fis_acum = []
+    for s in semanas_sorted:
+        soma, peso = 0.0, 0.0
+        for _k, _hist in _af_hist.items():
+            _known = {w: v for w, v in _hist.items() if w <= s}
+            if not _known:
+                continue
+            _af  = _known[max(_known)]
+            _p   = _ct_val.get(_k, 1.0)
+            soma += _af * _p
+            peso += _p
+        curva_fis_acum.append(round(soma / peso, 1) if peso else None)
+
+    # Baseline física: média ponderada mensal
+    _fis_m = {}
+    for c in cfg.values():
+        _k  = (c.get('contratada'), c.get('contrato'))
+        _p  = float(c.get('valor_contrato') or 0)
+        _lb = c.get('lb_fis_planejado') or {it['semana']: it['percentual'] for it in c.get('linha_base_fisica', [])}
+        for _m, _v in _lb.items():
+            _fis_m.setdefault(_m, []).append((float(_v or 0), _p))
+    _fis_cumul = {}
+    for _m in sorted(_fis_m):
+        _soma = sum(v * p for v, p in _fis_m[_m])
+        _peso = sum(p for _, p in _fis_m[_m])
+        _fis_cumul[_m] = round(_soma / _peso, 1) if _peso else 0
+    _fis_months = sorted(_fis_cumul)
+    curva_fis_base = [
+        next(((_fis_cumul[bm]) for bm in reversed(_fis_months) if bm <= _month_of_week(s)), None)
+        for s in semanas_sorted
+    ]
+
     # ── Por contratada ──
     por_contratada = []
     for ct in contratadas:
         valor  = sum(float(c.get('valor_contrato', 0) or 0) for c in cfg.values() if c.get('contratada') == ct)
-        medido = sum(r.get('valor_medido', 0) for r in registros if r.get('contratada') == ct)
+        medido = medido_por_contratada.get(ct, 0)
         por_contratada.append({
             'contratada': ct,
             'valor':  valor,
@@ -836,6 +1029,32 @@ def consolidado():
                 'rgba(96,165,250,.85)']
     cores = [_PALETTE[i % len(_PALETTE)] for i in range(len(por_contratada))]
 
+    # ── Por área de contrato (totais + detalhamento por contrato numa só passada) ──
+    area_map = {}
+    contratos_por_area: dict = {}
+    for c in cfg.values():
+        area     = (c.get('area_contrato') or '').strip() or 'Não classificado'
+        ct_name  = c.get('contratada', '')
+        contrato = c.get('contrato', '')
+        valor    = float(c.get('valor_contrato', 0) or 0)
+        medido_c = medido_por_par.get((ct_name, contrato), 0)
+        a = area_map.setdefault(area, {'area': area, 'valor': 0.0, 'medido': 0.0, 'n_contratos': 0})
+        a['valor']       += valor
+        a['medido']      += medido_c
+        a['n_contratos'] += 1
+        contratos_por_area.setdefault(area, []).append({
+            'contratada': ct_name,
+            'contrato':   contrato,
+            'valor':      valor,
+            'medido':     round(medido_c, 2),
+            'saldo':      round(valor - medido_c, 2),
+            'pct':        round(medido_c / valor * 100, 1) if valor else 0,
+        })
+    for a in area_map.values():
+        a['saldo'] = a['valor'] - a['medido']
+        a['pct']   = round(a['medido'] / a['valor'] * 100, 1) if a['valor'] else 0
+    por_area = sorted(area_map.values(), key=lambda x: -x['valor'])
+
     kpis = dict(
         total_valor_contrato=total_valor_contrato,
         total_medido=total_medido,
@@ -848,17 +1067,74 @@ def consolidado():
         af_medio=af_medio,
     )
 
+    tms_milestones = sorted(tms_cfg.get('milestones', []), key=lambda m: m.get('mes', ''))
+
+    # ── Histograma consolidado (última semana com dados) ──
+    _ult_sem = semanas_sorted[-1] if semanas_sorted else None
+    _ult_iso = format_date_to_week(_ult_sem) if _ult_sem else None
+    _hr_dir = _hr_ind = 0
+    for r in registros:
+        if r.get('semana_referencia') == _ult_sem:
+            _hr_dir += int(r.get('total_direto',   0) or 0)
+            _hr_ind += int(r.get('total_indireto', 0) or 0)
+    _hp_dir = _hp_ind = 0
+    if _ult_iso:
+        for c in cfg.values():
+            for lb in c.get('linha_base_histograma', []):
+                _v = int(lb.get('semanas', {}).get(_ult_iso, 0) or 0)
+                if lb.get('tipo') == 'indireto':
+                    _hp_ind += _v
+                else:
+                    _hp_dir += _v
+    _tms_h = int(tms_cfg.get('headcount_tms', 0) or 0)
+    hist_kpis = {
+        'semana':    _ult_iso or '',
+        'mod_plan':  _hp_dir,  'mod_real':  _hr_dir,  'mod_delta':  _hr_dir - _hp_dir,
+        'moi_plan':  _hp_ind,  'moi_real':  _hr_ind,  'moi_delta':  _hr_ind - _hp_ind,
+        'tot_plan':  _hp_dir + _hp_ind,
+        'tot_real':  _hr_dir + _hr_ind,
+        'tot_delta': (_hr_dir + _hr_ind) - (_hp_dir + _hp_ind),
+        'tms_plan':  _tms_h,   'tms_real':  _tms_h,   'tms_delta':  0,
+    }
+
+    # ── Suprimento stats para CONSOLIDADO ─────────────────────────────────
+    _sups = load_suprimentos()
+    sup_total = len(_sups)
+    _sup_etapa_labels = [SUPRIMENTO_STAGE_LABELS[s] for s in SUPRIMENTO_STAGES]
+    _sup_etapa_vals   = [sum(1 for x in _sups if x.get('status') == s) for s in SUPRIMENTO_STAGES]
+    _sup_etapa_cores  = [SUPRIMENTO_STAGE_COLORS[s] for s in SUPRIMENTO_STAGES]
+    _sup_area_map = {}
+    for x in _sups:
+        a = x.get('area_contrato') or 'Não classificado'
+        _sup_area_map[a] = _sup_area_map.get(a, 0) + 1
+    sup_valor_total = sum(x.get('valor_estimado') or 0 for x in _sups)
+    sup_etapa_rows  = list(zip(_sup_etapa_labels, _sup_etapa_vals, _sup_etapa_cores))
+
     return render_template('consolidado.html',
                            kpis=kpis,
                            por_contratada=por_contratada,
+                           por_area=por_area,
+                           contratos_por_area=contratos_por_area,
+                           tms_cfg=tms_cfg,
+                           tms_milestones=tms_milestones,
+                           hist_kpis=hist_kpis,
                            chart_labels=json.dumps(chart_labels),
                            curva_acum=json.dumps(curva_acum),
                            curva_base=json.dumps(curva_base),
+                           curva_fis_acum=json.dumps(curva_fis_acum),
+                           curva_fis_base=json.dumps(curva_fis_base),
                            bar_labels=json.dumps([x['contratada'] for x in por_contratada]),
                            bar_medido=json.dumps([round(x['medido'], 2) for x in por_contratada]),
-                           bar_valor=json.dumps([round(x['valor'], 2) for x in por_contratada]),
                            bar_pct=json.dumps([x['pct'] for x in por_contratada]),
-                           cores=json.dumps(cores))
+                           cores=json.dumps(cores),
+                           sup_total=sup_total,
+                           sup_valor_total=sup_valor_total,
+                           sup_etapa_rows=sup_etapa_rows,
+                           sup_por_etapa_labels=json.dumps(_sup_etapa_labels),
+                           sup_por_etapa_vals=json.dumps(_sup_etapa_vals),
+                           sup_por_etapa_cores=json.dumps(_sup_etapa_cores),
+                           sup_por_area_labels=json.dumps(list(_sup_area_map.keys())),
+                           sup_por_area_vals=json.dumps(list(_sup_area_map.values())))
 
 
 @app.route('/construcao')
@@ -954,8 +1230,11 @@ def novo():
         efetivo, total_direto, total_indireto = parse_efetivo(request.form)
         equipamentos = parse_equipamentos(request.form)
         acoes_realizadas        = parse_acoes_realizadas(request.form)
+        acoes_justificativas    = _parse_json_dict(request.form, 'acoes_justificativas_json')
+        acoes_forecast          = _parse_json_dict(request.form, 'acoes_forecast_json')
         equipamentos_realizados = _parse_json_dict(request.form, 'equipamentos_realizados_json')
         histograma_realizados   = _parse_json_dict(request.form, 'histograma_realizados_json')
+        avanco_fisico_fc        = _parse_json_dict(request.form, 'avanco_fisico_forecast_json')
 
         if erros:
             for e in erros:
@@ -968,6 +1247,9 @@ def novo():
                                    form_data=request.form,
                                    pluviometria_data=pluviometria,
                                    acoes_realizadas=acoes_realizadas,
+                                   acoes_justificativas=acoes_justificativas,
+                                   avanco_fisico_forecast=avanco_fisico_fc,
+                                   avanco_fisico_fc_manual=avanco_fisico_fc_manual_map(),
                                    equipamentos_realizados=equipamentos_realizados,
                                    histograma_realizados=histograma_realizados,
                                    contratos_cfg_json=json.dumps(load_contratos_config()))
@@ -985,8 +1267,10 @@ def novo():
             'pontos_atencao': pontos_atencao,
             'valor_medido': valor_medido,
             'avanco_fisico': avanco_fisico,
+            'avanco_fisico_forecast': avanco_fisico_fc,
             'pluviometria': pluviometria,
             'acoes_realizadas': acoes_realizadas,
+            'acoes_justificativas': acoes_justificativas,
             'equipamentos_realizados': equipamentos_realizados,
             'histograma_realizados': histograma_realizados,
             'criado_em': datetime.now().isoformat(),
@@ -996,6 +1280,7 @@ def novo():
 
         registros.append(novo_registro)
         save_data(registros)
+        recompute_forecast_acoes(contratada, contrato, overrides=acoes_forecast)
         audit_log('criar_registro', novo_registro['id'],
                   f'{contratada} / {contrato} / {format_date_br(semana_referencia)}')
         flash(f'Registro de "{contratada}" para a semana de {format_date_br(semana_referencia)} salvo com sucesso!', 'success')
@@ -1014,6 +1299,12 @@ def novo():
                            form_data=_form_inicial,
                            pluviometria_data={},
                            acoes_realizadas={},
+                           acoes_justificativas={},
+                           avanco_fisico_forecast={},
+                           avanco_fisico_fc_manual=avanco_fisico_fc_manual_map(),
+                           acoes_acumulado=acoes_acumulado_map(),
+                           acoes_real_sem=acoes_real_semanas_map(),
+                           acoes_fc_manual=acoes_forecast_manual_map(),
                            equipamentos_realizados={},
                            histograma_realizados={},
                            contratos_cfg_json=json.dumps(load_contratos_config()))
@@ -1075,8 +1366,11 @@ def editar(id):
         efetivo, total_direto, total_indireto = parse_efetivo(request.form)
         equipamentos = parse_equipamentos(request.form)
         acoes_realizadas        = parse_acoes_realizadas(request.form)
+        acoes_justificativas    = _parse_json_dict(request.form, 'acoes_justificativas_json')
+        acoes_forecast          = _parse_json_dict(request.form, 'acoes_forecast_json')
         equipamentos_realizados = _parse_json_dict(request.form, 'equipamentos_realizados_json')
         histograma_realizados   = _parse_json_dict(request.form, 'histograma_realizados_json')
+        avanco_fisico_fc        = _parse_json_dict(request.form, 'avanco_fisico_forecast_json')
 
         if erros:
             for e in erros:
@@ -1090,6 +1384,9 @@ def editar(id):
                                    form_data=request.form,
                                    pluviometria_data=pluviometria,
                                    acoes_realizadas=acoes_realizadas,
+                                   acoes_justificativas=acoes_justificativas,
+                                   avanco_fisico_forecast=avanco_fisico_fc,
+                                   avanco_fisico_fc_manual=avanco_fisico_fc_manual_map(),
                                    equipamentos_realizados=equipamentos_realizados,
                                    histograma_realizados=histograma_realizados,
                                    contratos_cfg_json=json.dumps(load_contratos_config()))
@@ -1106,8 +1403,10 @@ def editar(id):
             'pontos_atencao': pontos_atencao,
             'valor_medido': valor_medido,
             'avanco_fisico': avanco_fisico,
+            'avanco_fisico_forecast': avanco_fisico_fc,
             'pluviometria': pluviometria,
             'acoes_realizadas': acoes_realizadas,
+            'acoes_justificativas': acoes_justificativas,
             'equipamentos_realizados': equipamentos_realizados,
             'histograma_realizados': histograma_realizados,
             'atualizado_em': datetime.now().isoformat(),
@@ -1116,6 +1415,7 @@ def editar(id):
         })
 
         save_data(registros)
+        recompute_forecast_acoes(contratada, contrato, overrides=acoes_forecast)
         audit_log('editar_registro', id,
                   f'{contratada} / {contrato} / {format_date_br(semana_referencia)}')
         flash('Registro atualizado com sucesso!', 'success')
@@ -1134,6 +1434,12 @@ def editar(id):
                            form_data=registro,
                            pluviometria_data=pluv_existente,
                            acoes_realizadas=registro.get('acoes_realizadas', {}),
+                           acoes_justificativas=registro.get('acoes_justificativas', {}),
+                           avanco_fisico_forecast=registro.get('avanco_fisico_forecast', {}),
+                           avanco_fisico_fc_manual=avanco_fisico_fc_manual_map(exclude_id=id),
+                           acoes_acumulado=acoes_acumulado_map(exclude_id=id),
+                           acoes_real_sem=acoes_real_semanas_map(exclude_id=id),
+                           acoes_fc_manual=acoes_forecast_manual_map(),
                            equipamentos_realizados=registro.get('equipamentos_realizados', {}),
                            histograma_realizados=registro.get('histograma_realizados', {}),
                            contratos_cfg_json=json.dumps(load_contratos_config()))
@@ -1697,6 +2003,275 @@ def admin_logout():
     return redirect(url_for('index'))
 
 
+# ── ADMIN: CONFIGURAÇÕES TMS ─────────────────────────────────────────────────
+
+TMS_CONFIG_FILE = os.path.join('data', 'tms_config.json')
+
+def load_tms_config():
+    if os.path.exists(TMS_CONFIG_FILE):
+        with open(TMS_CONFIG_FILE, encoding='utf-8') as f:
+            return json.load(f)
+    return {}
+
+def save_tms_config(data):
+    with open(TMS_CONFIG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+# ── Suprimento ───────────────────────────────────────────────────────────────
+
+SUPRIMENTO_FILE = os.path.join('data', 'suprimentos.json')
+
+SUPRIMENTO_STAGES = ['prospeccao', 'qualificacao', 'proposta', 'negociacao', 'contrato']
+SUPRIMENTO_STAGE_LABELS = {
+    'prospeccao':  'Prospecção',
+    'qualificacao': 'Qualificação',
+    'proposta':    'Proposta',
+    'negociacao':  'Negociação',
+    'contrato':    'Contrato',
+}
+SUPRIMENTO_STAGE_COLORS = {
+    'prospeccao':  '#6b7c93',
+    'qualificacao': '#2BB2EE',
+    'proposta':    '#F0B34D',
+    'negociacao':  '#e07b00',
+    'contrato':    '#46C26A',
+}
+
+
+def load_suprimentos():
+    if not os.path.exists(SUPRIMENTO_FILE):
+        return []
+    try:
+        with open(SUPRIMENTO_FILE, encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def save_suprimentos(data):
+    with open(SUPRIMENTO_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _parse_valor(raw):
+    try:
+        return float(str(raw).replace('R$', '').replace('.', '').replace(',', '.').strip())
+    except Exception:
+        return 0.0
+
+
+@app.route('/admin/suprimento')
+def admin_suprimento():
+    # Suprimento agora é uma aba dentro de /admin; mantém a URL antiga funcionando.
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/suprimento/novo', methods=['POST'])
+def admin_suprimento_novo():
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    now = datetime.now().isoformat()
+    usuario = session.get('usuario_email') or 'Administrador'
+    item = {
+        'id': str(uuid.uuid4()),
+        'descricao':         request.form.get('descricao', '').strip(),
+        'contratada':        request.form.get('contratada', '').strip(),
+        'objeto':            request.form.get('objeto', '').strip(),
+        'valor_estimado':    _parse_valor(request.form.get('valor_estimado', '')),
+        'status':            'prospeccao',
+        'prioridade':        request.form.get('prioridade', 'media'),
+        'data_inicio':       request.form.get('data_inicio', ''),
+        'data_prev_contrato': request.form.get('data_prev_contrato', ''),
+        'area_contrato':     request.form.get('area_contrato', '').strip(),
+        'responsavel':       request.form.get('responsavel', '').strip(),
+        'notas':             request.form.get('notas', '').strip(),
+        'historico': [{'data': now[:10], 'status': 'prospeccao',
+                       'nota': 'Cadastro inicial', 'usuario': usuario}],
+        'criado_em':  now,
+        'criado_por': usuario,
+        'atualizado_em': now,
+    }
+    data = load_suprimentos()
+    data.append(item)
+    save_suprimentos(data)
+    audit_log('criar_suprimento', item['descricao'], f"Contratada: {item['contratada']}")
+    flash(f"Suprimento '{item['descricao']}' cadastrado.", 'success')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/suprimento/<sid>/editar', methods=['POST'])
+def admin_suprimento_editar(sid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    data = load_suprimentos()
+    item = next((s for s in data if s['id'] == sid), None)
+    if not item:
+        flash('Suprimento não encontrado.', 'danger')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    now = datetime.now().isoformat()
+    item['descricao']         = request.form.get('descricao', item['descricao']).strip()
+    item['contratada']        = request.form.get('contratada', item['contratada']).strip()
+    item['objeto']            = request.form.get('objeto', item.get('objeto', '')).strip()
+    item['valor_estimado']    = _parse_valor(request.form.get('valor_estimado', ''))
+    item['prioridade']        = request.form.get('prioridade', item.get('prioridade', 'media'))
+    item['data_inicio']       = request.form.get('data_inicio', item.get('data_inicio', ''))
+    item['data_prev_contrato'] = request.form.get('data_prev_contrato', item.get('data_prev_contrato', ''))
+    item['area_contrato']     = request.form.get('area_contrato', item.get('area_contrato', '')).strip()
+    item['responsavel']       = request.form.get('responsavel', item.get('responsavel', '')).strip()
+    item['notas']             = request.form.get('notas', item.get('notas', '')).strip()
+    item['atualizado_em']     = now
+    save_suprimentos(data)
+    audit_log('editar_suprimento', item['descricao'], '')
+    flash(f"Suprimento '{item['descricao']}' atualizado.", 'success')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/suprimento/<sid>/avancar', methods=['POST'])
+def admin_suprimento_avancar(sid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    data = load_suprimentos()
+    item = next((s for s in data if s['id'] == sid), None)
+    if not item:
+        flash('Suprimento não encontrado.', 'danger')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    cur = item.get('status', 'prospeccao')
+    idx = SUPRIMENTO_STAGES.index(cur) if cur in SUPRIMENTO_STAGES else 0
+    if idx < len(SUPRIMENTO_STAGES) - 1:
+        novo = SUPRIMENTO_STAGES[idx + 1]
+        now  = datetime.now().isoformat()
+        usuario = session.get('usuario_email') or 'Administrador'
+        nota    = request.form.get('nota', '').strip()
+        item['status'] = novo
+        item.setdefault('historico', []).append({
+            'data': now[:10], 'status': novo,
+            'nota': nota or f"Avançou para {SUPRIMENTO_STAGE_LABELS[novo]}",
+            'usuario': usuario,
+        })
+        item['atualizado_em'] = now
+        save_suprimentos(data)
+        audit_log('avancar_suprimento', item['descricao'], f"→ {novo}")
+        flash(f"Movido para «{SUPRIMENTO_STAGE_LABELS[novo]}».", 'success')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/suprimento/<sid>/recuar', methods=['POST'])
+def admin_suprimento_recuar(sid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    data = load_suprimentos()
+    item = next((s for s in data if s['id'] == sid), None)
+    if item:
+        cur = item.get('status', 'prospeccao')
+        idx = SUPRIMENTO_STAGES.index(cur) if cur in SUPRIMENTO_STAGES else 0
+        if idx > 0:
+            novo = SUPRIMENTO_STAGES[idx - 1]
+            now  = datetime.now().isoformat()
+            usuario = session.get('usuario_email') or 'Administrador'
+            item['status'] = novo
+            item.setdefault('historico', []).append({
+                'data': now[:10], 'status': novo,
+                'nota': f"Recuou para {SUPRIMENTO_STAGE_LABELS[novo]}",
+                'usuario': usuario,
+            })
+            item['atualizado_em'] = now
+            save_suprimentos(data)
+            audit_log('recuar_suprimento', item['descricao'], f"→ {novo}")
+    flash('Status atualizado.', 'info')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/suprimento/<sid>/excluir', methods=['POST'])
+def admin_suprimento_excluir(sid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    data = load_suprimentos()
+    item = next((s for s in data if s['id'] == sid), None)
+    if item:
+        data = [s for s in data if s['id'] != sid]
+        save_suprimentos(data)
+        audit_log('excluir_suprimento', item['descricao'], '')
+        flash(f"Suprimento '{item['descricao']}' excluído.", 'success')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/suprimento/<sid>/promover', methods=['POST'])
+def admin_suprimento_promover(sid):
+    """Promove suprimento a contrato ativo."""
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    data = load_suprimentos()
+    item = next((s for s in data if s['id'] == sid), None)
+    if not item:
+        flash('Suprimento não encontrado.', 'danger')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    contratada  = item.get('contratada', '').strip()
+    contrato_id = request.form.get('contrato_id', '').strip()
+    if not contratada or not contrato_id:
+        flash('Informe o identificador do contrato.', 'danger')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    cfg = load_contratos_config()
+    key = contrato_key(contratada, contrato_id)
+    if key in cfg:
+        flash('Já existe um contrato com essa chave.', 'warning')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    cfg[key] = {
+        'contratada': contratada, 'contrato': contrato_id,
+        'valor_contrato': item.get('valor_estimado', 0.0),
+        'data_inicio_contrato': '', 'data_fim_contrato': '',
+        'status_manual': 'auto',
+        'linha_base_financeira': [], 'linha_base_fisica': [],
+        'linha_base_histograma': [], 'linha_base_equipamentos': [],
+        'linha_base_acoes': [], 'aditivos': [],
+    }
+    save_contratos_config(cfg)
+    data = [s for s in data if s['id'] != sid]
+    save_suprimentos(data)
+    audit_log('promover_suprimento', item['descricao'], f"→ contrato {contrato_id}")
+    flash(f"Contrato '{contrato_id}' criado! Configure datas e linha de base.", 'success')
+    return redirect(url_for('admin_contrato', key=key))
+
+
+@app.route('/admin/tms', methods=['GET', 'POST'])
+def admin_tms():
+    u = current_user()
+    if not (u and u.get('role') in ('master', 'rumo')):
+        flash('Acesso restrito ao perfil Master ou Rumo.', 'danger')
+        return redirect(url_for('admin'))
+
+    cfg = load_tms_config()
+
+    if request.method == 'POST':
+        milestones_raw = request.form.get('milestones_json', '[]')
+        try:
+            milestones = json.loads(milestones_raw)
+        except Exception:
+            milestones = []
+        cfg.update({
+            'nome_programa':  request.form.get('nome_programa', '').strip(),
+            'sigla':          request.form.get('sigla', '').strip(),
+            'cliente':        request.form.get('cliente', '').strip(),
+            'objeto':         request.form.get('objeto', '').strip(),
+            'responsavel':    request.form.get('responsavel', '').strip(),
+            'data_inicio':    request.form.get('data_inicio', '').strip(),
+            'data_fim':       request.form.get('data_fim', '').strip(),
+            'valor_programa': request.form.get('valor_programa', '').strip(),
+            'local':          request.form.get('local', '').strip(),
+            'milestones':     milestones,
+            'atualizado_em':  datetime.now().isoformat(),
+            'atualizado_por': current_user_label(),
+        })
+        save_tms_config(cfg)
+        audit_log('editar_tms', 'tms_config', 'Configurações TMS atualizadas')
+        flash('Configurações TMS salvas com sucesso!', 'success')
+        return redirect(url_for('admin_tms'))
+
+    return render_template('admin_tms.html', cfg=cfg)
+
+
 # ── ADMIN: GESTÃO DE USUÁRIOS ───────────────────────────────────────────────
 
 @app.route('/admin/usuarios')
@@ -1929,7 +2504,17 @@ def admin():
                 'contrato': c.get('contrato', ''),
                 'config': c,
             }
-    return render_template('admin.html', contratos=sorted(contratos.values(), key=lambda x: x['contratada']))
+    suprimentos = load_suprimentos()
+    por_status  = {s: [] for s in SUPRIMENTO_STAGES}
+    for s in suprimentos:
+        por_status.setdefault(s.get('status', 'prospeccao'), []).append(s)
+    return render_template('admin.html',
+                           contratos=sorted(contratos.values(), key=lambda x: x['contratada']),
+                           suprimentos=suprimentos,
+                           por_status=por_status,
+                           stages=SUPRIMENTO_STAGES,
+                           stage_labels=SUPRIMENTO_STAGE_LABELS,
+                           stage_colors=SUPRIMENTO_STAGE_COLORS)
 
 
 @app.route('/admin/novo_contrato', methods=['POST'])
@@ -2001,44 +2586,88 @@ def admin_contrato(key):
         raw_val               = request.form.get('valor_contrato', '').replace('.', '').replace(',', '.')
         data['valor_contrato'] = float(raw_val) if raw_val else 0.0
 
-        semanas_fin = request.form.getlist('fin_semana[]')
-        vals_fin    = request.form.getlist('fin_valor[]')
+        # ── Nova estrutura matricial por mês ── Financeira ────────────────────
+        try:
+            lb_fin_plan = json.loads(request.form.get('lb_fin_json', '{}') or '{}')
+        except (json.JSONDecodeError, ValueError):
+            lb_fin_plan = {}
+        data['lb_fin_planejado'] = lb_fin_plan
+        # Mantém formato legado para compatibilidade com dashboards
         data['linha_base_financeira'] = [
-            {'semana': s, 'valor': float((v or '0').replace('.', '').replace(',', '.'))}
-            for s, v in zip(semanas_fin, vals_fin) if s
+            {'semana': m, 'valor': float(v)}
+            for m, v in sorted(lb_fin_plan.items()) if v is not None
         ]
+        try:
+            data['lb_fin_forecast']     = json.loads(request.form.get('lb_fin_fcst_json',  '{}') or '{}')
+        except (json.JSONDecodeError, ValueError):
+            data['lb_fin_forecast'] = {}
+        try:
+            data['lb_fin_replanejados'] = json.loads(request.form.get('lb_fin_repls_json', '[]') or '[]')
+        except (json.JSONDecodeError, ValueError):
+            data['lb_fin_replanejados'] = []
+        try:
+            data['lb_fin_repl_n'] = max(0, min(3, int(request.form.get('lb_fin_repl_n', '0') or 0)))
+        except (TypeError, ValueError):
+            data['lb_fin_repl_n'] = 0
+        try:
+            data['lb_fin_extra'] = json.loads(request.form.get('lb_fin_extra_json', '[]') or '[]')
+        except (json.JSONDecodeError, ValueError):
+            data['lb_fin_extra'] = []
 
-        semanas_fis = request.form.getlist('fis_semana[]')
-        percs_fis   = request.form.getlist('fis_perc[]')
+        # ── Nova estrutura matricial por mês ── Física ─────────────────────────
+        try:
+            lb_fis_plan = json.loads(request.form.get('lb_fis_json', '{}') or '{}')
+        except (json.JSONDecodeError, ValueError):
+            lb_fis_plan = {}
+        data['lb_fis_planejado'] = lb_fis_plan
         data['linha_base_fisica'] = [
-            {'semana': s, 'percentual': float((p or '0').replace(',', '.'))}
-            for s, p in zip(semanas_fis, percs_fis) if s
+            {'semana': m, 'percentual': float(v)}
+            for m, v in sorted(lb_fis_plan.items()) if v is not None
         ]
+        try:
+            data['lb_fis_forecast']     = json.loads(request.form.get('lb_fis_fcst_json',  '{}') or '{}')
+        except (json.JSONDecodeError, ValueError):
+            data['lb_fis_forecast'] = {}
+        try:
+            data['lb_fis_replanejados'] = json.loads(request.form.get('lb_fis_repls_json', '[]') or '[]')
+        except (json.JSONDecodeError, ValueError):
+            data['lb_fis_replanejados'] = []
+        try:
+            data['lb_fis_repl_n'] = max(0, min(3, int(request.form.get('lb_fis_repl_n', '0') or 0)))
+        except (TypeError, ValueError):
+            data['lb_fis_repl_n'] = 0
+        try:
+            data['lb_fis_extra'] = json.loads(request.form.get('lb_fis_extra_json', '[]') or '[]')
+        except (json.JSONDecodeError, ValueError):
+            data['lb_fis_extra'] = []
 
         data['data_inicio_contrato'] = request.form.get('data_inicio_contrato', '')
         data['data_fim_contrato']    = request.form.get('data_fim_contrato', '')
         data['status_manual']        = request.form.get('status_manual', 'auto')
+        data['area_contrato']        = request.form.get('area_contrato', '')
 
-        # ── Aditivos (valor / prazo) ──
-        adit_tipo  = request.form.getlist('adit_tipo[]')
-        adit_valor = request.form.getlist('adit_valor[]')
-        adit_prazo = request.form.getlist('adit_prazo[]')
-        adit_data  = request.form.getlist('adit_data[]')
-        adit_desc  = request.form.getlist('adit_desc[]')
-        aditivos = []
-        for t, v, p, d, ds in zip(adit_tipo, adit_valor, adit_prazo, adit_data, adit_desc):
-            if t not in ('valor', 'prazo'):
-                continue
-            valor = float((v or '0').replace('.', '').replace(',', '.')) if t == 'valor' else 0.0
-            prazo = p if t == 'prazo' else ''
-            # ignora linha totalmente vazia
-            if t == 'valor' and not valor and not ds.strip():
-                continue
-            if t == 'prazo' and not prazo and not ds.strip():
-                continue
-            aditivos.append({'tipo': t, 'valor': valor, 'prazo': prazo,
-                             'data': d, 'descricao': ds.strip()})
-        data['aditivos'] = aditivos
+        # ── Aditivos (valor / prazo) ── bloco removido da UI; só atualiza se enviado,
+        # preservando aditivos já existentes no contrato.
+        if 'adit_tipo[]' in request.form:
+            adit_tipo  = request.form.getlist('adit_tipo[]')
+            adit_valor = request.form.getlist('adit_valor[]')
+            adit_prazo = request.form.getlist('adit_prazo[]')
+            adit_data  = request.form.getlist('adit_data[]')
+            adit_desc  = request.form.getlist('adit_desc[]')
+            aditivos = []
+            for t, v, p, d, ds in zip(adit_tipo, adit_valor, adit_prazo, adit_data, adit_desc):
+                if t not in ('valor', 'prazo'):
+                    continue
+                valor = float((v or '0').replace('.', '').replace(',', '.')) if t == 'valor' else 0.0
+                prazo = p if t == 'prazo' else ''
+                # ignora linha totalmente vazia
+                if t == 'valor' and not valor and not ds.strip():
+                    continue
+                if t == 'prazo' and not prazo and not ds.strip():
+                    continue
+                aditivos.append({'tipo': t, 'valor': valor, 'prazo': prazo,
+                                 'data': d, 'descricao': ds.strip()})
+            data['aditivos'] = aditivos
 
         hist_json = request.form.get('hist_json', '[]')
         try:
@@ -2060,6 +2689,17 @@ def admin_contrato(key):
         except (json.JSONDecodeError, ValueError):
             data['linha_base_acoes'] = []
 
+        # Semanas extras adicionadas manualmente no bloco de Ações Notáveis
+        try:
+            data['acoes_semanas_extra'] = json.loads(request.form.get('acoes_extra_json', '[]'))
+        except (json.JSONDecodeError, ValueError):
+            data['acoes_semanas_extra'] = []
+        # Nº de linhas de "Replanejado" adicionadas pelo botão (0–3)
+        try:
+            data['acoes_replanejado_n'] = max(0, min(3, int(request.form.get('acoes_repl_n', '0') or 0)))
+        except (TypeError, ValueError):
+            data['acoes_replanejado_n'] = 0
+
         cfg[key] = data
         save_contratos_config(cfg)
         audit_log('editar_contrato', key, f'{data.get("contratada","")} / {data.get("contrato","")}')
@@ -2079,8 +2719,312 @@ def admin_contrato(key):
         for e in data.get('linha_base_equipamentos', [])
     ]
 
+    # Real por ação/semana, por mês (financeiro e físico) — lidos dos registros deste contrato.
+    acoes_real = {}
+    fin_real   = {}   # {YYYY-MM: soma de valor_medido}
+    fis_real_list = {}  # {YYYY-MM: [(semana_ref, avanco_fisico)]}
+    for r in load_data():
+        if r.get('contratada') != data.get('contratada') or r.get('contrato') != data.get('contrato'):
+            continue
+        semana = r.get('semana_referencia', '')
+        wk     = format_date_to_week(semana)
+        month  = semana[:7] if len(semana) >= 7 else None
+        # Ações notáveis
+        if wk:
+            for acao, val in (r.get('acoes_realizadas') or {}).items():
+                try:
+                    acoes_real.setdefault(acao, {})[wk] = float(val)
+                except (TypeError, ValueError):
+                    pass
+        # Financeiro: soma valor_medido por mês
+        if month:
+            try:
+                fin_real[month] = fin_real.get(month, 0) + float(r.get('valor_medido') or 0)
+            except (TypeError, ValueError):
+                pass
+            # Físico: mantém último avanco_fisico por mês
+            af = r.get('avanco_fisico')
+            if af is not None:
+                try:
+                    fis_real_list.setdefault(month, []).append((semana, float(af)))
+                except (TypeError, ValueError):
+                    pass
+    fis_real = {m: sorted(v, key=lambda x: x[0])[-1][1] for m, v in fis_real_list.items()}
+
     return render_template('admin_contrato.html', key=key, contrato=data_view,
-                           funcoes_mao_obra=get_funcoes_list())
+                           funcoes_mao_obra=get_funcoes_list(),
+                           acoes_real=acoes_real,
+                           fin_real=fin_real,
+                           fis_real=fis_real)
+
+
+# ── Helpers: gera listas de semanas/meses a partir de YYYY-Wnn ──────────────
+
+def _gen_weeks_py(start_yw, end_yw):
+    """Retorna lista de 'YYYY-Wnn' de start_yw até end_yw inclusive."""
+    import datetime as _dt
+    from datetime import timedelta
+    weeks = []
+    try:
+        cur  = _dt.datetime.strptime(get_monday(start_yw), '%Y-%m-%d').date()
+        last = _dt.datetime.strptime(get_monday(end_yw),   '%Y-%m-%d').date()
+        while cur <= last:
+            weeks.append(format_date_to_week(cur.strftime('%Y-%m-%d')))
+            cur += timedelta(days=7)
+    except Exception:
+        pass
+    return weeks
+
+
+def _gen_months_py(start_yw, end_yw):
+    """Retorna lista de 'YYYY-MM' cobrindo os meses de start_yw até end_yw inclusive."""
+    import datetime as _dt
+    months = []
+    try:
+        sd = _dt.datetime.strptime(get_monday(start_yw), '%Y-%m-%d').date()
+        ed = _dt.datetime.strptime(get_monday(end_yw),   '%Y-%m-%d').date()
+        y, m = sd.year, sd.month
+        while (y, m) <= (ed.year, ed.month):
+            months.append(f'{y}-{m:02d}')
+            m += 1
+            if m > 12:
+                m = 1; y += 1
+    except Exception:
+        pass
+    return months
+
+
+# ── Download: modelo Excel de planejamento ────────────────────────────────────
+
+@app.route('/admin/contrato/<path:key>/template')
+def admin_contrato_template(key):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    cfg  = load_contratos_config()
+    data = cfg.get(key, {})
+    inicio = data.get('data_inicio_contrato', '')
+    fim    = data.get('data_fim_contrato',    '')
+    weeks  = _gen_weeks_py(inicio, fim)
+    months = _gen_months_py(inicio, fim)
+
+    import openpyxl
+    from openpyxl.styles import PatternFill, Font, Alignment
+    from openpyxl.utils import get_column_letter
+    from io import BytesIO
+
+    wb = openpyxl.Workbook()
+    NAVY     = PatternFill('solid', fgColor='001f4d')
+    HDR_FONT = Font(bold=True, color='FFFFFF', size=9, name='Calibri')
+    LBL_FONT = Font(bold=True, size=9, name='Calibri')
+    DAT_FONT = Font(size=9, name='Calibri')
+    CENTER   = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+    def _head(ws, labels):
+        for ci, lbl in enumerate(labels, 1):
+            c = ws.cell(row=1, column=ci, value=lbl)
+            c.fill = NAVY; c.font = HDR_FONT; c.alignment = CENTER
+
+    def _row(ws, ri, label, vals):
+        ws.cell(row=ri, column=1, value=label).font = LBL_FONT
+        for ci, v in enumerate(vals, 2):
+            if v is not None:
+                ws.cell(row=ri, column=ci, value=v).font = DAT_FONT
+
+    def _widths(ws, fixed, n_period, pw=10):
+        for col_ltr, w in fixed.items():
+            ws.column_dimensions[col_ltr].width = w
+        for ci in range(len(fixed) + 1, len(fixed) + n_period + 1):
+            ws.column_dimensions[get_column_letter(ci)].width = pw
+
+    # ── Instruções ──────────────────────────────────────────────────────────
+    ws0 = wb.active; ws0.title = 'Instrucoes'
+    ws0.column_dimensions['A'].width = 72
+    linhas = [
+        ('MODELO DE IMPORTAÇÃO — PLANEJAMENTO', Font(bold=True, size=13, color='001f4d', name='Calibri')),
+        ('', None),
+        ('Como usar:', Font(bold=True, size=10, name='Calibri')),
+        ('1. Preencha apenas as linhas "Planejado" (obrigatório). Forecast e Replanejado são opcionais.', DAT_FONT),
+        ('2. Financeira: valores em R$ (número inteiro, sem ponto de milhar — ex: 60000).', DAT_FONT),
+        ('3. Fisica: percentual de 0 a 100 (ex: 25.5).', DAT_FONT),
+        ('4. Histograma: quantidade de pessoas por semana (número inteiro).', DAT_FONT),
+        ('5. Acoes: percentual de execução previsto por semana (ex: 15.0).', DAT_FONT),
+        ('6. Não altere os cabeçalhos YYYY-MM (Financeira/Física) ou YYYY-Wnn (Histograma/Ações).', DAT_FONT),
+        ('', None),
+        ('Categorias do Histograma: direto | indireto | equipamento', Font(bold=True, size=9, name='Calibri')),
+        ('Unidades das Ações: m² | m³ | m | Unid | (deixe em branco para sem unidade)', Font(bold=True, size=9, name='Calibri')),
+    ]
+    for ri, (txt, fnt) in enumerate(linhas, 1):
+        c = ws0.cell(row=ri, column=1, value=txt)
+        if fnt: c.font = fnt
+
+    # ── Financeira ───────────────────────────────────────────────────────────
+    ws1 = wb.create_sheet('Financeira')
+    _head(ws1, ['Série'] + months)
+    _widths(ws1, {'A': 16}, len(months))
+    fp = data.get('lb_fin_planejado', {}) or {it['semana']: it['valor'] for it in data.get('linha_base_financeira', [])}
+    ff = data.get('lb_fin_forecast',  {})
+    fr = data.get('lb_fin_replanejados', [])
+    _row(ws1, 2, 'Planejado', [fp.get(m) for m in months])
+    _row(ws1, 3, 'Forecast',  [ff.get(m) for m in months])
+    for i in range(3):
+        rp = fr[i] if i < len(fr) else {}
+        _row(ws1, 4 + i, f'Replanejado {i + 1}', [rp.get(m) for m in months])
+
+    # ── Fisica ───────────────────────────────────────────────────────────────
+    ws2 = wb.create_sheet('Fisica')
+    _head(ws2, ['Série'] + months)
+    _widths(ws2, {'A': 16}, len(months))
+    gp = data.get('lb_fis_planejado', {}) or {it['semana']: it['percentual'] for it in data.get('linha_base_fisica', [])}
+    gf = data.get('lb_fis_forecast',  {})
+    gr = data.get('lb_fis_replanejados', [])
+    _row(ws2, 2, 'Planejado', [gp.get(m) for m in months])
+    _row(ws2, 3, 'Forecast',  [gf.get(m) for m in months])
+    for i in range(3):
+        rp = gr[i] if i < len(gr) else {}
+        _row(ws2, 4 + i, f'Replanejado {i + 1}', [rp.get(m) for m in months])
+
+    # ── Histograma ───────────────────────────────────────────────────────────
+    ws3 = wb.create_sheet('Histograma')
+    _head(ws3, ['Função', 'Categoria'] + weeks)
+    _widths(ws3, {'A': 24, 'B': 14}, len(weeks), pw=9)
+    hist_all = list(data.get('linha_base_histograma', []))
+    for eq in data.get('linha_base_equipamentos', []):
+        hist_all.append({'funcao': eq.get('equipamento', ''), 'tipo': 'equipamento',
+                         'semanas': eq.get('semanas', {})})
+    for ri, r in enumerate(hist_all, 2):
+        ws3.cell(row=ri, column=1, value=r.get('funcao', '')).font  = LBL_FONT
+        ws3.cell(row=ri, column=2, value=r.get('tipo',   'direto')).font = DAT_FONT
+        for ci, wk in enumerate(weeks, 3):
+            v = r.get('semanas', {}).get(wk)
+            if v is not None:
+                ws3.cell(row=ri, column=ci, value=v).font = DAT_FONT
+
+    # ── Ações Notáveis ────────────────────────────────────────────────────────
+    ws4 = wb.create_sheet('Acoes')
+    _head(ws4, ['Ação', 'Unidade'] + weeks)
+    _widths(ws4, {'A': 32, 'B': 9}, len(weeks), pw=9)
+    for ri, ac in enumerate(data.get('linha_base_acoes', []), 2):
+        ws4.cell(row=ri, column=1, value=ac.get('acao',    '')).font = LBL_FONT
+        ws4.cell(row=ri, column=2, value=ac.get('unidade', '')).font = DAT_FONT
+        for ci, wk in enumerate(weeks, 3):
+            v = ac.get('semanas', {}).get(wk)
+            if v is not None:
+                ws4.cell(row=ri, column=ci, value=v).font = DAT_FONT
+
+    buf = BytesIO()
+    wb.save(buf); buf.seek(0)
+    ct = data.get('contratada', '').replace(' ', '_')
+    cn = data.get('contrato',   '').replace(' ', '_')
+    return send_file(buf, as_attachment=True,
+                     download_name=f'modelo_{ct}_{cn}.xlsx',
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+# ── Upload: importa Excel e retorna JSON com dados extraídos ──────────────────
+
+@app.route('/admin/contrato/<path:key>/import', methods=['POST'])
+def admin_contrato_import_excel(key):
+    if not _admin_required():
+        return jsonify({'error': 'Não autorizado'}), 401
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nenhum arquivo enviado'}), 400
+
+    f = request.files['file']
+    if not f.filename.lower().endswith('.xlsx'):
+        return jsonify({'error': 'Apenas arquivos .xlsx são aceitos'}), 400
+
+    import openpyxl
+    try:
+        wb = openpyxl.load_workbook(f, data_only=True)
+    except Exception as e:
+        return jsonify({'error': f'Erro ao abrir arquivo: {e}'}), 400
+
+    def _fval(v):
+        if v is None or str(v).strip() == '': return None
+        try: return float(str(v).replace(',', '.').replace(' ', ''))
+        except: return None
+
+    def _parse_series(ws_name):
+        """Lê planilha de série (Financeira/Fisica): col A = rótulo, resto = período→valor."""
+        if ws_name not in wb.sheetnames: return {}
+        rows   = list(wb[ws_name].iter_rows(values_only=True))
+        if not rows: return {}
+        header  = [str(h).strip() if h is not None else '' for h in rows[0]]
+        periods = header[1:]
+        parsed  = {}
+        for row in rows[1:]:
+            if not row or row[0] is None: continue
+            label = str(row[0]).strip().lower()
+            vals  = {}
+            for i, p in enumerate(periods):
+                if not p: continue
+                v = _fval(row[i + 1] if i + 1 < len(row) else None)
+                if v is not None:
+                    vals[p] = v
+            if label: parsed[label] = vals
+        return parsed
+
+    result = {
+        'financeira': {'planejado': {}, 'forecast': {}, 'replanejados': [], 'repl_n': 0},
+        'fisica':     {'planejado': {}, 'forecast': {}, 'replanejados': [], 'repl_n': 0},
+        'histograma': [], 'acoes': [], 'errors': [],
+    }
+    try:
+        for label, vals in _parse_series('Financeira').items():
+            if 'planejado' in label:     result['financeira']['planejado'] = vals
+            elif 'forecast' in label:    result['financeira']['forecast']  = vals
+            elif 'replanejado' in label: result['financeira']['replanejados'].append(vals)
+        result['financeira']['repl_n'] = min(3, len(result['financeira']['replanejados']))
+
+        for label, vals in _parse_series('Fisica').items():
+            if 'planejado' in label:     result['fisica']['planejado'] = vals
+            elif 'forecast' in label:    result['fisica']['forecast']  = vals
+            elif 'replanejado' in label: result['fisica']['replanejados'].append(vals)
+        result['fisica']['repl_n'] = min(3, len(result['fisica']['replanejados']))
+
+        if 'Histograma' in wb.sheetnames:
+            rows = list(wb['Histograma'].iter_rows(values_only=True))
+            if rows:
+                hdr     = [str(h).strip() if h else '' for h in rows[0]]
+                wk_keys = hdr[2:]
+                for row in rows[1:]:
+                    if not row or row[0] is None: continue
+                    funcao = str(row[0]).strip()
+                    cat    = str(row[1]).strip().lower() if len(row) > 1 and row[1] else 'direto'
+                    if cat not in ('direto', 'indireto', 'equipamento'): cat = 'direto'
+                    semanas = {}
+                    for i, wk in enumerate(wk_keys):
+                        if not wk: continue
+                        v = _fval(row[i + 2] if i + 2 < len(row) else None)
+                        if v is not None:
+                            semanas[wk] = int(round(v))
+                    if funcao:
+                        result['histograma'].append({'funcao': funcao, 'tipo': cat, 'semanas': semanas})
+
+        if 'Acoes' in wb.sheetnames:
+            rows = list(wb['Acoes'].iter_rows(values_only=True))
+            if rows:
+                hdr     = [str(h).strip() if h else '' for h in rows[0]]
+                wk_keys = hdr[2:]
+                for row in rows[1:]:
+                    if not row or row[0] is None: continue
+                    acao    = str(row[0]).strip()
+                    unidade = str(row[1]).strip() if len(row) > 1 and row[1] else ''
+                    semanas = {}
+                    for i, wk in enumerate(wk_keys):
+                        if not wk: continue
+                        v = _fval(row[i + 2] if i + 2 < len(row) else None)
+                        if v is not None:
+                            semanas[wk] = v
+                    if acao:
+                        result['acoes'].append({'acao': acao, 'unidade': unidade,
+                                                'semanas': semanas, 'forecast': {}, 'replanejados': []})
+    except Exception as _exc:
+        app.logger.exception('Erro ao processar import Excel')
+        return jsonify({'error': f'Erro ao processar arquivo: {_exc}'}), 500
+
+    return jsonify(result)
 
 
 if __name__ == '__main__':

@@ -11,8 +11,11 @@ Aplicação web Flask para registro e acompanhamento semanal de obras de constru
 - **Deploy**: Railway (Procfile + gunicorn) | GitHub: `gabrieltmd-coder/obras_semanais`
 
 ## Como iniciar o servidor
+A cópia **oficial** é este repositório: `c:\Users\Gabriel\Documents\GitHub\obras_semanais`
+(é o git aberto e o que faz deploy no Railway). Existe uma cópia antiga em
+`Desktop\PROJETOS\A\obras_semanais-master` — **não usar** para evitar divergência.
 ```powershell
-Start-Process py -ArgumentList "app.py" -WorkingDirectory "c:\Users\Gabriel\Desktop\PROJETOS\A\obras_semanais-master" -WindowStyle Normal
+Start-Process py -ArgumentList "app.py" -WorkingDirectory "c:\Users\Gabriel\Documents\GitHub\obras_semanais" -WindowStyle Normal
 ```
 **Iniciar automaticamente ao começar qualquer conversa sobre este projeto.**
 **Reiniciar sempre que alterar `app.py` ou qualquer template — sem pedir permissão.**

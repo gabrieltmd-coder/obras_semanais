@@ -3,7 +3,7 @@
 {% block title %}{% if modo == 'editar' %}Editar Registro{% else %}Novo Registro{% endif %}{% endblock %}
 {% block page_icon %}<i class="bi bi-{% if modo == 'editar' %}pencil-square{% else %}plus-circle{% endif %}"></i>{% endblock %}
 {% block page_title %}{% if modo == 'editar' %}Editar Registro{% else %}Novo Registro{% endif %}{% endblock %}
-{% block breadcrumb %}<a href="{{ url_for('index') }}" style="color:rgba(255,255,255,.65);">Registros</a> › {% if modo == 'editar' %}Editar{% else %}Novo{% endif %}{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('index') }}">Registros</a> / {% if modo == 'editar' %}Editar{% else %}Novo{% endif %}{% endblock %}
 
 {% block content %}
 
@@ -75,7 +75,7 @@
                         {% endif %}
                     </div>
 
-                    <!-- Linha: Semana | Avanço Físico -->
+                    <!-- Linha: Semana de Referência -->
                     <div class="col-md-6">
                         <label class="form-label" for="semana_referencia">
                             <i class="bi bi-calendar-week me-1" style="color:var(--rumo-cyan)"></i>Semana de Referência *
@@ -83,40 +83,61 @@
                         <input type="week" class="form-control" id="semana_referencia"
                                name="semana_referencia"
                                value="{{ form_data.get('semana_referencia', '')|date_to_week }}"
-                               onchange="atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();" required>
+                               onchange="atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos(); atualizarAvancoFisico();" required>
                         <small class="text-muted" style="font-size:.7rem;">
                             <i class="bi bi-info-circle me-1"></i>Selecione a semana do registro
                         </small>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label" for="avanco_fisico">
-                            <i class="bi bi-bar-chart-line me-1" style="color:var(--rumo-cyan)"></i>Avanço Físico (%)
-                        </label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" id="avanco_fisico"
-                                   name="avanco_fisico" step="0.01" min="0" max="100"
-                                   placeholder="0,00" required
-                                   value="{{ form_data.get('avanco_fisico', '') }}">
-                            <span class="input-group-text" style="font-size:.8rem; background:var(--rumo-cyan-light); border-color:var(--rumo-gray-border); color:var(--rumo-dark); font-weight:700;">%</span>
-                        </div>
                     </div>
 
                 </div>
             </div>
         </div>
 
-        <!-- PLUVIOMETRIA DA SEMANA -->
+        <!-- AVANÇO FÍSICO DA SEMANA -->
         <div class="card-rumo mb-4">
+            <div class="card-header">
+                <i class="bi bi-bar-chart-line"></i>Avanço Físico da Semana
+            </div>
+            <div class="p-3">
+                <div class="d-flex align-items-end gap-3 flex-wrap">
+                    <div>
+                        <label class="form-label mb-1" for="avanco_fisico" style="font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#5B6B7B;">
+                            <i class="bi bi-bar-chart-line me-1" style="color:var(--rumo-cyan)"></i>Avanço Físico Acumulado (%) *
+                        </label>
+                        <div class="input-group" style="max-width:160px;">
+                            <input type="number" class="form-control" id="avanco_fisico" name="avanco_fisico"
+                                   step="0.01" min="0" max="100" placeholder="0,00" required
+                                   value="{{ form_data.get('avanco_fisico', '') }}"
+                                   oninput="onAvancoFisicoInput()" style="text-align:right; font-weight:700;">
+                            <span class="input-group-text" style="font-weight:700;">%</span>
+                        </div>
+                    </div>
+                    <div id="af-plan-display" style="display:none; font-size:.75rem; color:#5B6B7B; padding-bottom:.35rem;">
+                        Planejado: <strong id="af-plan-value" style="color:var(--rumo-cyan);">—</strong>%
+                    </div>
+                </div>
+                <!-- Forecast — aparece quando realizado < planejado -->
+                <div id="af-forecast-wrap" style="display:none; margin-top:.75rem; background:#fff7ed; border-top:2px solid #f59e0b; border-radius:0 0 6px 6px; padding:.5rem .75rem;">
+                    <div style="font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#b35309; margin-bottom:.4rem;">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Avanço abaixo do planejado — ajuste o forecast das próximas competências se necessário
+                    </div>
+                    <div id="af-forecast-grid" style="display:flex; flex-wrap:wrap; gap:.4rem 1rem;"></div>
+                </div>
+                <input type="hidden" id="avanco-fisico-fc-json" name="avanco_fisico_forecast_json" value="{{ avanco_fisico_forecast|default({})|tojson }}">
+            </div>
+        </div>
+
+        <!-- PLUVIOMETRIA DA SEMANA -->
+        <div class="card-rumo mb-3">
             <div class="card-header">
                 <i class="bi bi-cloud-rain"></i>Pluviometria da Semana
             </div>
-            <div class="pluv-list">
+            <div style="padding:.6rem 1rem .75rem; display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:.3rem .75rem;">
                 {% for dia_key, dia_label in dias_semana %}
-                <div class="pluv-row {% if loop.index0 >= 5 %}pluv-weekend{% endif %}">
-                    <span class="pluv-chip">{{ dia_label }}</span>
-                    <select class="form-select form-select-sm" name="pluv_{{ dia_key }}" required>
-                        <option value="">— Não informado —</option>
+                <div style="display:flex; align-items:center; gap:.45rem;">
+                    <span style="font-family:monospace; font-size:.6rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:#fff; background:{% if loop.index0 >= 5 %}#8a9aaa{% else %}#001f4d{% endif %}; padding:.18rem .45rem; border-radius:4px; white-space:nowrap; flex-shrink:0; min-width:68px; text-align:center;">{{ dia_label }}</span>
+                    <select class="form-select form-select-sm" name="pluv_{{ dia_key }}" required onchange="updatePluvStyle(this)">
+                        <option value="">— n/a —</option>
                         {% for op in pluviometria_opcoes %}
                             <option value="{{ op }}"
                                 {% if pluviometria_data.get(dia_key) == op %}selected{% endif %}>
@@ -134,11 +155,11 @@
             <div class="col-md-6">
                 <div class="card-rumo h-100">
                     <div class="card-header">
-                        <i class="bi bi-tools"></i>Trabalhos Notáveis da Semana
+                        <i class="bi bi-chat-left-text"></i>Comentários
                     </div>
                     <div class="p-3">
                         <textarea class="form-control" id="trabalhos_notaveis" name="trabalhos_notaveis"
-                                  rows="6" required placeholder="Descreva as atividades mais relevantes executadas na semana...">{{ form_data.get('trabalhos_notaveis', '') }}</textarea>
+                                  rows="6" required placeholder="Comentários gerais sobre a semana...">{{ form_data.get('trabalhos_notaveis', '') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -235,26 +256,29 @@
                             <tr style="background:#f0f4f8;">
                                 <th style="padding:.3rem .5rem; text-align:left; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700;">Ação Notável</th>
                                 <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:55px;">Unid.</th>
-                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:65px;">% Prev.</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:65px;">Prev</th>
                                 <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:70px;">Realizado</th>
+                                <th style="padding:.3rem .5rem; text-align:center; font-size:.62rem; text-transform:uppercase; color:#8a9aaa; font-weight:700; width:52px;">Evol.</th>
                             </tr>
                         </thead>
                         <tbody id="acoes-tbody"></tbody>
                     </table>
                 </div>
                 <input type="hidden" id="acoes-realizadas-json" name="acoes_realizadas_json" value="{}">
+                <input type="hidden" id="acoes-justificativas-json" name="acoes_justificativas_json" value="{}">
+                <input type="hidden" id="acoes-forecast-json" name="acoes_forecast_json" value="{}">
             </div>
         </div>
 
         <!-- ACTIONS -->
-        <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary-rumo" style="padding:.5rem 1.4rem;">
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary-rumo justify-content-center">
+                <i class="bi bi-arrow-left me-1"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary-rumo flex-grow-1 justify-content-center" style="padding:.5rem 1.4rem;">
                 <i class="bi bi-check-lg me-2"></i>
                 {% if modo == 'editar' %}SALVAR ALTERAÇÕES{% else %}SALVAR REGISTRO{% endif %}
             </button>
-            <a href="{{ url_for('index') }}" class="btn btn-secondary-rumo text-center">
-                <i class="bi bi-arrow-left me-1"></i>Cancelar
-            </a>
         </div>
 
         {% if modo == 'editar' and registro %}
@@ -276,8 +300,13 @@
 <script>
 const CONTRATOS_CFG = {{ contratos_cfg_json|safe }};
 const ACOES_REALIZADAS        = {{ acoes_realizadas|default({})|tojson }};
+const ACOES_JUSTIFICATIVAS    = {{ acoes_justificativas|default({})|tojson }};
+const ACOES_ACUMULADO         = {{ acoes_acumulado|default({})|tojson }};
+const ACOES_REAL_SEM          = {{ acoes_real_sem|default({})|tojson }};
+const ACOES_FC_MANUAL         = {{ acoes_fc_manual|default({})|tojson }};
 const EQUIPAMENTOS_REALIZADOS = {{ equipamentos_realizados|default({})|tojson }};
 const HISTOGRAMA_REALIZADOS   = {{ histograma_realizados|default({})|tojson }};
+const AF_FIS_FC_MANUAL        = {{ avanco_fisico_fc_manual|default({})|tojson }};
 
 // ── Status de contrato ──────────────────────────────────────────────────────
 function _isoWeekToSunday(weekStr) {
@@ -371,7 +400,7 @@ function updateContratoUI(contratada, currentValue) {
         hiddenEl.value = matched;
     }
 
-    atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
+    atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos(); atualizarAvancoFisico();
 }
 
 function toggleCustomContratada(sel) {
@@ -394,6 +423,216 @@ function _getCurrentISOWeek() {
 
 function _escHtml(s) {
     return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Recalcula a prévia do forecast futuro — mesma lógica do backend: o desvio
+// acumulado das semanas entregues é distribuído SOMENTE entre as semanas
+// futuras (após a última semana com realizado). Nunca mexe no passado.
+function computeForecastPreview(a, contratada, contrato, semana, currentReal, manualFut) {
+    manualFut = manualFut || {};
+    const planned = {};
+    Object.entries(a.semanas || {}).forEach(([k, v]) => { planned[k] = parseFloat(v) || 0; });
+    const key = `${contratada}||${contrato}`;
+    const real = {};
+    if (ACOES_REAL_SEM[key] && ACOES_REAL_SEM[key][a.acao]) {
+        Object.entries(ACOES_REAL_SEM[key][a.acao]).forEach(([k, v]) => { real[k] = parseFloat(v) || 0; });
+    }
+    if (currentReal !== null && !isNaN(currentReal)) real[semana] = currentReal;
+    const entregues = Object.keys(real).filter(w => w in planned);
+    const limite = entregues.length ? entregues.sort().slice(-1)[0] : null;
+    // distribui SOMENTE o desvio da última semana com realizado (não o acumulado)
+    const net = (limite !== null) ? (planned[limite] - real[limite]) : 0;
+    const futuras = Object.keys(planned).filter(w => limite !== null && w > limite);
+    // semanas travadas manualmente não recebem distribuição
+    const mFut = {};
+    futuras.forEach(w => { if (manualFut[w] !== undefined && !isNaN(parseFloat(manualFut[w]))) mFut[w] = parseFloat(manualFut[w]); });
+    let absorvido = 0;
+    Object.keys(mFut).forEach(w => { absorvido += mFut[w] - planned[w]; });
+    const restante = net - absorvido;
+    const autoFut = futuras.filter(w => !(w in mFut));
+    const base = autoFut.reduce((s, w) => s + planned[w], 0);
+    const fc = {};
+    autoFut.forEach(w => {
+        const share = base > 0 ? restante * (planned[w] / base) : (autoFut.length ? restante / autoFut.length : 0);
+        fc[w] = Math.ceil(Math.max(0, planned[w] + share));
+    });
+    return fc;   // apenas semanas futuras NÃO travadas
+}
+
+// Cor de um input de forecast: vermelho se aumentou (atraso/falta de entrega),
+// verde se diminuiu (performance acima), neutro se igual ao planejado.
+function onFcInput(input) {
+    const plan = parseFloat(input.dataset.fcPlan || '0');
+    const v = parseFloat(input.value);
+    if (isNaN(v))      input.style.color = '';
+    else if (v > plan) input.style.color = '#d63346';
+    else if (v < plan) input.style.color = '#1f9e4a';
+    else               input.style.color = '#0a2540';
+}
+
+// Colore o realizado, calcula a evolução acumulada e, quando abaixo do previsto,
+// exige justificativa e mostra o reajuste do forecast das próximas semanas.
+function onAcaoRealInput(input) {
+    // unidade "Unid" → aceita apenas inteiros (remove qualquer parte decimal digitada)
+    if (input.dataset.acaoUnid === 'Unid' && /[.,]/.test(input.value)) {
+        input.value = input.value.replace(/[.,].*$/, '');
+    }
+    const prev = parseFloat(input.dataset.acaoPrev || '0');
+    const raw  = (input.value || '').trim();
+    const real = raw === '' ? null : parseFloat(input.value);
+    const row  = input.closest('tr');
+    const evolCell = row ? row.querySelector('.evol-cell') : null;
+    const justRow  = row ? row.nextElementSibling : null;
+    const hasJust  = justRow && justRow.classList.contains('just-row');
+    const ta = hasJust ? justRow.querySelector('textarea[data-acao-just]') : null;
+
+    const acum  = parseFloat(input.dataset.acaoAcum  || '0');
+    const total = parseFloat(input.dataset.acaoTotal || '0');
+
+    // Cor do realizado vs previsto DA SEMANA
+    if (real === null || isNaN(real))   input.style.color = '';
+    else if (real < prev)               input.style.color = '#d63346';
+    else if (real > prev)               input.style.color = '#1f9e4a';
+    else                                input.style.color = '#0a2540';
+
+    // Evolução = acumulado da ação ÷ total planejado
+    if (evolCell) {
+        if (total > 0) {
+            const cumulative = acum + ((real === null || isNaN(real)) ? 0 : real);
+            evolCell.textContent = Math.round(cumulative / total * 100) + '%';
+            evolCell.style.color = '#127aa8';
+        } else {
+            evolCell.textContent = '—';
+            evolCell.style.color = '#b0bece';
+        }
+    }
+
+    // Abaixo do previsto → justificativa obrigatória + reajuste do forecast futuro
+    const abaixo = (real !== null && !isNaN(real) && real < prev);
+    if (hasJust) justRow.style.display = abaixo ? '' : 'none';
+    if (ta) ta.required = abaixo;
+
+    if (abaixo && hasJust) {
+        const { contratada, contrato, semana } = _getSelectors();
+        const cfg = CONTRATOS_CFG[`${contratada}||${contrato}`];
+        const a = cfg ? (cfg.linha_base_acoes || []).find(x => x.acao === input.dataset.acaoReal) : null;
+        const grid = justRow.querySelector('.fc-grid');
+        if (a && grid) {
+            const manualFut = {};
+            grid.querySelectorAll('input[data-fc-week]').forEach(inp => {
+                if (inp.dataset.fcTouched === '1') {
+                    const v = parseFloat(inp.value);
+                    if (!isNaN(v)) manualFut[inp.dataset.fcWeek] = v;
+                }
+            });
+            const preview = computeForecastPreview(a, contratada, contrato, semana, real, manualFut);
+            grid.querySelectorAll('input[data-fc-week]').forEach(inp => {
+                if (inp.dataset.fcTouched !== '1') {   // não sobrescreve semana travada manualmente
+                    const wk = inp.dataset.fcWeek;
+                    if (preview[wk] !== undefined) inp.value = preview[wk];
+                }
+                onFcInput(inp);
+            });
+        }
+    }
+}
+
+function _weekToMonth(weekStr) {
+    if (!weekStr || !weekStr.includes('-W')) return '';
+    const [yr, wPart] = weekStr.split('-W');
+    const year = parseInt(yr), week = parseInt(wPart);
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const mondayW1 = new Date(jan4);
+    mondayW1.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() + 6) % 7));
+    const monday = new Date(mondayW1);
+    monday.setUTCDate(mondayW1.getUTCDate() + (week - 1) * 7);
+    return `${monday.getUTCFullYear()}-${String(monday.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function _afFmtMonth(ym) {
+    const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const [y, mo] = ym.split('-');
+    return M[+mo - 1] + "'" + y.slice(2);
+}
+
+function atualizarAvancoFisico() {
+    const { contratada, contrato, semana } = _getSelectors();
+    const planDisplay  = document.getElementById('af-plan-display');
+    const forecastWrap = document.getElementById('af-forecast-wrap');
+    const afInput      = document.getElementById('avanco_fisico');
+
+    planDisplay.style.display = 'none';
+    forecastWrap.style.display = 'none';
+    delete afInput.dataset.afPlan;
+    delete afInput.dataset.afAllPlan;
+
+    if (!contratada || !contrato || !semana) return;
+
+    const key = `${contratada}||${contrato}`;
+    const cfg = CONTRATOS_CFG[key];
+    if (!cfg) return;
+
+    const monthOfWeek = _weekToMonth(semana);
+    if (!monthOfWeek) return;
+
+    const planDict  = cfg.lb_fis_planejado || {};
+    const legacyArr = (cfg.linha_base_fisica || []).reduce((acc, it) => {
+        acc[it.semana] = it.percentual; return acc;
+    }, {});
+    const allPlan = Object.keys(planDict).length ? planDict : legacyArr;
+    if (!Object.keys(allPlan).length) return;
+
+    afInput.dataset.afAllPlan = JSON.stringify(allPlan);
+
+    const planned = allPlan[monthOfWeek];
+    if (planned !== undefined && planned !== '') {
+        afInput.dataset.afPlan = planned;
+        document.getElementById('af-plan-value').textContent = parseFloat(planned).toFixed(1);
+        planDisplay.style.display = '';
+    }
+
+    onAvancoFisicoInput();
+}
+
+function onAvancoFisicoInput() {
+    const { contratada, contrato, semana } = _getSelectors();
+    const afInput      = document.getElementById('avanco_fisico');
+    const forecastWrap = document.getElementById('af-forecast-wrap');
+    const grid         = document.getElementById('af-forecast-grid');
+
+    const realized = parseFloat(afInput.value);
+    const planned  = parseFloat(afInput.dataset.afPlan);
+
+    if (isNaN(realized) || isNaN(planned) || realized >= planned) {
+        forecastWrap.style.display = 'none';
+        return;
+    }
+
+    const allPlan     = JSON.parse(afInput.dataset.afAllPlan || '{}');
+    const monthOfWeek = _weekToMonth(semana);
+    const futureMonths = Object.keys(allPlan).filter(m => m > monthOfWeek).sort();
+
+    if (!futureMonths.length) { forecastWrap.style.display = 'none'; return; }
+
+    forecastWrap.style.display = '';
+    const key      = `${contratada}||${contrato}`;
+    const fcManual = AF_FIS_FC_MANUAL[key] || {};
+
+    grid.innerHTML = futureMonths.map(m => {
+        const mn      = _afFmtMonth(m);
+        const planVal = parseFloat(allPlan[m]) || 0;
+        const hasFc   = fcManual[m] !== undefined;
+        const initVal = hasFc ? fcManual[m] : planVal;
+        const touched = hasFc ? ' data-fc-touched="1"' : '';
+        const border  = hasFc ? '#b9863a' : '#dde8f0';
+        return `<label style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:.54rem;color:#8a9aaa;">
+            ${mn}${hasFc ? ' <i class="bi bi-lock-fill" style="font-size:.5rem;color:#b35309;"></i>' : ''}
+            <input type="number" min="0" max="100" step="0.01" value="${initVal}"
+                   data-af-fc-month="${m}"${touched}
+                   oninput="this.dataset.fcTouched='1'"
+                   style="width:52px;text-align:center;font-size:.72rem;font-weight:700;padding:.12rem;border:1px solid ${border};border-radius:4px;">
+        </label>`;
+    }).join('');
 }
 
 function atualizarAcoes() {
@@ -436,25 +675,58 @@ function atualizarAcoes() {
 
     const tbody = document.getElementById('acoes-tbody');
     tbody.innerHTML = acoes.map((a, i) => {
-        const perc = a.semanas[semana];
+        const perc = parseFloat(a.semanas[semana]) || 0;
         const bg   = i % 2 === 0 ? '#fff' : '#f8fafc';
         const unid = a.unidade ? _escHtml(a.unidade) : '—';
-        const realVal = ACOES_REALIZADAS[a.acao] !== undefined ? ACOES_REALIZADAS[a.acao] : '';
+        const realVal = ACOES_REALIZADAS[a.acao] !== undefined ? ACOES_REALIZADAS[a.acao] : perc;
+        const just    = ACOES_JUSTIFICATIVAS[a.acao] !== undefined ? ACOES_JUSTIFICATIVAS[a.acao] : '';
+        const totalPlan  = Object.values(a.semanas || {}).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+        const acumKey    = `${contratada}||${contrato}`;
+        const acumOutras = (ACOES_ACUMULADO[acumKey] && ACOES_ACUMULADO[acumKey][a.acao]) ? ACOES_ACUMULADO[acumKey][a.acao] : 0;
+        const fcManual = (ACOES_FC_MANUAL[acumKey] && ACOES_FC_MANUAL[acumKey][a.acao]) ? ACOES_FC_MANUAL[acumKey][a.acao] : {};
+        const futW = Object.keys(a.semanas || {}).filter(w => w > semana).sort();
+        const fcInputs = futW.map(w => {
+            const wn = (w.split('-W')[1] || w);
+            const locked = (fcManual[w] !== undefined);
+            const lockedAttr = locked ? ` value="${fcManual[w]}" data-fc-touched="1" title="Travado manualmente — não é recalculado"` : '';
+            return `<label style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:.54rem;color:#8a9aaa;">W${wn}${locked ? ' 🔒' : ''}` +
+                   `<input type="number" min="0" step="1" data-fc-acao="${_escHtml(a.acao)}" data-fc-week="${w}" data-fc-plan="${parseFloat(a.semanas[w])||0}"${lockedAttr} oninput="this.dataset.fcTouched='1';onFcInput(this)" style="width:46px;text-align:center;font-size:.72rem;font-weight:700;padding:.12rem;border:1px solid ${locked ? '#b9863a' : '#dde8f0'};border-radius:4px;"></label>`;
+        }).join('');
         return `<tr style="background:${bg};">
             <td style="padding:.3rem .5rem; border-bottom:1px solid #f0f4f8;">${_escHtml(a.acao)}</td>
             <td style="padding:.3rem .5rem; text-align:center; border-bottom:1px solid #f0f4f8;
                 color:#8a9aaa; font-size:.72rem;">${unid}</td>
             <td style="padding:.3rem .5rem; text-align:center; border-bottom:1px solid #f0f4f8;
-                font-weight:700; color:var(--rumo-cyan);">${perc}%</td>
+                font-weight:700; color:var(--rumo-cyan);">${perc}</td>
             <td style="padding:.2rem .4rem; text-align:center; border-bottom:1px solid #f0f4f8;">
-                <input type="number" min="0" step="0.1"
-                       data-acao-real="${_escHtml(a.acao)}"
-                       value="${realVal}"
+                <input type="number" min="0" step="${a.unidade === 'Unid' ? '1' : '0.1'}"
+                       data-acao-real="${_escHtml(a.acao)}" data-acao-prev="${perc}" data-acao-unid="${_escHtml(a.unidade || '')}"
+                       data-acao-acum="${acumOutras}" data-acao-total="${totalPlan}"
+                       value="${realVal}" oninput="onAcaoRealInput(this)"
                        class="form-control form-control-sm"
-                       style="width:65px; text-align:center; padding:.15rem .3rem; font-size:.75rem; display:inline-block;">
+                       style="width:60px; text-align:center; padding:.15rem .3rem; font-size:.75rem; display:inline-block; font-weight:700;">
+            </td>
+            <td class="evol-cell" style="padding:.3rem .35rem; text-align:center; border-bottom:1px solid #f0f4f8;
+                font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:.72rem; color:#b0bece;">—</td>
+        </tr>
+        <tr class="just-row" style="display:none; background:#fff7ed;">
+            <td colspan="5" style="padding:.25rem .5rem .55rem; border-bottom:1px solid #f0f4f8;">
+                <div style="font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#b35309; margin-bottom:.25rem;">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Realizado abaixo do previsto — justificativa obrigatória
+                </div>
+                <textarea data-acao-just="${_escHtml(a.acao)}" rows="2" class="form-control form-control-sm"
+                          placeholder="Explique o desvio do planejado..."
+                          style="font-size:.76rem; min-height:auto;">${_escHtml(just)}</textarea>
+                <div class="fc-block" style="margin-top:.55rem; border-top:1px dashed #e8c9a0; padding-top:.45rem;">
+                    <div style="font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#5B6B7B; margin-bottom:.3rem;">
+                        <i class="bi bi-sliders me-1"></i>Reajuste do forecast — próximas semanas (automático, editável)
+                    </div>
+                    <div class="fc-grid" data-fc-acao="${_escHtml(a.acao)}" style="display:flex; flex-wrap:wrap; gap:.4rem;">${fcInputs}</div>
+                </div>
             </td>
         </tr>`;
     }).join('');
+    tbody.querySelectorAll('input[data-acao-real]').forEach(inp => onAcaoRealInput(inp));
 }
 
 function _getSelectors() {
@@ -491,7 +763,7 @@ function atualizarHistograma() {
         const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
         const tColor = h.tipo === 'direto' ? '#3a7a00' : (h.tipo === 'equipamento' ? '#b37d00' : '#003d8f');
         const tBg    = h.tipo === 'direto' ? 'rgba(141,198,63,.12)' : (h.tipo === 'equipamento' ? 'rgba(240,165,0,.12)' : 'rgba(0,174,239,.12)');
-        const realVal = HISTOGRAMA_REALIZADOS[h.funcao] !== undefined ? HISTOGRAMA_REALIZADOS[h.funcao] : '';
+        const realVal = HISTOGRAMA_REALIZADOS[h.funcao] !== undefined ? HISTOGRAMA_REALIZADOS[h.funcao] : h.semanas[semana];
         return `<tr style="background:${bg};">
             <td style="padding:.3rem .5rem;border-bottom:1px solid #f0f4f8;">${_escHtml(h.funcao)}</td>
             <td style="padding:.3rem .5rem;text-align:center;border-bottom:1px solid #f0f4f8;">
@@ -532,7 +804,7 @@ function atualizarEquipamentos() {
     vazio.style.display = 'none'; semDados.style.display = 'none'; tableWrap.style.display = '';
     document.getElementById('equip-tbody').innerHTML = items.map((e, i) => {
         const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
-        const realVal = EQUIPAMENTOS_REALIZADOS[e.equipamento] !== undefined ? EQUIPAMENTOS_REALIZADOS[e.equipamento] : '';
+        const realVal = EQUIPAMENTOS_REALIZADOS[e.equipamento] !== undefined ? EQUIPAMENTOS_REALIZADOS[e.equipamento] : e.semanas[semana];
         return `<tr style="background:${bg};">
             <td style="padding:.3rem .5rem;border-bottom:1px solid #f0f4f8;">${_escHtml(e.equipamento)}</td>
             <td style="padding:.3rem .5rem;text-align:center;border-bottom:1px solid #f0f4f8;
@@ -586,13 +858,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (contratoTextEl) {
         contratoTextEl.addEventListener('input', function() {
             document.getElementById('contrato').value = this.value;
-            atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
+            atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos(); atualizarAvancoFisico();
         });
     }
     if (contratoSelectEl) {
         contratoSelectEl.addEventListener('change', function() {
             document.getElementById('contrato').value = this.value;
-            atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
+            atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos(); atualizarAvancoFisico();
         });
     }
 
@@ -605,9 +877,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos();
+    atualizarAcoes(); atualizarHistograma(); atualizarEquipamentos(); atualizarAvancoFisico();
 
     document.getElementById('mainForm').addEventListener('submit', function(e) {
+        // Serializa forecast manual do Avanço Físico (competências futuras ajustadas)
+        const afFcMap = {};
+        document.querySelectorAll('[data-af-fc-month]').forEach(inp => {
+            if (inp.dataset.fcTouched === '1') {
+                const v = parseFloat(inp.value);
+                if (!isNaN(v)) afFcMap[inp.dataset.afFcMonth] = v;
+            }
+        });
+        document.getElementById('avanco-fisico-fc-json').value = JSON.stringify(afFcMap);
+
         // Serializa Ações Realizadas
         const realizadoMap = {};
         document.querySelectorAll('[data-acao-real]').forEach(inp => {
@@ -648,9 +930,39 @@ document.addEventListener('DOMContentLoaded', () => {
             erros.push('Digite o nome da contratada.');
         if (!semana) erros.push('Informe a semana de referência.');
         if (!contrato || !contrato.trim()) erros.push('Informe o contrato.');
-        if (avanco === '' || avanco === null) erros.push('Informe o avanço físico (%).');
+        if (avanco === '' || avanco === null || avanco === undefined)
+            erros.push('Informe o avanço físico acumulado (%).');
         if (!trabalhos.trim()) erros.push('Descreva os trabalhos notáveis.');
         if (!pontos.trim()) erros.push('Descreva os pontos de atenção.');
+
+        // Serializa justificativas de desvio (realizado < previsto) — obrigatórias
+        const justMap = {};
+        const semJust = [];
+        document.querySelectorAll('textarea[data-acao-just]').forEach(ta => {
+            if (ta.required) {
+                const v = ta.value.trim();
+                if (!v) semJust.push(ta.dataset.acaoJust);
+                else    justMap[ta.dataset.acaoJust] = v;
+            }
+        });
+        document.getElementById('acoes-justificativas-json').value = JSON.stringify(justMap);
+        if (semJust.length) erros.push('Justifique o desvio (realizado abaixo do previsto): ' + semJust.join(', ') + '.');
+
+        // Serializa o reajuste manual do forecast (semanas futuras) das ações abaixo do previsto
+        const fcMap = {};
+        document.querySelectorAll('tr.just-row').forEach(jr => {
+            if (jr.style.display === 'none') return;
+            const grid = jr.querySelector('.fc-grid');
+            if (!grid) return;
+            const obj = {};
+            grid.querySelectorAll('input[data-fc-week]').forEach(inp => {
+                if (inp.dataset.fcTouched !== '1') return;   // só semanas ajustadas manualmente são travadas
+                const v = parseFloat(inp.value);
+                if (!isNaN(v)) obj[inp.dataset.fcWeek] = v;
+            });
+            if (Object.keys(obj).length) fcMap[grid.dataset.fcAcao] = obj;
+        });
+        document.getElementById('acoes-forecast-json').value = JSON.stringify(fcMap);
 
         if (erros.length) {
             e.preventDefault();

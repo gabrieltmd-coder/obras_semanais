@@ -1,0 +1,43 @@
+{
+  "nome_programa": "",
+  "sigla": "",
+  "cliente": "",
+  "objeto": "",
+  "responsavel": "",
+  "data_inicio": "",
+  "data_fim": "",
+  "valor_programa": "",
+  "local": "",
+  "milestones": [
+    {
+      "mes": "2025-04",
+      "descricao": "Conclusão das obras preliminares",
+      "forecast": "2025-12"
+    },
+    {
+      "mes": "2025-10",
+      "descricao": "Liberação da dragagem para execução das obras offshore."
+    },
+    {
+      "mes": "2025-11",
+      "descricao": "Liberação pra execução da dragagem",
+      "forecast": "2026-08"
+    },
+    {
+      "mes": "2025-12",
+      "descricao": "Aprovação do capex",
+      "entregue": "2026-06"
+    },
+    {
+      "mes": "2026-03",
+      "descricao": "LI IBAMA",
+      "forecast": "2027-06"
+    },
+    {
+      "mes": "2026-03",
+      "descricao": "Início da cravação de estacas dos silos (que é caminho crítico)"
+    }
+  ],
+  "atualizado_em": "2026-06-19T14:30:16.504971",
+  "atualizado_por": "gabrieltmd@gmail.com"
+}

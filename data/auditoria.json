@@ -89,5 +89,159 @@
     "acao": "editar_usuario",
     "alvo": "teste@validacao.com",
     "detalhe": "rumo/-/- -> contratada_rw/Infratech Obras/CT-2024-002"
+  },
+  {
+    "data_hora": "2026-06-18T09:44:24.613062",
+    "usuario": "Administrador",
+    "acao": "editar_registro",
+    "alvo": "a1b2c3d4-0001-4001-8001-100000000001",
+    "detalhe": "Construtora Alpha / CT-2024-001 / 11/05/2026"
+  },
+  {
+    "data_hora": "2026-06-18T10:07:13.967974",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_registro",
+    "alvo": "a1b2c3d4-0001-4001-8001-100000000005",
+    "detalhe": "Construtora Alpha / CT-2024-001 / 08/06/2026"
+  },
+  {
+    "data_hora": "2026-06-18T13:52:45.065544",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-18T15:22:43.002374",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_registro",
+    "alvo": "a1b2c3d4-0001-4001-8001-100000000005",
+    "detalhe": "Construtora Alpha / CT-2024-001 / 08/06/2026"
+  },
+  {
+    "data_hora": "2026-06-18T15:23:29.379938",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-18T15:35:12.349301",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_registro",
+    "alvo": "a1b2c3d4-0001-4001-8001-100000000005",
+    "detalhe": "Construtora Alpha / CT-2024-001 / 08/06/2026"
+  },
+  {
+    "data_hora": "2026-06-18T15:35:44.444833",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_registro",
+    "alvo": "a1b2c3d4-0001-4001-8001-100000000005",
+    "detalhe": "Construtora Alpha / CT-2024-001 / 08/06/2026"
+  },
+  {
+    "data_hora": "2026-06-18T16:10:44.470810",
+    "usuario": "Administrador",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-18T16:19:46.876417",
+    "usuario": "Administrador",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-18T16:34:23.671154",
+    "usuario": "Administrador",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-18T17:19:38.634575",
+    "usuario": "Administrador",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-18T19:47:10.993585",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "criar_contrato",
+    "alvo": "TETSE||2356453",
+    "detalhe": "TETSE / 2356453"
+  },
+  {
+    "data_hora": "2026-06-18T19:47:19.690461",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "TETSE||2356453",
+    "detalhe": "TETSE / 2356453"
+  },
+  {
+    "data_hora": "2026-06-18T19:47:42.216364",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "TETSE||2356453",
+    "detalhe": "TETSE / 2356453"
+  },
+  {
+    "data_hora": "2026-06-18T20:40:31.053882",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "excluir_contrato",
+    "alvo": "TETSE||2356453",
+    "detalhe": "TETSE / 2356453"
+  },
+  {
+    "data_hora": "2026-06-19T08:29:16.375133",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-19T08:29:22.577918",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "Infratech Obras||CT-2024-002",
+    "detalhe": "Infratech Obras / CT-2024-002"
+  },
+  {
+    "data_hora": "2026-06-19T08:29:32.153389",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "Infratech Obras||CT-2024-007",
+    "detalhe": "Infratech Obras / CT-2024-007"
+  },
+  {
+    "data_hora": "2026-06-19T08:29:38.393281",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "TechBuild Engenharia||CT-2024-003",
+    "detalhe": "TechBuild Engenharia / CT-2024-003"
+  },
+  {
+    "data_hora": "2026-06-19T13:49:59.469101",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_tms",
+    "alvo": "tms_config",
+    "detalhe": "Configurações TMS atualizadas"
+  },
+  {
+    "data_hora": "2026-06-19T14:30:16.512661",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_tms",
+    "alvo": "tms_config",
+    "detalhe": "Configurações TMS atualizadas"
+  },
+  {
+    "data_hora": "2026-06-19T17:10:29.343872",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "avancar_suprimento",
+    "alvo": "Pavimentação e Drenagem — Área Interna",
+    "detalhe": "→ proposta"
   }
 ]

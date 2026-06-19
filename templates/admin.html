@@ -1,25 +1,86 @@
 {% extends "base.html" %}
-
 {% block title %}Contratos{% endblock %}
 {% block page_icon %}<i class="bi bi-file-earmark-text"></i>{% endblock %}
 {% block page_title %}Contratos{% endblock %}
 {% block breadcrumb %}Configuração de Contratos{% endblock %}
 
 {% block content %}
+<style>
+/* ── Abas ── */
+.admin-tabs { display:flex; gap:0; border-bottom:2px solid var(--tms-border); margin-bottom:1.25rem; }
+.admin-tab-btn {
+    padding:.55rem 1.2rem; font-size:.82rem; font-weight:700; cursor:pointer;
+    background:none; border:none; border-bottom:3px solid transparent;
+    color:var(--tms-muted); display:flex; align-items:center; gap:.4rem;
+    transition:color .15s, border-color .15s; margin-bottom:-2px;
+}
+.admin-tab-btn.active { color:var(--tms-cyan); border-bottom-color:var(--tms-cyan); }
+.admin-tab-btn:hover:not(.active) { color:var(--tms-dark); }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div style="font-size:.82rem; color:var(--tms-muted);">
-        <i class="bi bi-info-circle me-1"></i>
-        Configure os dados de linha de base de cada contrato. Os dados são usados nos gráficos do Dashboard.
+/* ── Pipeline (Suprimento) ── */
+.pipeline-wrap { display:flex; gap:.75rem; overflow-x:auto; padding-bottom:.5rem; align-items:flex-start; }
+.pipeline-col  { flex:0 0 224px; min-width:224px; display:flex; flex-direction:column; gap:.5rem; }
+.pipeline-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.42rem .7rem; border-radius:8px;
+    font-size:.64rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em;
+}
+.pipeline-header .pip-count {
+    font-size:.68rem; font-weight:700; padding:.08rem .42rem; border-radius:99px; color:#fff;
+}
+.sup-card {
+    background:var(--tms-surface); border:1px solid var(--tms-border);
+    border-radius:10px; padding:.6rem .72rem;
+    transition:box-shadow .15s, transform .15s;
+}
+.sup-card:hover { box-shadow:0 4px 18px rgba(0,0,0,.09); transform:translateY(-1px); }
+.sup-card-title { font-size:.81rem; font-weight:700; color:var(--tms-dark); margin-bottom:.15rem; line-height:1.3; }
+.sup-card-sub   { font-size:.73rem; color:var(--tms-muted); margin-bottom:.4rem; }
+.sup-card-meta  { font-size:.69rem; color:var(--tms-muted); display:flex; flex-wrap:wrap; gap:.28rem .6rem; margin-bottom:.45rem; }
+.sup-card-meta i { color:var(--tms-cyan); }
+.prio-badge { display:inline-block; font-size:.58rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.07em; padding:.08rem .4rem; border-radius:99px; flex-shrink:0; }
+.prio-alta   { background:#ffe5e8; color:#c0392b; }
+.prio-media  { background:#fff3cd; color:#856404; }
+.prio-baixa  { background:#d1ecf1; color:#0c5460; }
+.sup-actions { display:flex; gap:.28rem; justify-content:flex-end; flex-wrap:wrap; margin-top:.45rem; }
+.sup-actions .btn { font-size:.68rem; padding:.2rem .5rem; }
+.btn-promover { background:#46C26A; color:#fff; border:none; font-size:.68rem;
+    padding:.22rem .6rem; border-radius:6px; font-weight:700; cursor:pointer; }
+.btn-promover:hover { background:#38a55a; }
+.funnel-bar { display:flex; gap:2px; border-radius:6px; overflow:hidden; height:5px; margin-bottom:.9rem; }
+.funnel-seg { flex:1; }
+</style>
+
+<!-- Cabeçalho com botões contextuais -->
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+    <div style="font-size:.82rem; color:var(--tms-muted);" id="tab-desc-contratos">
+        <i class="bi bi-info-circle me-1"></i>Configure dados de linha de base. Usados nos gráficos do Dashboard.
     </div>
-    <div class="d-flex gap-2">
-        <button type="button" class="btn btn-primary-rumo btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoContrato">
+    <div style="font-size:.82rem; color:var(--tms-muted); display:none;" id="tab-desc-suprimento">
+        <i class="bi bi-info-circle me-1"></i>Processos em negociação que evoluem até virar contrato ativo.
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        {% if current_user and current_user.role in ('master', 'rumo') %}
+        <a href="{{ url_for('admin_tms') }}" class="btn btn-secondary-rumo btn-sm">
+            <i class="bi bi-gear-wide-connected me-1"></i>Config. TMS
+        </a>
+        {% endif %}
+        <!-- Botão contextual da aba Contratos -->
+        <button id="btn-novo-contrato" type="button" class="btn btn-primary-rumo btn-sm"
+                data-bs-toggle="modal" data-bs-target="#modalNovoContrato">
             <i class="bi bi-plus-circle me-1"></i>Novo Contrato
         </button>
+        <!-- Botão contextual da aba Suprimento -->
+        <button id="btn-novo-suprimento" type="button" class="btn btn-primary-rumo btn-sm"
+                style="display:none;"
+                data-bs-toggle="modal" data-bs-target="#modalNovoSuprimento">
+            <i class="bi bi-plus-lg me-1"></i>Novo Processo
+        </button>
         <a href="{{ url_for('export_contratos') }}" class="btn-export" title="Exportar Excel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 3v13M7 11l5 5 5-5"/>
-                <line x1="4" y1="21" x2="20" y2="21"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v13M7 11l5 5 5-5"/><line x1="4" y1="21" x2="20" y2="21"/>
             </svg>
         </a>
         <a href="{{ url_for('admin_logout') }}" class="btn btn-danger-rumo btn-sm">
@@ -28,84 +89,28 @@
     </div>
 </div>
 
-<!-- Modal: Novo Contrato -->
-<div class="modal fade" id="modalNovoContrato" tabindex="-1" aria-labelledby="modalNovoContratoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:var(--tms-radius); border:1px solid var(--tms-border); overflow:hidden;">
-            <div class="modal-header" style="background:linear-gradient(135deg,var(--tms-dark) 0%,var(--tms-navy) 100%); border-bottom:none; padding:1.1rem 1.4rem;">
-                <h5 class="modal-title" id="modalNovoContratoLabel"
-                    style="font-family:'Montserrat',sans-serif; font-size:.82rem; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:#fff; margin:0;">
-                    <i class="bi bi-plus-circle me-2" style="color:var(--tms-cyan);"></i>Novo Contrato
-                </h5>
-                <button type="button" class="btn-close btn-close-white btn-close-sm" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="post" action="{{ url_for('admin_novo_contrato') }}">
-                <div class="modal-body" style="padding:1.5rem;">
-                    <div class="mb-3">
-                        <label class="form-label"><i class="bi bi-building me-1" style="color:var(--tms-cyan);"></i>Contratada</label>
-                        <input type="text" name="contratada" class="form-control"
-                               placeholder="Nome da empresa contratada" required autofocus>
-                    </div>
-                    <div class="mb-1">
-                        <label class="form-label"><i class="bi bi-file-text me-1" style="color:var(--tms-cyan);"></i>Contrato / Identificador</label>
-                        <input type="text" name="contrato" class="form-control"
-                               placeholder="Ex: CT-2025-001">
-                        <small style="color:var(--tms-muted); font-size:.68rem;">
-                            Identificador único dentro da contratada.
-                        </small>
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--tms-border); padding:.85rem 1.4rem; gap:.6rem;">
-                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary-rumo">
-                        <i class="bi bi-plus-circle me-1"></i>Criar e Configurar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+<!-- Abas -->
+<div class="admin-tabs">
+    <button class="admin-tab-btn active" id="tab-contratos-btn" onclick="switchTab('contratos')">
+        <i class="bi bi-file-earmark-text"></i>Contratos
+        <span style="background:var(--tms-border); color:var(--tms-muted); font-size:.65rem; padding:.05rem .4rem; border-radius:99px; font-weight:700;">{{ contratos|length }}</span>
+    </button>
+    <button class="admin-tab-btn" id="tab-suprimento-btn" onclick="switchTab('suprimento')">
+        <i class="bi bi-funnel"></i>Suprimento
+        <span style="background:var(--tms-border); color:var(--tms-muted); font-size:.65rem; padding:.05rem .4rem; border-radius:99px; font-weight:700;">{{ suprimentos|length }}</span>
+    </button>
 </div>
 
-{% if current_user and current_user.role == 'master' %}
-<!-- Modal: Excluir Contrato -->
-<div class="modal fade" id="modalExcluirContrato" tabindex="-1" aria-labelledby="modalExcluirContratoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:var(--tms-radius); border:1px solid var(--tms-border); overflow:hidden;">
-            <div class="modal-header" style="background:linear-gradient(135deg,#7a1420 0%,#b02a37 100%); border-bottom:none; padding:1.1rem 1.4rem;">
-                <h5 class="modal-title" id="modalExcluirContratoLabel"
-                    style="font-family:'Montserrat',sans-serif; font-size:.82rem; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:#fff; margin:0;">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Excluir Contrato
-                </h5>
-                <button type="button" class="btn-close btn-close-white btn-close-sm" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="post" id="formExcluirContrato">
-                <div class="modal-body" style="padding:1.5rem;">
-                    <p style="font-size:.9rem; color:var(--tms-dark); margin-bottom:.6rem;">
-                        Tem certeza que deseja excluir o contrato
-                        <strong id="exclContratoNome" style="color:#b02a37;"></strong>?
-                    </p>
-                    <div style="background:rgba(220,53,69,.08); border:1px solid rgba(220,53,69,.25); border-radius:8px; padding:.6rem .8rem; font-size:.78rem; color:#8a1c27;">
-                        <i class="bi bi-info-circle me-1"></i>Esta ação não pode ser desfeita.
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--tms-border); padding:.85rem 1.4rem; gap:.6rem;">
-                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger-rumo">
-                        <i class="bi bi-trash me-1"></i>Excluir Contrato
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
+<!-- ═══════════════════════════════════ ABA CONTRATOS ═══════════════════════════════════ -->
+<div id="tab-contratos">
 
 {% if not contratos %}
 <div class="card-rumo">
     <div class="empty-state">
         <i class="bi bi-folder"></i>
         <p>Nenhum contrato encontrado.<br>
-           <button type="button" class="btn btn-primary-rumo mt-2" data-bs-toggle="modal" data-bs-target="#modalNovoContrato">
+           <button type="button" class="btn btn-primary-rumo mt-2"
+                   data-bs-toggle="modal" data-bs-target="#modalNovoContrato">
                <i class="bi bi-plus-circle me-1"></i>Criar Novo Contrato
            </button>
         </p>
@@ -114,8 +119,7 @@
 {% else %}
 <div class="card-rumo">
     <div class="card-header">
-        <i class="bi bi-card-list"></i>
-        Contratos ({{ contratos|length }})
+        <i class="bi bi-card-list"></i>Contratos ({{ contratos|length }})
     </div>
     <div class="table-responsive">
         <table class="table table-rumo mb-0">
@@ -159,37 +163,24 @@
                     <td class="text-center">
                         {% set n_fin = cfg.get('linha_base_financeira', [])|length %}
                         {% if n_fin %}
-                        <span class="badge" style="background:rgba(0,174,239,.12); color:var(--tms-cyan); font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">
-                            {{ n_fin }} semanas
-                        </span>
-                        {% else %}
-                        <span style="color:#ccc; font-size:.75rem;">—</span>
-                        {% endif %}
+                        <span class="badge" style="background:rgba(0,174,239,.12); color:var(--tms-cyan); font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">{{ n_fin }} semanas</span>
+                        {% else %}<span style="color:#ccc; font-size:.75rem;">—</span>{% endif %}
                     </td>
                     <td class="text-center">
                         {% set n_fis = cfg.get('linha_base_fisica', [])|length %}
                         {% if n_fis %}
-                        <span class="badge" style="background:rgba(141,198,63,.12); color:var(--tms-green-dark); font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">
-                            {{ n_fis }} semanas
-                        </span>
-                        {% else %}
-                        <span style="color:#ccc; font-size:.75rem;">—</span>
-                        {% endif %}
+                        <span class="badge" style="background:rgba(141,198,63,.12); color:var(--tms-green-dark); font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">{{ n_fis }} semanas</span>
+                        {% else %}<span style="color:#ccc; font-size:.75rem;">—</span>{% endif %}
                     </td>
                     <td class="text-center">
                         {% set n_hist = cfg.get('linha_base_histograma', [])|length %}
                         {% if n_hist %}
-                        <span class="badge" style="background:rgba(240,165,0,.12); color:#b37d00; font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">
-                            {{ n_hist }} funções
-                        </span>
-                        {% else %}
-                        <span style="color:#ccc; font-size:.75rem;">—</span>
-                        {% endif %}
+                        <span class="badge" style="background:rgba(240,165,0,.12); color:#b37d00; font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">{{ n_hist }} funções</span>
+                        {% else %}<span style="color:#ccc; font-size:.75rem;">—</span>{% endif %}
                     </td>
                     <td class="text-center">
                         <div class="d-flex gap-1 justify-content-center">
-                            <a href="{{ url_for('admin_contrato', key=c.key) }}"
-                               class="btn btn-secondary-rumo btn-sm">
+                            <a href="{{ url_for('admin_contrato', key=c.key) }}" class="btn btn-secondary-rumo btn-sm">
                                 <i class="bi bi-sliders me-1"></i>Configurar
                             </a>
                             {% if current_user and current_user.role == 'master' %}
@@ -211,18 +202,391 @@
 </div>
 {% endif %}
 
+</div>{# /tab-contratos #}
+
+<!-- ═══════════════════════════════════ ABA SUPRIMENTO ══════════════════════════════════ -->
+<div id="tab-suprimento" style="display:none;">
+
+<!-- Barra visual do funil -->
+<div class="funnel-bar">
+    {% for st in stages %}
+    {% set n = por_status[st]|length %}
+    <div class="funnel-seg" style="background:{{ stage_colors[st] }}; opacity:{% if n %}1{% else %}.2{% endif %};"
+         title="{{ stage_labels[st] }}: {{ n }}"></div>
+    {% endfor %}
+</div>
+
+<!-- Contagens -->
+<div class="d-flex gap-2 flex-wrap mb-3">
+    {% for st in stages %}
+    {% set n = por_status[st]|length %}
+    <span style="font-size:.68rem; font-weight:700; color:{{ stage_colors[st] }}; opacity:{% if n %}1{% else %}.35{% endif %};">
+        {{ stage_labels[st] }}&nbsp;<span style="background:{{ stage_colors[st] }}; color:#fff; border-radius:99px; padding:.05rem .38rem;">{{ n }}</span>
+    </span>
+    {% endfor %}
+    {% if suprimentos %}
+    <span style="font-size:.68rem; color:var(--tms-muted); margin-left:auto;">
+        {{ suprimentos|length }} processo(s)
+        {% set total_val = suprimentos|sum(attribute='valor_estimado') %}
+        {% if total_val %} · R$ {{ "{:,.0f}".format(total_val).replace(',','.') }}{% endif %}
+    </span>
+    {% endif %}
+</div>
+
+<!-- Kanban -->
+<div class="pipeline-wrap">
+    {% for st in stages %}
+    {% set cor   = stage_colors[st] %}
+    {% set cards = por_status[st] %}
+    {% set is_last = loop.last %}
+
+    <div class="pipeline-col">
+        <div class="pipeline-header" style="background:{{ cor }}1a; border-left:3px solid {{ cor }};">
+            <span style="color:{{ cor }};">{{ stage_labels[st] }}</span>
+            <span class="pip-count" style="background:{{ cor }};">{{ cards|length }}</span>
+        </div>
+
+        {% for sup in cards %}
+        {% set sid = sup.id %}
+        {% set sidjs = sid|replace('-','') %}
+        <div class="sup-card">
+            <div class="d-flex align-items-start justify-content-between gap-1 mb-1">
+                <div class="sup-card-title">{{ sup.descricao }}</div>
+                <span class="prio-badge prio-{{ sup.get('prioridade','media') }}">
+                    {{ {'alta':'Alta','media':'Méd','baixa':'Baixa'}.get(sup.get('prioridade','media'),'Méd') }}
+                </span>
+            </div>
+            <div class="sup-card-sub">
+                <i class="bi bi-building me-1" style="color:var(--tms-cyan);"></i>{{ sup.contratada or '—' }}
+            </div>
+            {% if sup.get('objeto') %}
+            <div style="font-size:.69rem; color:var(--tms-muted); margin-bottom:.38rem; font-style:italic;">{{ sup.objeto|truncate(65) }}</div>
+            {% endif %}
+            <div class="sup-card-meta">
+                {% if sup.get('valor_estimado') %}<span><i class="bi bi-currency-dollar"></i>R$ {{ "{:,.0f}".format(sup.valor_estimado).replace(',','.') }}</span>{% endif %}
+                {% if sup.get('data_prev_contrato') %}<span><i class="bi bi-calendar-check"></i>{{ sup.data_prev_contrato }}</span>{% endif %}
+                {% if sup.get('responsavel') %}<span><i class="bi bi-person"></i>{{ sup.responsavel }}</span>{% endif %}
+            </div>
+            {% if sup.get('notas') %}
+            <div style="font-size:.67rem; color:var(--tms-muted); border-top:1px solid var(--tms-border); padding-top:.32rem; margin-bottom:.32rem;">{{ sup.notas|truncate(85) }}</div>
+            {% endif %}
+
+            <div class="sup-actions">
+                {% set idx = stages.index(st) %}
+                {% if idx > 0 %}
+                <form method="post" action="{{ url_for('admin_suprimento_recuar', sid=sid) }}" style="display:inline;">
+                    <button class="btn btn-outline-secondary btn-sm" title="Recuar"><i class="bi bi-arrow-left"></i></button>
+                </form>
+                {% endif %}
+                <button class="btn btn-outline-primary btn-sm" title="Editar"
+                        onclick="abrirEditarSup('{{ sidjs }}')">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                {% if not is_last %}
+                <form method="post" action="{{ url_for('admin_suprimento_avancar', sid=sid) }}" style="display:inline;">
+                    <button class="btn btn-sm" title="Avançar"
+                            style="background:{{ cor }}1a; border:1px solid {{ cor }}55; color:{{ cor }}; font-weight:700;">
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </form>
+                {% else %}
+                <button class="btn-promover" onclick="abrirPromover('{{ sidjs }}')">
+                    <i class="bi bi-star-fill me-1"></i>Promover
+                </button>
+                {% endif %}
+                <button class="btn btn-outline-danger btn-sm" title="Excluir"
+                        onclick="abrirDelSup('{{ sidjs }}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+
+            {% if sup.get('historico') %}
+            <div style="font-size:.61rem; color:var(--tms-muted); margin-top:.38rem; border-top:1px solid var(--tms-border); padding-top:.28rem;">
+                <i class="bi bi-clock-history me-1"></i>{{ sup.historico[-1].data }} — {{ sup.historico[-1].nota|truncate(42) }}
+            </div>
+            {% endif %}
+        </div>{# /sup-card #}
+        {% endfor %}
+
+        {% if cards|length == 0 %}
+        <div style="border:2px dashed {{ cor }}33; border-radius:10px; padding:1.1rem .65rem;
+                    text-align:center; color:{{ cor }}55; font-size:.71rem;">
+            <i class="bi bi-inbox" style="font-size:1.3rem; display:block; margin-bottom:.35rem;"></i>Nenhum processo
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modais de suprimento fora do pipeline (evita conflito com transform do card) -->
+{% for sup in suprimentos %}
+{% set sid   = sup.id %}
+{% set sidjs = sid|replace('-','') %}
+{% set is_contrato = sup.get('status') == 'contrato' %}
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditSup{{ sidjs }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" action="{{ url_for('admin_suprimento_editar', sid=sid) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Editar Suprimento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12"><label class="form-label fw-bold">Descrição *</label>
+                            <input type="text" name="descricao" class="form-control" required value="{{ sup.descricao }}"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Contratada *</label>
+                            <input type="text" name="contratada" class="form-control" required value="{{ sup.contratada }}"></div>
+                        <div class="col-md-6"><label class="form-label">Valor Estimado (R$)</label>
+                            <input type="number" name="valor_estimado" class="form-control" step="0.01" value="{{ sup.get('valor_estimado','') }}"></div>
+                        <div class="col-md-8"><label class="form-label">Objeto / Escopo</label>
+                            <input type="text" name="objeto" class="form-control" value="{{ sup.get('objeto','') }}"></div>
+                        <div class="col-md-4"><label class="form-label">Área do Contrato</label>
+                            <select name="area_contrato" class="form-select">
+                                <option value="">— Selecione —</option>
+                                {% set _area = sup.get('area_contrato','') %}
+                                {% for av in ['Obras preliminares','Obras civis','Obras eletromecânicas','Engenharia','Meio Ambiente'] %}
+                                <option value="{{ av }}" {% if _area == av %}selected{% endif %}>{{ av }}</option>
+                                {% endfor %}
+                            </select></div>
+                        <div class="col-md-4"><label class="form-label">Prioridade</label>
+                            <select name="prioridade" class="form-select">
+                                {% for pv, pl in [('alta','Alta'),('media','Média'),('baixa','Baixa')] %}
+                                <option value="{{ pv }}" {% if sup.get('prioridade','media')==pv %}selected{% endif %}>{{ pl }}</option>
+                                {% endfor %}
+                            </select></div>
+                        <div class="col-md-4"><label class="form-label">Início</label>
+                            <input type="date" name="data_inicio" class="form-control" value="{{ sup.get('data_inicio','') }}"></div>
+                        <div class="col-md-4"><label class="form-label">Prev. Contrato</label>
+                            <input type="date" name="data_prev_contrato" class="form-control" value="{{ sup.get('data_prev_contrato','') }}"></div>
+                        <div class="col-md-6"><label class="form-label">Responsável</label>
+                            <input type="text" name="responsavel" class="form-control" value="{{ sup.get('responsavel','') }}"></div>
+                        <div class="col-md-6"><label class="form-label">Notas</label>
+                            <input type="text" name="notas" class="form-control" value="{{ sup.get('notas','') }}"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-rumo">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Excluir -->
+<div class="modal fade" id="modalDelSup{{ sidjs }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Excluir Suprimento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">Confirma a exclusão de <strong>{{ sup.descricao }}</strong>?</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{{ url_for('admin_suprimento_excluir', sid=sid) }}">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Promover (só para quem está no último estágio) -->
+{% if is_contrato %}
+<div class="modal fade" id="modalPromSup{{ sidjs }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ url_for('admin_suprimento_promover', sid=sid) }}">
+                <div class="modal-header" style="background:#46C26A1a;">
+                    <h5 class="modal-title" style="color:#2a7a47;"><i class="bi bi-star-fill me-2"></i>Promover a Contrato</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted" style="font-size:.85rem;">Cria <strong>{{ sup.contratada }}</strong> como contrato ativo. Informe o número oficial.</p>
+                    <label class="form-label fw-bold">Identificador do Contrato *</label>
+                    <input type="text" name="contrato_id" class="form-control" required placeholder="Ex: CT-2026-042">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn" style="background:#46C26A; color:#fff; font-weight:700;">
+                        <i class="bi bi-check-lg me-1"></i>Criar Contrato
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}{# modais suprimento #}
+
+{% if suprimentos|length == 0 %}
+<div class="card-rumo text-center py-5 mt-2">
+    <i class="bi bi-funnel" style="font-size:2.5rem; color:var(--tms-muted); display:block; margin-bottom:.75rem;"></i>
+    <p class="text-muted mb-3">Nenhum processo cadastrado ainda.</p>
+    <button class="btn btn-primary-rumo btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoSuprimento">
+        <i class="bi bi-plus-lg me-1"></i>Cadastrar Primeiro Processo
+    </button>
+</div>
+{% endif %}
+
+</div>{# /tab-suprimento #}
+
+<!-- ═══════════════════ MODAIS GLOBAIS ══════════════════════════════════════════════════ -->
+
+<!-- Modal: Novo Contrato -->
+<div class="modal fade" id="modalNovoContrato" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--tms-radius); overflow:hidden;">
+            <div class="modal-header" style="background:var(--ink); border-bottom:none; padding:1.1rem 1.4rem;">
+                <h5 class="modal-title" style="font-size:.86rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#fff; margin:0;">
+                    <i class="bi bi-plus-circle me-2" style="color:var(--tms-cyan);"></i>Novo Contrato
+                </h5>
+                <button type="button" class="btn-close btn-close-white btn-close-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ url_for('admin_novo_contrato') }}">
+                <div class="modal-body" style="padding:1.5rem;">
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-building me-1" style="color:var(--tms-cyan);"></i>Contratada</label>
+                        <input type="text" name="contratada" class="form-control" placeholder="Nome da empresa contratada" required autofocus>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label"><i class="bi bi-file-text me-1" style="color:var(--tms-cyan);"></i>Contrato / Identificador</label>
+                        <input type="text" name="contrato" class="form-control" placeholder="Ex: CT-2025-001">
+                        <small style="color:var(--tms-muted); font-size:.68rem;">Identificador único dentro da contratada.</small>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--tms-border); padding:.85rem 1.4rem; gap:.6rem;">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-rumo"><i class="bi bi-plus-circle me-1"></i>Criar e Configurar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Novo Suprimento -->
+<div class="modal fade" id="modalNovoSuprimento" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" action="{{ url_for('admin_suprimento_novo') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-funnel me-2"></i>Novo Processo de Suprimento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12"><label class="form-label fw-bold">Descrição *</label>
+                            <input type="text" name="descricao" class="form-control" required placeholder="Ex: Obras de terraplanagem — Lote 2"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Empresa / Contratada *</label>
+                            <input type="text" name="contratada" class="form-control" required placeholder="Nome da empresa"></div>
+                        <div class="col-md-6"><label class="form-label">Valor Estimado (R$)</label>
+                            <input type="number" name="valor_estimado" class="form-control" step="0.01" placeholder="0.00"></div>
+                        <div class="col-md-8"><label class="form-label">Objeto / Escopo</label>
+                            <input type="text" name="objeto" class="form-control" placeholder="Breve descrição do que será contratado"></div>
+                        <div class="col-md-4"><label class="form-label">Área do Contrato</label>
+                            <select name="area_contrato" class="form-select">
+                                <option value="">— Selecione —</option>
+                                <option value="Obras preliminares">Obras preliminares</option>
+                                <option value="Obras civis">Obras civis</option>
+                                <option value="Obras eletromecânicas">Obras eletromecânicas</option>
+                                <option value="Engenharia">Engenharia</option>
+                                <option value="Meio Ambiente">Meio Ambiente</option>
+                            </select></div>
+                        <div class="col-md-4"><label class="form-label">Prioridade</label>
+                            <select name="prioridade" class="form-select">
+                                <option value="alta">Alta</option>
+                                <option value="media" selected>Média</option>
+                                <option value="baixa">Baixa</option>
+                            </select></div>
+                        <div class="col-md-4"><label class="form-label">Início do Processo</label>
+                            <input type="date" name="data_inicio" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label">Prev. Assinatura</label>
+                            <input type="date" name="data_prev_contrato" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label">Responsável</label>
+                            <input type="text" name="responsavel" class="form-control" placeholder="Nome do responsável"></div>
+                        <div class="col-md-6"><label class="form-label">Notas</label>
+                            <input type="text" name="notas" class="form-control" placeholder="Observações iniciais"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-rumo"><i class="bi bi-funnel me-1"></i>Iniciar Processo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if current_user and current_user.role == 'master' %}
+<!-- Modal: Excluir Contrato -->
+<div class="modal fade" id="modalExcluirContrato" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--tms-radius); overflow:hidden;">
+            <div class="modal-header" style="background:var(--danger); border-bottom:none; padding:1.1rem 1.4rem;">
+                <h5 class="modal-title" style="font-size:.86rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#fff; margin:0;">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Excluir Contrato
+                </h5>
+                <button type="button" class="btn-close btn-close-white btn-close-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="formExcluirContrato">
+                <div class="modal-body" style="padding:1.5rem;">
+                    <p style="font-size:.9rem; color:var(--tms-dark); margin-bottom:.6rem;">
+                        Tem certeza que deseja excluir o contrato
+                        <strong id="exclContratoNome" style="color:#b02a37;"></strong>?
+                    </p>
+                    <div style="background:rgba(220,53,69,.08); border:1px solid rgba(220,53,69,.25); border-radius:8px; padding:.6rem .8rem; font-size:.78rem; color:#8a1c27;">
+                        <i class="bi bi-info-circle me-1"></i>Esta ação não pode ser desfeita.
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--tms-border); padding:.85rem 1.4rem; gap:.6rem;">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger-rumo"><i class="bi bi-trash me-1"></i>Excluir Contrato</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
 <script>
+// ── Troca de abas ──────────────────────────────────────────────────────────
+function switchTab(tab) {
+    const isSup = tab === 'suprimento';
+    document.getElementById('tab-contratos').style.display    = isSup ? 'none' : '';
+    document.getElementById('tab-suprimento').style.display   = isSup ? '' : 'none';
+    document.getElementById('tab-contratos-btn').classList.toggle('active', !isSup);
+    document.getElementById('tab-suprimento-btn').classList.toggle('active', isSup);
+    document.getElementById('tab-desc-contratos').style.display  = isSup ? 'none' : '';
+    document.getElementById('tab-desc-suprimento').style.display = isSup ? '' : 'none';
+    document.getElementById('btn-novo-contrato').style.display   = isSup ? 'none' : '';
+    document.getElementById('btn-novo-suprimento').style.display = isSup ? '' : 'none';
+    const url = new URL(window.location);
+    if (isSup) url.searchParams.set('tab', 'suprimento');
+    else url.searchParams.delete('tab');
+    history.replaceState(null, '', url);
+}
+
+// Ativa aba correta na carga (via ?tab=)
+if (new URLSearchParams(window.location.search).get('tab') === 'suprimento') switchTab('suprimento');
+
+// ── Contratos ──────────────────────────────────────────────────────────────
 function abrirExcluirContrato(btn) {
-    const acao       = btn.dataset.action;
-    const contrato   = btn.dataset.contrato || '';
-    const contratada = btn.dataset.contratada || '';
-    document.getElementById('formExcluirContrato').action = acao;
+    document.getElementById('formExcluirContrato').action = btn.dataset.action;
     document.getElementById('exclContratoNome').textContent =
-        (contrato ? contrato : '(sem identificador)') + ' — ' + contratada;
+        (btn.dataset.contrato || '(sem id)') + ' — ' + btn.dataset.contratada;
     new bootstrap.Modal(document.getElementById('modalExcluirContrato')).show();
 }
+
+// ── Suprimento (helpers para abrir modais por id) ──────────────────────────
+function abrirEditarSup(sidjs)  { new bootstrap.Modal(document.getElementById('modalEditSup'  + sidjs)).show(); }
+function abrirDelSup(sidjs)     { new bootstrap.Modal(document.getElementById('modalDelSup'   + sidjs)).show(); }
+function abrirPromover(sidjs)   { new bootstrap.Modal(document.getElementById('modalPromSup'  + sidjs)).show(); }
 </script>
 {% endblock %}

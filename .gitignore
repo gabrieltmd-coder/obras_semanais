@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Flask / runtime
+instance/
+*.log
+
+# Exports e backups gerados
+exports/*.xlsx
+data/*_bak*.json
+
+# Scripts de debug temporários
+test_*.py
+gen_fake.py
+
+# Memória interna do agente (não versionar)
+memory/
+MEMORY.md
+.claude/
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

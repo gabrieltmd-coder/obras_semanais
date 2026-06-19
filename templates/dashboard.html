@@ -7,81 +7,125 @@
 
 {% block content %}
 <style>
-/* ── DARK THEME OVERRIDE (TMS navy) ── */
-body { background: #0b1828 !important; }
-.page-header { background: linear-gradient(135deg,#040c18 0%,#0b1828 100%) !important; padding:1rem 0 .85rem !important; margin-bottom:.85rem !important; }
-.app-footer  { background: #040c18 !important; margin-top:0 !important; padding:.6rem !important; }
+/* ── PAINEL DE CONTROLE (grafite) ── */
+body {
+    background: #0E1B24 !important;
+    background-image:
+        linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px) !important;
+    background-size: 112px 112px, 112px 112px !important;
+}
+.page-header {
+    background: #0A141C !important;
+    border-bottom: 1.5px solid rgba(255,255,255,.10) !important;
+    padding: 1rem 0 .9rem !important; margin-bottom: 1rem !important;
+}
+.page-header h1 { color: #fff !important; }
+.page-header h1 i { color: #fff !important; }
+.page-header .breadcrumb { color: rgba(255,255,255,.45) !important; }
+.app-footer { background: #0A141C !important; margin-top: 1.2rem !important; }
+.btn-back-header { background: rgba(255,255,255,.05) !important; color: rgba(255,255,255,.85) !important; border-color: rgba(255,255,255,.18) !important; }
+.btn-back-header:hover { background: rgba(255,255,255,.14) !important; color:#fff !important; }
 
-/* ── GLASS CARD ── */
+/* ── PAINEL (antes glass) ── */
 .gc {
-    background: rgba(255,255,255,.06);
+    background: #13242F;
     border: 1px solid rgba(255,255,255,.09);
-    border-radius: 16px;
-    padding: .85rem 1rem;
-    backdrop-filter: blur(10px);
+    border-radius: 4px;
+    padding: .9rem 1rem;
 }
 .gc-title {
-    font-size: .6rem; font-weight:800; text-transform:uppercase;
-    letter-spacing:.10em; color:rgba(255,255,255,.4);
-    margin-bottom: .6rem;
-    display:flex; align-items:center; justify-content:space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .62rem; font-weight: 500; text-transform: uppercase;
+    letter-spacing: .12em; color: rgba(255,255,255,.5);
+    margin-bottom: .7rem; padding-bottom: .55rem;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    display: flex; align-items: center; justify-content: space-between;
 }
-.gc-title i { color:#00AEEF; margin-right:.3rem; }
-.gc-sub { font-size:.58rem; color:rgba(255,255,255,.25); }
+.gc-title i { color: #2BB2EE; margin-right: .35rem; }
+.gc-sub { font-family:'IBM Plex Mono',monospace; font-size:.58rem; color:rgba(255,255,255,.3); letter-spacing:.06em; }
 
-/* ── FILTER BAR ── */
+/* ── FILTRO ── */
 .d-filter {
-    background: linear-gradient(135deg, #001f4d 0%, #003a80 50%, #005099 100%);
-    border: 1px solid rgba(0,174,239,.40);
-    border-left: 4px solid #00AEEF;
-    border-radius: 12px;
-    padding: .65rem 1rem;
-    margin-bottom: .7rem;
+    background: #13242F;
+    border: 1px solid rgba(255,255,255,.09);
+    border-left: 4px solid #2BB2EE;
+    border-radius: 4px;
+    padding: .7rem 1rem; margin-bottom: .8rem;
     display: flex; align-items: flex-end; gap: .85rem; flex-wrap: wrap;
-    box-shadow: 0 4px 24px rgba(0,31,77,.55);
 }
-.d-filter .filter-label { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.70); margin-bottom:.18rem; }
+.d-filter .filter-label { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:500; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.5); margin-bottom:.22rem; }
 .d-filter .form-control,
 .d-filter .form-select {
-    background: rgba(255,255,255,.07) !important;
-    border: 1px solid rgba(255,255,255,.12) !important;
-    color: #fff !important; border-radius: 8px !important;
-    font-size:.76rem !important; padding:.28rem .65rem !important; height:30px !important;
+    background: rgba(255,255,255,.05) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    color: #fff !important; border-radius: 4px !important;
+    font-size: .78rem !important; padding: .3rem .65rem !important; height: 32px !important;
 }
-.d-filter .form-select option { background:#0b1828; }
-.d-filter .btn { height:30px; border-radius:8px; font-size:.68rem; padding:.28rem .75rem; display:inline-flex; align-items:center; gap:.3rem; }
-.d-filter .btn-f { background:rgba(0,174,239,.18); border:1px solid rgba(0,174,239,.35); color:#00d4ff; }
-.d-filter .btn-x { background:rgba(220,53,69,.15); border:1px solid rgba(220,53,69,.25); color:#ff6b7a; }
+.d-filter .form-select option { background:#13242F; }
+.d-filter .btn { height:32px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; padding:.3rem .8rem; display:inline-flex; align-items:center; gap:.35rem; border:1px solid; }
+.d-filter .btn-f { background:rgba(43,178,238,.14); border-color:rgba(43,178,238,.4); color:#5cc8f2; }
+.d-filter .btn-f:hover { background:rgba(43,178,238,.26); }
+.d-filter .btn-x { background:rgba(200,50,75,.14); border-color:rgba(200,50,75,.32); color:#ff7a89; }
 
 /* ── KPI STRIP ── */
-.kpi-strip { display:flex; gap:.55rem; margin-bottom:.7rem; }
+.kpi-strip { display:flex; gap:.6rem; margin-bottom:.8rem; flex-wrap:wrap; }
 .kpi-mini {
-    background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09);
-    border-radius:12px; padding:.55rem .8rem; flex:1; min-width:0;
-    border-left:3px solid rgba(255,255,255,.15);
+    background:#13242F; border:1px solid rgba(255,255,255,.09);
+    border-radius:4px; padding:.6rem .85rem; flex:1; min-width:130px;
+    position:relative; overflow:hidden;
 }
-.kpi-mini.c  { border-left-color:#00AEEF; }
-.kpi-mini.g  { border-left-color:#8DC63F; }
-.kpi-mini.nd { border-left-color:rgba(255,255,255,.12); }
-.kpi-ml { font-size:.56rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.38); margin-bottom:.18rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kpi-mv { font-family:'Montserrat',sans-serif; font-size:.95rem; font-weight:800; color:#fff; line-height:1; }
-.kpi-mv.sm { font-size:.75rem; }
-.kpi-mv.nd { color:rgba(255,255,255,.2); font-size:.8rem; }
+.kpi-mini::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:rgba(255,255,255,.14); transform:skewX(-14deg) translateX(-1px); }
+.kpi-mini.c::before  { background:#2BB2EE; }
+.kpi-mini.g::before  { background:#46C26A; }
+.kpi-mini.nd::before { background:rgba(255,255,255,.12); }
+.kpi-ml { font-family:'IBM Plex Mono',monospace; font-size:.56rem; font-weight:500; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.45); margin-bottom:.22rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-left:.3rem; }
+.kpi-mv { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:600; color:#fff; line-height:1; padding-left:.3rem; font-variant-numeric:tabular-nums; }
+.kpi-mv.sm { font-size:.8rem; }
+.kpi-mv.nd { color:rgba(255,255,255,.25); font-size:.85rem; }
 
-/* ── DONUT LEGEND ── */
-.leg { display:flex;align-items:center;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.06); }
+/* ── LEGENDA DONUT ── */
+.leg { display:flex;align-items:center;justify-content:space-between;padding:.32rem 0;border-bottom:1px solid rgba(255,255,255,.06); }
 .leg:last-child { border-bottom:none; }
-.leg-dot { width:9px;height:9px;border-radius:3px;flex-shrink:0; }
-.leg-name { font-size:.72rem;color:rgba(255,255,255,.65);font-weight:500;flex:1;margin-left:.45rem; }
-.leg-val { font-family:'Montserrat',sans-serif;font-size:.82rem;font-weight:800; }
+.leg-dot { width:9px;height:9px;flex-shrink:0; transform:skewX(-14deg); }
+.leg-name { font-size:.74rem;color:rgba(255,255,255,.7);font-weight:400;flex:1;margin-left:.5rem; }
+.leg-val { font-family:'IBM Plex Mono',monospace;font-size:.82rem;font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* ── TEMA OCEÂNICO (override) ── */
+body {
+    background-color: #030e1a !important;
+    background-image:
+        radial-gradient(120% 70% at 50% -8%, #11567f 0%, transparent 52%),
+        linear-gradient(180deg, #0b3050 0%, #082338 40%, #051726 70%, #030e1a 100%) !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+}
+body::after {
+    content:''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+        radial-gradient(460px 460px at 95% 6%, rgba(43,178,238,.15), transparent 70%),
+        radial-gradient(400px 400px at 2% 94%, rgba(63,200,200,.11), transparent 70%);
+}
+.navbar-rumo { background: rgba(4,18,32,.72) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,.08) !important; }
+.page-header { background: transparent !important; border-bottom: 1px solid rgba(255,255,255,.10) !important; position: relative; z-index: 1; }
+main { position: relative; z-index: 1; }
+.app-footer { background: rgba(4,18,32,.6) !important; }
+.gc, .kpi-mini, .d-filter {
+    background: rgba(255,255,255,.055) !important;
+    border-color: rgba(255,255,255,.12) !important;
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+.gc { border-radius: 14px !important; }
+.kpi-mini, .d-filter { border-radius: 12px !important; }
 </style>
 
 <div style="color:#fff;">
 
 {% if not kpis %}
 <div class="gc text-center py-4">
-    <i class="bi bi-bar-chart" style="font-size:2rem;color:rgba(255,255,255,.15);display:block;margin-bottom:.5rem;"></i>
-    <p style="color:rgba(255,255,255,.35);font-size:.82rem;margin:0;">Nenhum registro. <a href="{{ url_for('novo') }}" style="color:#00AEEF;">Criar registro</a>.</p>
+    <i class="bi bi-bar-chart" style="font-size:2rem;color:rgba(255,255,255,.18);display:block;margin-bottom:.5rem;"></i>
+    <p style="color:rgba(255,255,255,.4);font-size:.84rem;margin:0;">Nenhum registro ainda. <a href="{{ url_for('novo') }}" style="color:#2BB2EE;">Criar o primeiro registro</a>.</p>
 </div>
 
 {% else %}
@@ -97,11 +141,11 @@ body { background: #0b1828 !important; }
     </div>
     <div>
         <div class="filter-label">De</div>
-        <input type="date" name="de" class="form-control" value="{{ filtro_de }}" style="width:130px;">
+        <input type="date" name="de" class="form-control" value="{{ filtro_de }}" style="width:140px;">
     </div>
     <div>
         <div class="filter-label">Até</div>
-        <input type="date" name="ate" class="form-control" value="{{ filtro_ate }}" style="width:130px;">
+        <input type="date" name="ate" class="form-control" value="{{ filtro_ate }}" style="width:140px;">
     </div>
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-f"><i class="bi bi-funnel"></i>Filtrar</button>
@@ -125,11 +169,11 @@ body { background: #0b1828 !important; }
     {% if kpis.saldo >= 0 %}
     <div class="kpi-mini g">
     {% else %}
-    <div class="kpi-mini nd" style="border-left-color:#ff6b7a;">
+    <div class="kpi-mini nd" style="">
     {% endif %}
         <div class="kpi-ml">Saldo</div>
         {% if kpis.total_valor_contrato %}
-        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#7dda24{% else %}#ff6b7a{% endif %};">
+        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#46C26A{% else %}#ff7a89{% endif %};">
             {{ kpis.saldo|currency }}
         </div>
         {% else %}
@@ -175,31 +219,31 @@ body { background: #0b1828 !important; }
                 <canvas id="chartPrevDonut" width="90" height="90" style="max-width:90px;flex-shrink:0;"></canvas>
                 <div style="flex:1;min-width:0;">
                     <div class="leg">
-                        <div class="leg-dot" style="background:rgba(141,198,63,.85);"></div>
+                        <div class="leg-dot" style="background:#46C26A;"></div>
                         <span class="leg-name">Direto</span>
                         {% set tot = prev_direto + prev_indireto %}
-                        <span class="leg-val" style="color:#8DC63F;">{{ (prev_direto / tot * 100)|round|int if tot else 0 }}%</span>
+                        <span class="leg-val" style="color:#46C26A;">{{ (prev_direto / tot * 100)|round|int if tot else 0 }}%</span>
                     </div>
                     <div class="leg">
-                        <div class="leg-dot" style="background:rgba(0,174,239,.85);"></div>
+                        <div class="leg-dot" style="background:#2BB2EE;"></div>
                         <span class="leg-name">Indireto</span>
-                        <span class="leg-val" style="color:#00AEEF;">{{ (prev_indireto / tot * 100)|round|int if tot else 0 }}%</span>
+                        <span class="leg-val" style="color:#2BB2EE;">{{ (prev_indireto / tot * 100)|round|int if tot else 0 }}%</span>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div style="text-align:center;padding:1.5rem;color:rgba(255,255,255,.25);font-size:.8rem;">
-                <i class="bi bi-people" style="font-size:1.8rem;display:block;margin-bottom:.4rem;color:rgba(255,255,255,.15);"></i>
+            <div style="text-align:center;padding:1.5rem;color:rgba(255,255,255,.3);font-size:.82rem;">
+                <i class="bi bi-people" style="font-size:1.8rem;display:block;margin-bottom:.4rem;color:rgba(255,255,255,.18);"></i>
                 Sem dados de histograma previsto.<br>Configure o histograma na área Admin.
             </div>
             {% endif %}
             <!-- Efetivo por Função -->
-            <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:.55rem;margin-top:.55rem;">
-                <div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.28);margin-bottom:.45rem;">Efetivo por Função</div>
+            <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:.6rem;margin-top:.6rem;">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:.56rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.35);margin-bottom:.5rem;">Efetivo por Função</div>
                 {% if hist_list %}
                 <canvas id="chartHistograma" height="110"></canvas>
                 {% else %}
-                <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.25);font-size:.8rem;">Sem dados.</div>
+                <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.3);font-size:.82rem;">Sem dados.</div>
                 {% endif %}
             </div>
         </div>
@@ -225,7 +269,7 @@ body { background: #0b1828 !important; }
             {% if acoes_labels and acoes_labels != '[]' %}
             <canvas id="chartAcoes" height="120"></canvas>
             {% else %}
-            <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.25);font-size:.8rem;">Sem dados.</div>
+            <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.3);font-size:.82rem;">Sem dados.</div>
             {% endif %}
         </div>
     </div>
@@ -248,27 +292,22 @@ const FIS_BASE  = {{ curva_fis_base|safe }};
 const HIST_LABELS = {{ hist_labels|safe }};
 const HIST_QTD    = {{ hist_qtd|safe }};
 const HIST_COLORS = {{ hist_colors|safe }};
-const HIST_TIPOS  = [
-    { text:'Direto',         color:'rgba(141,198,63,.85)' },
-    { text:'Indireto',       color:'rgba(0,174,239,.85)' },
-    { text:'A classificar',  color:'rgba(240,165,0,.85)' }
-];
 const ACOES_LABELS  = {{ acoes_labels|safe }};
 const ACOES_PCT     = {{ acoes_pct|safe }};
 const PREV_DIRETO   = {{ prev_direto }};
 const PREV_INDIRETO = {{ prev_indireto }};
 
+const C_GREEN = '#46C26A', C_CYAN = '#2BB2EE', C_AMBER = '#F0B34D';
 const GRID  = 'rgba(255,255,255,.05)';
-const TICK  = { color:'rgba(255,255,255,.62)', font:{ size:10, family:"'Inter',sans-serif" } };
+const TICK  = { color:'rgba(255,255,255,.6)', font:{ size:10, family:"'IBM Plex Mono',monospace" } };
 
-Chart.defaults.color = 'rgba(255,255,255,.62)';
-Chart.defaults.font.family = "'Inter',system-ui,sans-serif";
+Chart.defaults.color = 'rgba(255,255,255,.6)';
+Chart.defaults.font.family = "'IBM Plex Sans',system-ui,sans-serif";
 
-// Rótulos de valor em todos os gráficos (chartjs-plugin-datalabels)
 Chart.register(ChartDataLabels);
 Chart.defaults.set('plugins.datalabels', {
     color: '#fff',
-    font: { size: 10, weight: 700, family: "'Inter',sans-serif" },
+    font: { size: 10, weight: 600, family: "'IBM Plex Mono',monospace" },
     display: ctx => ctx.dataset.data[ctx.dataIndex] != null,
 });
 
@@ -281,25 +320,25 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
             datasets: [{
                 label: 'Realizado (R$)',
                 data: FIN_ACUM,
-                borderColor: '#7dda24',
-                backgroundColor: 'rgba(125,218,36,.08)',
+                borderColor: C_GREEN,
+                backgroundColor: 'rgba(70,194,106,.08)',
                 borderWidth: 2,
-                pointRadius: 3, pointBackgroundColor: '#7dda24',
-                fill: true, tension: 0.45,
+                pointRadius: 3, pointBackgroundColor: C_GREEN,
+                fill: true, tension: 0.4,
             },{
                 label: 'Linha de Base',
-                data: FIN_BASE, borderColor: '#00d4ff',
+                data: FIN_BASE, borderColor: C_CYAN,
                 borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
             }]
         },
         options: {
             responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
             plugins:{
-                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
+                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.5)' }},
                 tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
                 datalabels:{
                     display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
-                    align:'top', anchor:'end', color:'#7dda24',
+                    align:'top', anchor:'end', color:C_GREEN,
                     formatter: v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'
                 }
             },
@@ -320,25 +359,25 @@ if (document.getElementById('chartFisico') && LABELS.length) {
             datasets: [{
                 label: 'Avanço Real (%)',
                 data: FIS_REAL,
-                borderColor: '#7dda24',
-                backgroundColor: 'rgba(125,218,36,.08)',
+                borderColor: C_GREEN,
+                backgroundColor: 'rgba(70,194,106,.08)',
                 borderWidth: 2,
-                pointRadius: 3, pointBackgroundColor: '#7dda24',
-                fill: true, tension: 0.45,
+                pointRadius: 3, pointBackgroundColor: C_GREEN,
+                fill: true, tension: 0.4,
             },{
                 label: 'Linha de Base',
-                data: FIS_BASE, borderColor: '#00d4ff',
+                data: FIS_BASE, borderColor: C_CYAN,
                 borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false,
             }]
         },
         options: {
             responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
             plugins:{
-                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
+                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.5)' }},
                 tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':` ${ctx.parsed.y}%` }},
                 datalabels:{
                     display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
-                    align:'top', anchor:'end', color:'#7dda24',
+                    align:'top', anchor:'end', color:C_GREEN,
                     formatter: v => v+'%'
                 }
             },
@@ -356,7 +395,7 @@ if (document.getElementById('chartHistograma') && HIST_LABELS.length) {
         type: 'bar',
         data: {
             labels: HIST_LABELS,
-            datasets:[{ label:'Trabalhadores', data:HIST_QTD, backgroundColor:HIST_COLORS, borderRadius:4, borderSkipped:false }]
+            datasets:[{ label:'Trabalhadores', data:HIST_QTD, backgroundColor:HIST_COLORS, borderRadius:2, borderSkipped:false }]
         },
         options: {
             indexAxis:'y', responsive:true, animation:{ duration:600 },
@@ -381,8 +420,8 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
         data:{
             labels:['Direto','Indireto'],
             datasets:[{ data:[PREV_DIRETO, PREV_INDIRETO],
-                backgroundColor:['rgba(141,198,63,.85)','rgba(0,174,239,.85)'],
-                borderWidth:2, borderColor:'rgba(255,255,255,.05)', hoverOffset:4 }]
+                backgroundColor:[C_GREEN, C_CYAN],
+                borderWidth:2, borderColor:'#13242F', hoverOffset:4 }]
         },
         options:{
             responsive:false, cutout:'65%', animation:{ duration:600 },
@@ -390,7 +429,7 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
                 legend:{display:false},
                 tooltip:{ callbacks:{ label: ctx=>` ${ctx.label}: ${ctx.parsed}` }},
                 datalabels:{
-                    color:'#fff', font:{ size:9, weight:800 },
+                    color:'#fff', font:{ size:9, weight:700, family:"'IBM Plex Mono',monospace" },
                     formatter: (v, ctx) => {
                         const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
                         const pct = tot ? Math.round(v/tot*100) : 0;
@@ -405,22 +444,12 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
 
 // ── Ações Notáveis — evolução % ──
 if (document.getElementById('chartAcoes') && ACOES_LABELS.length) {
-    const acoesBg = ACOES_PCT.map(p =>
-        p >= 80 ? 'rgba(141,198,63,.85)' :
-        p >= 40 ? 'rgba(0,174,239,.85)'  :
-                  'rgba(240,165,0,.85)'
-    );
+    const acoesBg = ACOES_PCT.map(p => p >= 80 ? C_GREEN : (p >= 40 ? C_CYAN : C_AMBER));
     new Chart(document.getElementById('chartAcoes'), {
         type:'bar',
         data:{
             labels: ACOES_LABELS,
-            datasets:[{
-                label:'Evolução (%)',
-                data: ACOES_PCT,
-                backgroundColor: acoesBg,
-                borderRadius: 4,
-                borderSkipped: false
-            }]
+            datasets:[{ label:'Evolução (%)', data: ACOES_PCT, backgroundColor: acoesBg, borderRadius: 2, borderSkipped: false }]
         },
         options:{
             indexAxis:'y', responsive:true, animation:{ duration:600 },
@@ -428,16 +457,11 @@ if (document.getElementById('chartAcoes') && ACOES_LABELS.length) {
             plugins:{
                 legend:{ display:false },
                 tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.x}% concluído` }},
-                datalabels:{
-                    anchor:'end', align:'end', clip:false,
-                    color: '#fff',
-                    font:{ size:9, weight:700 },
-                    formatter: v => v + '%'
-                }
+                datalabels:{ anchor:'end', align:'end', clip:false, color:'#fff', font:{ size:9, weight:600, family:"'IBM Plex Mono',monospace" }, formatter: v => v + '%' }
             },
             scales:{
                 x:{ min:0, max:100, grid:{color:GRID}, ticks:{ ...TICK, callback: v => v+'%' }},
-                y:{ grid:{display:false}, ticks:{ ...TICK, font:{size:9} }}
+                y:{ grid:{display:false}, ticks:{ ...TICK, font:{size:9, family:"'IBM Plex Mono',monospace"} }}
             }
         }
     });
