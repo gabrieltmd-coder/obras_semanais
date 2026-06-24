@@ -243,5 +243,75 @@
     "acao": "avancar_suprimento",
     "alvo": "Pavimentação e Drenagem — Área Interna",
     "detalhe": "→ proposta"
+  },
+  {
+    "data_hora": "2026-06-22T11:07:33.634858",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-23T16:05:55.876065",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_tms",
+    "alvo": "tms_config",
+    "detalhe": "Configurações TMS atualizadas"
+  },
+  {
+    "data_hora": "2026-06-24T09:26:15.638303",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_registro",
+    "alvo": "a1b2c3d4-0001-4001-8001-100000000005",
+    "detalhe": "Construtora Alpha / CT-2024-001 / 08/06/2026"
+  },
+  {
+    "data_hora": "2026-06-24T09:26:45.930647",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_contrato",
+    "alvo": "Construtora Alpha||CT-2024-001",
+    "detalhe": "Construtora Alpha / CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-24T09:47:32.471942",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "recuar_suprimento",
+    "alvo": "Estruturas Metálicas dos Silos",
+    "detalhe": "→ prospeccao"
+  },
+  {
+    "data_hora": "2026-06-24T09:47:37.903593",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "avancar_suprimento",
+    "alvo": "Estruturas Metálicas dos Silos",
+    "detalhe": "→ qualificacao"
+  },
+  {
+    "data_hora": "2026-06-24T09:47:40.422946",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "avancar_suprimento",
+    "alvo": "Estruturas Metálicas dos Silos",
+    "detalhe": "→ proposta"
+  },
+  {
+    "data_hora": "2026-06-24T09:50:03.374725",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "avancar_suprimento",
+    "alvo": "Sistemas de Combate a Incêndio",
+    "detalhe": "→ qualificacao"
+  },
+  {
+    "data_hora": "2026-06-24T14:37:04.778423",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "recuar_suprimento",
+    "alvo": "Pavimentação e Drenagem — Área Interna",
+    "detalhe": "→ qualificacao"
+  },
+  {
+    "data_hora": "2026-06-24T14:43:48.832054",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "avancar_suprimento",
+    "alvo": "Estruturas Metálicas dos Silos",
+    "detalhe": "→ negociacao"
   }
 ]

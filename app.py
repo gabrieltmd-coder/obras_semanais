@@ -748,18 +748,25 @@ def parse_acoes_realizadas(form):
     return _parse_json_dict(form, 'acoes_realizadas_json')
 
 
-def fin_base_curve(cfg, filtro_contratada, semanas_sorted, filtro_contrato=None):
-    """Linha de base financeira acumulada (mensal) alinhada ao eixo semanal do gráfico."""
+def fin_base_curve(cfg, filtro_contratada, semanas_sorted, filtro_contrato=None, replan=False):
+    """Linha de base financeira acumulada (mensal) alinhada ao eixo semanal do gráfico.
+
+    Se replan=True, usa por contrato o replanejamento mais recente sobreposto ao
+    planejado original e retorna (curva, houve_replan)."""
     monthly = {}
+    houve = False
     for _, cdata in cfg.items():
         if filtro_contratada and cdata.get('contratada') != filtro_contratada:
             continue
         if filtro_contrato and cdata.get('contrato') != filtro_contrato:
             continue
-        for entry in cdata.get('linha_base_financeira', []):
-            m = entry.get('semana', '')
-            if m:
-                monthly[m] = monthly.get(m, 0) + float(entry.get('valor', 0) or 0)
+        base = {entry['semana']: float(entry.get('valor', 0) or 0)
+                for entry in cdata.get('linha_base_financeira', []) if entry.get('semana')}
+        if replan:
+            base, ch = _mesclar_replan(base, cdata.get('lb_fin_replanejados'))
+            houve = houve or ch
+        for m, v in base.items():
+            monthly[m] = monthly.get(m, 0) + float(v or 0)
 
     cumul, acum = {}, 0
     for m in sorted(monthly):
@@ -771,7 +778,142 @@ def fin_base_curve(cfg, filtro_contratada, semanas_sorted, filtro_contrato=None)
     for s in semanas_sorted:
         m = _month_of_week(s)
         curve.append(next((cumul[bm] for bm in reversed(months) if bm <= m), None))
-    return curve
+    return (curve, houve) if replan else curve
+
+
+# ── Helpers das Curvas S (Forecast + Replanejamento) ─────────────────────────
+def _iter_months(start_ym, end_ym):
+    """Lista 'YYYY-MM' de start_ym a end_ym (inclusive)."""
+    sy, sm = (int(x) for x in start_ym.split('-'))
+    ey, em = (int(x) for x in end_ym.split('-'))
+    cur, end = sy * 12 + (sm - 1), ey * 12 + (em - 1)
+    out = []
+    while cur <= end:
+        out.append(f'{cur // 12:04d}-{cur % 12 + 1:02d}')
+        cur += 1
+    return out
+
+
+def _future_dates(cfg, semanas_sorted, filtro_contratada=None, filtro_contrato=None):
+    """Datas mensais futuras (YYYY-MM-28) após a última semana com dados, até o fim
+    do baseline/contrato — estende o eixo do tempo para o forecast/replan projetarem."""
+    meses = set()
+    for c in cfg.values():
+        if filtro_contratada and c.get('contratada') != filtro_contratada:
+            continue
+        if filtro_contrato and c.get('contrato') != filtro_contrato:
+            continue
+        for it in c.get('linha_base_financeira', []):
+            if it.get('semana'):
+                meses.add(it['semana'])
+        for it in c.get('linha_base_fisica', []):
+            if it.get('semana'):
+                meses.add(it['semana'])
+        _fim = c.get('data_fim_contrato', '')
+        if _fim:
+            try:
+                meses.add(_month_of_week(_iso_week_date(_fim, 1).strftime('%Y-%m-%d')))
+            except Exception:
+                pass
+    out = []
+    if semanas_sorted and meses:
+        end_month = max(meses)
+        last_hist_month = _month_of_week(semanas_sorted[-1])
+        if end_month > last_hist_month:
+            for m in _iter_months(last_hist_month, end_month):
+                if m > last_hist_month:
+                    out.append(f'{m}-28')
+    return out
+
+
+def _forecast_series(real, base, clamp_max=None):
+    """Projeção = linha de base deslocada pelo desvio atual (realizado − previsto na
+    última semana com dados). Atrasado → corre abaixo da base; adiantado → acima."""
+    n = len(base)
+    fc = [None] * n
+    li = next((i for i in range(len(real) - 1, -1, -1) if real[i] is not None), None)
+    if li is None:
+        return fc
+    gap = (real[li] - base[li]) if base[li] is not None else 0.0
+    for i in range(li, n):
+        if base[i] is None:
+            continue
+        v = max(base[i] + gap, 0)
+        if clamp_max is not None:
+            v = min(v, clamp_max)
+        fc[i] = round(v, 2)
+    return fc
+
+
+def _mesclar_replan(base_dict, replans):
+    """Sobrepõe o replanejamento mais recente ao planejado original.
+    Retorna (dict_revisado, houve_replan)."""
+    revisado = {k: float(v or 0) for k, v in base_dict.items()}
+    repls = [r for r in (replans or []) if r]
+    if not repls:
+        return revisado, False
+    for k, v in repls[-1].items():
+        revisado[k] = float(v or 0)
+    return revisado, True
+
+
+def _parse_baseline_mensal(form, data):
+    """Lê os campos das Linhas de Base mensais (Financeira + Física) do formulário e
+    grava em `data`. Mesma lógica usada em Configurar Contrato e Configurações TMS."""
+    # ── Financeira ──
+    try:
+        lb_fin_plan = json.loads(form.get('lb_fin_json', '{}') or '{}')
+    except (json.JSONDecodeError, ValueError):
+        lb_fin_plan = {}
+    data['lb_fin_planejado'] = lb_fin_plan
+    # Mantém formato legado para compatibilidade com dashboards
+    data['linha_base_financeira'] = [
+        {'semana': m, 'valor': float(v)}
+        for m, v in sorted(lb_fin_plan.items()) if v is not None
+    ]
+    try:
+        data['lb_fin_forecast'] = json.loads(form.get('lb_fin_fcst_json', '{}') or '{}')
+    except (json.JSONDecodeError, ValueError):
+        data['lb_fin_forecast'] = {}
+    try:
+        data['lb_fin_replanejados'] = json.loads(form.get('lb_fin_repls_json', '[]') or '[]')
+    except (json.JSONDecodeError, ValueError):
+        data['lb_fin_replanejados'] = []
+    try:
+        data['lb_fin_repl_n'] = max(0, min(3, int(form.get('lb_fin_repl_n', '0') or 0)))
+    except (TypeError, ValueError):
+        data['lb_fin_repl_n'] = 0
+    try:
+        data['lb_fin_extra'] = json.loads(form.get('lb_fin_extra_json', '[]') or '[]')
+    except (json.JSONDecodeError, ValueError):
+        data['lb_fin_extra'] = []
+
+    # ── Física ──
+    try:
+        lb_fis_plan = json.loads(form.get('lb_fis_json', '{}') or '{}')
+    except (json.JSONDecodeError, ValueError):
+        lb_fis_plan = {}
+    data['lb_fis_planejado'] = lb_fis_plan
+    data['linha_base_fisica'] = [
+        {'semana': m, 'percentual': float(v)}
+        for m, v in sorted(lb_fis_plan.items()) if v is not None
+    ]
+    try:
+        data['lb_fis_forecast'] = json.loads(form.get('lb_fis_fcst_json', '{}') or '{}')
+    except (json.JSONDecodeError, ValueError):
+        data['lb_fis_forecast'] = {}
+    try:
+        data['lb_fis_replanejados'] = json.loads(form.get('lb_fis_repls_json', '[]') or '[]')
+    except (json.JSONDecodeError, ValueError):
+        data['lb_fis_replanejados'] = []
+    try:
+        data['lb_fis_repl_n'] = max(0, min(3, int(form.get('lb_fis_repl_n', '0') or 0)))
+    except (TypeError, ValueError):
+        data['lb_fis_repl_n'] = 0
+    try:
+        data['lb_fis_extra'] = json.loads(form.get('lb_fis_extra_json', '[]') or '[]')
+    except (json.JSONDecodeError, ValueError):
+        data['lb_fis_extra'] = []
 
 
 @app.route('/')
@@ -1010,6 +1152,74 @@ def consolidado():
         for s in semanas_sorted
     ]
 
+    # ── Forecast das Curvas S ────────────────────────────────────────────────
+    # Estende o eixo do tempo até o fim do baseline/contrato e projeta a curva
+    # como a linha de base deslocada pelo desvio atual (forecast). Ver helpers.
+    future_dates = _future_dates(cfg, semanas_sorted)
+    all_dates = semanas_sorted + future_dates
+    chart_labels = [format_date_br(s) for s in all_dates]
+
+    # Recalcula baselines e realizados sobre a linha do tempo estendida
+    curva_base = fin_base_curve(cfg, '', all_dates)
+    curva_fis_base = [
+        next(((_fis_cumul[bm]) for bm in reversed(_fis_months) if bm <= _month_of_week(s)), None)
+        for s in all_dates
+    ]
+    _nf = len(future_dates)
+    curva_acum = curva_acum + [None] * _nf          # realizado não existe no futuro
+    curva_fis_acum = curva_fis_acum + [None] * _nf
+
+    curva_fc = _forecast_series(curva_acum, curva_base)
+    curva_fis_fc = _forecast_series(curva_fis_acum, curva_fis_base, clamp_max=100)
+
+    # ── Linha de base REPLANEJADA (mostrada só se houver replanejamento) ───────
+    # Cada contrato pode ter replanejamentos (lb_*_replanejados = lista de {mês:valor}).
+    # A baseline replanejada consolidada usa, por contrato, o replan mais recente
+    # sobreposto ao planejado original; contratos sem replan mantêm o original.
+    # Financeira: soma acumulada mensal. Física: média ponderada por valor de contrato.
+
+    # Financeira replanejada
+    _fin_repl_m, _has_repl_fin = {}, False
+    for c in cfg.values():
+        _base = c.get('lb_fin_planejado') or {it['semana']: it['valor'] for it in c.get('linha_base_financeira', [])}
+        _rev, _ch = _mesclar_replan(_base, c.get('lb_fin_replanejados'))
+        _has_repl_fin = _has_repl_fin or _ch
+        for _m, _v in _rev.items():
+            _fin_repl_m[_m] = _fin_repl_m.get(_m, 0) + float(_v or 0)
+    curva_repl = None
+    if _has_repl_fin:
+        _cumul, _acc = {}, 0
+        for _m in sorted(_fin_repl_m):
+            _acc += _fin_repl_m[_m]
+            _cumul[_m] = round(_acc, 2)
+        _months_r = sorted(_cumul)
+        curva_repl = [
+            next((_cumul[bm] for bm in reversed(_months_r) if bm <= _month_of_week(s)), None)
+            for s in all_dates
+        ]
+
+    # Física replanejada (média ponderada por valor de contrato)
+    _fis_repl_m, _has_repl_fis = {}, False
+    for c in cfg.values():
+        _p = float(c.get('valor_contrato') or 0)
+        _base = c.get('lb_fis_planejado') or {it['semana']: it['percentual'] for it in c.get('linha_base_fisica', [])}
+        _rev, _ch = _mesclar_replan(_base, c.get('lb_fis_replanejados'))
+        _has_repl_fis = _has_repl_fis or _ch
+        for _m, _v in _rev.items():
+            _fis_repl_m.setdefault(_m, []).append((float(_v or 0), _p))
+    curva_fis_repl = None
+    if _has_repl_fis:
+        _fc = {}
+        for _m in sorted(_fis_repl_m):
+            _soma = sum(v * p for v, p in _fis_repl_m[_m])
+            _peso = sum(p for _, p in _fis_repl_m[_m])
+            _fc[_m] = round(_soma / _peso, 1) if _peso else 0
+        _months_r = sorted(_fc)
+        curva_fis_repl = [
+            next((_fc[bm] for bm in reversed(_months_r) if bm <= _month_of_week(s)), None)
+            for s in all_dates
+        ]
+
     # ── Por contratada ──
     por_contratada = []
     for ct in contratadas:
@@ -1121,8 +1331,12 @@ def consolidado():
                            chart_labels=json.dumps(chart_labels),
                            curva_acum=json.dumps(curva_acum),
                            curva_base=json.dumps(curva_base),
+                           curva_fc=json.dumps(curva_fc),
+                           curva_repl=json.dumps(curva_repl),
                            curva_fis_acum=json.dumps(curva_fis_acum),
                            curva_fis_base=json.dumps(curva_fis_base),
+                           curva_fis_fc=json.dumps(curva_fis_fc),
+                           curva_fis_repl=json.dumps(curva_fis_repl),
                            bar_labels=json.dumps([x['contratada'] for x in por_contratada]),
                            bar_medido=json.dumps([round(x['medido'], 2) for x in por_contratada]),
                            bar_pct=json.dumps([x['pct'] for x in por_contratada]),
@@ -1492,6 +1706,7 @@ def dashboard():
                   filtro_contratada=filtro_contratada,
                   filtro_de=filtro_de, filtro_ate=filtro_ate,
                   chart_labels='[]', curva_fin_acum='[]', curva_fis_real='[]', curva_fin_base='[]', curva_fis_base='[]',
+                  curva_fin_fc='[]', curva_fis_fc='[]', curva_fin_repl='null', curva_fis_repl='null',
                   hist_labels='[]', hist_qtd='[]', hist_colors='[]', hist_list=[],
                   prev_direto=0, prev_indireto=0,
                   acoes_labels='[]', acoes_pct='[]')
@@ -1587,30 +1802,51 @@ def dashboard():
     )
     saldo = total_valor_contrato - total_medido
 
-    # ── Linhas de Base para Curvas S ──
-    curva_fin_base = fin_base_curve(cfg, filtro_contratada, semanas_sorted)
+    # ── Linhas de Base para Curvas S (com Forecast + Replanejamento) ──
+    # Estende o eixo do tempo até o fim do baseline/contrato (igual ao Consolidado)
+    future_dates = _future_dates(cfg, semanas_sorted, filtro_contratada)
+    all_dates    = semanas_sorted + future_dates
+    chart_labels = [format_date_br(s) for s in all_dates]
+    _nf = len(future_dates)
 
-    fis_base_monthly = {}
-    for _, cdata in cfg.items():
-        if filtro_contratada and cdata.get('contratada') != filtro_contratada:
-            continue
-        for entry in cdata.get('linha_base_fisica', []):
-            m = entry.get('semana', '')
-            p = float(entry.get('percentual', 0) or 0)
-            if m:
-                fis_base_monthly.setdefault(m, []).append(p)
+    # Realizado não existe no futuro
+    curva_fin_acum = curva_fin_acum + [None] * _nf
+    curva_fis_real = curva_fis_real + [None] * _nf
 
-    fis_base_cumul, acum_fis = {}, 0
-    for m in sorted(fis_base_monthly):
-        vals = fis_base_monthly[m]
-        acum_fis += (sum(vals) / len(vals)) if vals else 0
-        fis_base_cumul[m] = round(acum_fis, 2)
+    curva_fin_base = fin_base_curve(cfg, filtro_contratada, all_dates)
 
-    fis_months = sorted(fis_base_cumul)
-    curva_fis_base = []
-    for s in semanas_sorted:
-        m = _month_of_week(s)
-        curva_fis_base.append(next((fis_base_cumul[bm] for bm in reversed(fis_months) if bm <= m), None))
+    # Física: o percentual da linha de base já é o avanço ACUMULADO planejado por mês
+    # (ex.: 8, 25, 48, 75, 100). Média simples entre contratos e amostra o último mês
+    # ≤ a semana (sem cumsum), igual ao Consolidado. Helper reusado p/ baseline e replan.
+    def _fis_curve(usar_replan):
+        monthly, houve = {}, False
+        for _, cdata in cfg.items():
+            if filtro_contratada and cdata.get('contratada') != filtro_contratada:
+                continue
+            base = {it['semana']: float(it.get('percentual', 0) or 0)
+                    for it in cdata.get('linha_base_fisica', []) if it.get('semana')}
+            if usar_replan:
+                base, ch = _mesclar_replan(base, cdata.get('lb_fis_replanejados'))
+                houve = houve or ch
+            for m, p in base.items():
+                monthly.setdefault(m, []).append(float(p or 0))
+        cumul = {m: round(sum(vals) / len(vals), 2) for m, vals in monthly.items() if vals}
+        months = sorted(cumul)
+        curva = [next((cumul[bm] for bm in reversed(months) if bm <= _month_of_week(s)), None)
+                 for s in all_dates]
+        return curva, houve
+
+    curva_fis_base, _ = _fis_curve(False)
+
+    # Forecast (linha de base deslocada pelo desvio atual)
+    curva_fin_fc = _forecast_series(curva_fin_acum, curva_fin_base)
+    curva_fis_fc = _forecast_series(curva_fis_real, curva_fis_base, clamp_max=100)
+
+    # Replanejado (só aparece se algum contrato tiver replanejamento)
+    curva_fin_base_repl, _hr_fin = fin_base_curve(cfg, filtro_contratada, all_dates, replan=True)
+    curva_fin_repl = curva_fin_base_repl if _hr_fin else None
+    _fis_repl_curve, _hr_fis = _fis_curve(True)
+    curva_fis_repl = _fis_repl_curve if _hr_fis else None
 
     # ── Histograma Previsto por Função (equipamentos ficam fora do efetivo) ──
     hist_previsto = {}
@@ -1690,6 +1926,10 @@ def dashboard():
                            curva_fis_real=json.dumps(curva_fis_real),
                            curva_fin_base=json.dumps(curva_fin_base),
                            curva_fis_base=json.dumps(curva_fis_base),
+                           curva_fin_fc=json.dumps(curva_fin_fc),
+                           curva_fis_fc=json.dumps(curva_fis_fc),
+                           curva_fin_repl=json.dumps(curva_fin_repl),
+                           curva_fis_repl=json.dumps(curva_fis_repl),
                            hist_labels=json.dumps(hist_labels),
                            hist_qtd=json.dumps(hist_qtd),
                            hist_colors=json.dumps(hist_colors),
@@ -2237,10 +2477,9 @@ def admin_suprimento_promover(sid):
 
 @app.route('/admin/tms', methods=['GET', 'POST'])
 def admin_tms():
-    u = current_user()
-    if not (u and u.get('role') in ('master', 'rumo')):
-        flash('Acesso restrito ao perfil Master ou Rumo.', 'danger')
-        return redirect(url_for('admin'))
+    if not _is_master():
+        flash('Acesso restrito ao usuário Master.', 'danger')
+        return redirect(url_for('dashboard'))
 
     cfg = load_tms_config()
 
@@ -2264,6 +2503,8 @@ def admin_tms():
             'atualizado_em':  datetime.now().isoformat(),
             'atualizado_por': current_user_label(),
         })
+        # Linhas de Base mensais (mesma lógica de Configurar Contrato)
+        _parse_baseline_mensal(request.form, cfg)
         save_tms_config(cfg)
         audit_log('editar_tms', 'tms_config', 'Configurações TMS atualizadas')
         flash('Configurações TMS salvas com sucesso!', 'success')
@@ -2586,60 +2827,8 @@ def admin_contrato(key):
         raw_val               = request.form.get('valor_contrato', '').replace('.', '').replace(',', '.')
         data['valor_contrato'] = float(raw_val) if raw_val else 0.0
 
-        # ── Nova estrutura matricial por mês ── Financeira ────────────────────
-        try:
-            lb_fin_plan = json.loads(request.form.get('lb_fin_json', '{}') or '{}')
-        except (json.JSONDecodeError, ValueError):
-            lb_fin_plan = {}
-        data['lb_fin_planejado'] = lb_fin_plan
-        # Mantém formato legado para compatibilidade com dashboards
-        data['linha_base_financeira'] = [
-            {'semana': m, 'valor': float(v)}
-            for m, v in sorted(lb_fin_plan.items()) if v is not None
-        ]
-        try:
-            data['lb_fin_forecast']     = json.loads(request.form.get('lb_fin_fcst_json',  '{}') or '{}')
-        except (json.JSONDecodeError, ValueError):
-            data['lb_fin_forecast'] = {}
-        try:
-            data['lb_fin_replanejados'] = json.loads(request.form.get('lb_fin_repls_json', '[]') or '[]')
-        except (json.JSONDecodeError, ValueError):
-            data['lb_fin_replanejados'] = []
-        try:
-            data['lb_fin_repl_n'] = max(0, min(3, int(request.form.get('lb_fin_repl_n', '0') or 0)))
-        except (TypeError, ValueError):
-            data['lb_fin_repl_n'] = 0
-        try:
-            data['lb_fin_extra'] = json.loads(request.form.get('lb_fin_extra_json', '[]') or '[]')
-        except (json.JSONDecodeError, ValueError):
-            data['lb_fin_extra'] = []
-
-        # ── Nova estrutura matricial por mês ── Física ─────────────────────────
-        try:
-            lb_fis_plan = json.loads(request.form.get('lb_fis_json', '{}') or '{}')
-        except (json.JSONDecodeError, ValueError):
-            lb_fis_plan = {}
-        data['lb_fis_planejado'] = lb_fis_plan
-        data['linha_base_fisica'] = [
-            {'semana': m, 'percentual': float(v)}
-            for m, v in sorted(lb_fis_plan.items()) if v is not None
-        ]
-        try:
-            data['lb_fis_forecast']     = json.loads(request.form.get('lb_fis_fcst_json',  '{}') or '{}')
-        except (json.JSONDecodeError, ValueError):
-            data['lb_fis_forecast'] = {}
-        try:
-            data['lb_fis_replanejados'] = json.loads(request.form.get('lb_fis_repls_json', '[]') or '[]')
-        except (json.JSONDecodeError, ValueError):
-            data['lb_fis_replanejados'] = []
-        try:
-            data['lb_fis_repl_n'] = max(0, min(3, int(request.form.get('lb_fis_repl_n', '0') or 0)))
-        except (TypeError, ValueError):
-            data['lb_fis_repl_n'] = 0
-        try:
-            data['lb_fis_extra'] = json.loads(request.form.get('lb_fis_extra_json', '[]') or '[]')
-        except (json.JSONDecodeError, ValueError):
-            data['lb_fis_extra'] = []
+        # ── Linhas de Base mensais (Financeira + Física) ──────────────────────
+        _parse_baseline_mensal(request.form, data)
 
         data['data_inicio_contrato'] = request.form.get('data_inicio_contrato', '')
         data['data_fim_contrato']    = request.form.get('data_fim_contrato', '')

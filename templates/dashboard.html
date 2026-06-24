@@ -237,15 +237,6 @@ main { position: relative; z-index: 1; }
                 Sem dados de histograma previsto.<br>Configure o histograma na área Admin.
             </div>
             {% endif %}
-            <!-- Efetivo por Função -->
-            <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:.6rem;margin-top:.6rem;">
-                <div style="font-family:'IBM Plex Mono',monospace;font-size:.56rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.35);margin-bottom:.5rem;">Efetivo por Função</div>
-                {% if hist_list %}
-                <canvas id="chartHistograma" height="110"></canvas>
-                {% else %}
-                <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.3);font-size:.82rem;">Sem dados.</div>
-                {% endif %}
-            </div>
         </div>
     </div>
 
@@ -289,6 +280,11 @@ const FIN_ACUM  = {{ curva_fin_acum|safe }};
 const FIS_REAL  = {{ curva_fis_real|safe }};
 const FIN_BASE  = {{ curva_fin_base|safe }};
 const FIS_BASE  = {{ curva_fis_base|safe }};
+const FIN_FC    = {{ curva_fin_fc|safe }};
+const FIS_FC    = {{ curva_fis_fc|safe }};
+const FIN_REPL  = {{ curva_fin_repl|safe }};
+const FIS_REPL  = {{ curva_fis_repl|safe }};
+const C_VIOLET = '#A78BFA', C_ROSE = '#FF8FA3';
 const HIST_LABELS = {{ hist_labels|safe }};
 const HIST_QTD    = {{ hist_qtd|safe }};
 const HIST_COLORS = {{ hist_colors|safe }};
@@ -313,29 +309,35 @@ Chart.defaults.set('plugins.datalabels', {
 
 // ── Curva S Financeira ──
 if (document.getElementById('chartFinanceiro') && LABELS.length) {
+    const dsFin = [{
+        label: 'Realizado (R$)',
+        data: FIN_ACUM,
+        borderColor: C_GREEN,
+        backgroundColor: 'rgba(70,194,106,.08)',
+        borderWidth: 2,
+        pointRadius: 3, pointBackgroundColor: C_GREEN,
+        fill: true, tension: 0.4,
+    },{
+        label: 'Forecast (R$)',
+        data: FIN_FC, borderColor: C_VIOLET, backgroundColor:'rgba(167,139,250,.06)',
+        borderWidth: 2, borderDash:[6,4], pointRadius:0, fill:false, tension:0.4, spanGaps:false,
+    }];
+    if (FIN_REPL) dsFin.push({
+        label:'Replanejado', data:FIN_REPL, borderColor:C_ROSE,
+        borderWidth:1.5, borderDash:[2,3], pointRadius:0, fill:false, tension:0.4 });
+    dsFin.push({
+        label: 'Linha de Base',
+        data: FIN_BASE, borderColor: C_CYAN,
+        borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
+    });
     new Chart(document.getElementById('chartFinanceiro'), {
         type: 'line',
-        data: {
-            labels: LABELS,
-            datasets: [{
-                label: 'Realizado (R$)',
-                data: FIN_ACUM,
-                borderColor: C_GREEN,
-                backgroundColor: 'rgba(70,194,106,.08)',
-                borderWidth: 2,
-                pointRadius: 3, pointBackgroundColor: C_GREEN,
-                fill: true, tension: 0.4,
-            },{
-                label: 'Linha de Base',
-                data: FIN_BASE, borderColor: C_CYAN,
-                borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
-            }]
-        },
+        data: { labels: LABELS, datasets: dsFin },
         options: {
             responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
             plugins:{
                 legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.5)' }},
-                tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
+                tooltip:{ callbacks:{ label: ctx => ctx.dataset.label==='Linha de Base'?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
                 datalabels:{
                     display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
                     align:'top', anchor:'end', color:C_GREEN,
@@ -352,29 +354,35 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
 
 // ── Curva S Física ──
 if (document.getElementById('chartFisico') && LABELS.length) {
+    const dsFis = [{
+        label: 'Avanço Real (%)',
+        data: FIS_REAL,
+        borderColor: C_GREEN,
+        backgroundColor: 'rgba(70,194,106,.08)',
+        borderWidth: 2,
+        pointRadius: 3, pointBackgroundColor: C_GREEN,
+        fill: true, tension: 0.4,
+    },{
+        label: 'Forecast (%)',
+        data: FIS_FC, borderColor: C_VIOLET, backgroundColor:'rgba(167,139,250,.06)',
+        borderWidth: 2, borderDash:[6,4], pointRadius:0, fill:false, tension:0.4, spanGaps:false,
+    }];
+    if (FIS_REPL) dsFis.push({
+        label:'Replanejado', data:FIS_REPL, borderColor:C_ROSE,
+        borderWidth:1.5, borderDash:[2,3], pointRadius:0, fill:false, tension:0.4 });
+    dsFis.push({
+        label: 'Linha de Base',
+        data: FIS_BASE, borderColor: C_CYAN,
+        borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false,
+    });
     new Chart(document.getElementById('chartFisico'), {
         type: 'line',
-        data: {
-            labels: LABELS,
-            datasets: [{
-                label: 'Avanço Real (%)',
-                data: FIS_REAL,
-                borderColor: C_GREEN,
-                backgroundColor: 'rgba(70,194,106,.08)',
-                borderWidth: 2,
-                pointRadius: 3, pointBackgroundColor: C_GREEN,
-                fill: true, tension: 0.4,
-            },{
-                label: 'Linha de Base',
-                data: FIS_BASE, borderColor: C_CYAN,
-                borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false,
-            }]
-        },
+        data: { labels: LABELS, datasets: dsFis },
         options: {
             responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
             plugins:{
                 legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.5)' }},
-                tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':` ${ctx.parsed.y}%` }},
+                tooltip:{ callbacks:{ label: ctx => ctx.dataset.label==='Linha de Base'?'':` ${ctx.parsed.y}%` }},
                 datalabels:{
                     display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
                     align:'top', anchor:'end', color:C_GREEN,
@@ -384,30 +392,6 @@ if (document.getElementById('chartFisico') && LABELS.length) {
             scales:{
                 x:{ grid:{color:GRID}, ticks:TICK },
                 y:{ min:0, max:100, grid:{color:GRID}, ticks:{ ...TICK, callback: v=>v+'%' }}
-            }
-        }
-    });
-}
-
-// ── Histograma ──
-if (document.getElementById('chartHistograma') && HIST_LABELS.length) {
-    new Chart(document.getElementById('chartHistograma'), {
-        type: 'bar',
-        data: {
-            labels: HIST_LABELS,
-            datasets:[{ label:'Trabalhadores', data:HIST_QTD, backgroundColor:HIST_COLORS, borderRadius:2, borderSkipped:false }]
-        },
-        options: {
-            indexAxis:'y', responsive:true, animation:{ duration:600 },
-            layout:{ padding:{ right: 36 } },
-            plugins:{
-                legend:{ display:false },
-                tooltip:{ callbacks:{ label: ctx=>` ${ctx.parsed.x} trabalhadores` }},
-                datalabels:{ anchor:'end', align:'end', color:'#fff', clip:false, formatter: v => v }
-            },
-            scales:{
-                x:{ grid:{color:GRID}, ticks:{ ...TICK, stepSize:1 }, max: Math.max(...HIST_QTD) * 1.25 },
-                y:{ grid:{display:false}, ticks:TICK }
             }
         }
     });

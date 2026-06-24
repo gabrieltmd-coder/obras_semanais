@@ -247,7 +247,7 @@
     "equipamentos": [],
     "pontos_atencao": "Nenhuma ocorrência relevante.",
     "valor_medido": 0.0,
-    "avanco_fisico": 41.0,
+    "avanco_fisico": 48.0,
     "pluviometria": {
       "segunda": "Tempo Bom",
       "terca": "Tempo Bom",
@@ -258,14 +258,16 @@
       "domingo": "Sem Expediente"
     },
     "criado_em": "2026-06-12T08:30:00.000000",
-    "atualizado_em": "2026-06-18T15:35:44.427688",
+    "atualizado_em": "2026-06-24T09:26:15.608736",
     "acoes_realizadas": {
       "Concretagem de Pilares": 15,
-      "Alvenaria de Vedação": 100,
+      "Alvenaria de Vedação": 12,
       "Fundação — estacas": 5
     },
-    "alterado_em": "2026-06-18T15:35:44.427692",
-    "acoes_justificativas": {},
+    "alterado_em": "2026-06-24T09:26:15.608750",
+    "acoes_justificativas": {
+      "Alvenaria de Vedação": "ddrtgth"
+    },
     "equipamentos_realizados": {
       "Escavadeira Hidráulica": 2,
       "Caminhão Basculante": 4,
@@ -277,7 +279,8 @@
       "Encarregado": 5,
       "Mestre de Obras": 2
     },
-    "alterado_por": "gabrieltmd@gmail.com"
+    "alterado_por": "gabrieltmd@gmail.com",
+    "avanco_fisico_forecast": {}
   },
   {
     "id": "b2c3d4e5-0002-4002-8002-200000000001",

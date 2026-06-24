@@ -34,7 +34,7 @@
     "objeto": "Fornecimento e montagem de estruturas metálicas (480 t)",
     "valor_estimado": 6800000.0,
     "prioridade": "alta",
-    "status": "qualificacao",
+    "status": "negociacao",
     "data_inicio": "2026-05-05",
     "data_prev_contrato": "2026-08-15",
     "responsavel": "Ana Lima",
@@ -53,9 +53,33 @@
         "status": "qualificacao",
         "nota": "Recuou para Qualificação",
         "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "prospeccao",
+        "nota": "Recuou para Prospecção",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "qualificacao",
+        "nota": "Avançou para Qualificação",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "proposta",
+        "nota": "Avançou para Proposta",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "negociacao",
+        "nota": "Avançou para Negociação",
+        "usuario": "Administrador"
       }
     ],
-    "atualizado_em": "2026-06-19T17:10:31.032827",
+    "atualizado_em": "2026-06-24T14:43:48.828347",
     "area_contrato": "Obras eletromecânicas"
   },
   {
@@ -85,7 +109,7 @@
     "objeto": "Pavimento de concreto 18.000 m² + drenagem pluvial",
     "valor_estimado": 2800000.0,
     "prioridade": "media",
-    "status": "proposta",
+    "status": "qualificacao",
     "data_inicio": "2026-05-15",
     "data_prev_contrato": "2026-09-30",
     "responsavel": "Fernanda Costa",
@@ -104,9 +128,15 @@
         "status": "proposta",
         "nota": "Avançou para Proposta",
         "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "qualificacao",
+        "nota": "Recuou para Qualificação",
+        "usuario": "Administrador"
       }
     ],
-    "atualizado_em": "2026-06-19T17:10:29.342260",
+    "atualizado_em": "2026-06-24T14:37:04.775755",
     "area_contrato": "Obras civis"
   },
   {
@@ -116,7 +146,7 @@
     "objeto": "Sprinklers, hidrantes e central de alarme — área de 9.000 m²",
     "valor_estimado": 870000.0,
     "prioridade": "media",
-    "status": "prospeccao",
+    "status": "qualificacao",
     "data_inicio": "2026-06-10",
     "data_prev_contrato": "2026-11-01",
     "responsavel": "Rodrigo Alves",
@@ -125,9 +155,16 @@
       {
         "data": "2026-06-10",
         "nota": "Identificada demanda pelo setor de segurança"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "qualificacao",
+        "nota": "Avançou para Qualificação",
+        "usuario": "Administrador"
       }
     ],
-    "area_contrato": "Meio Ambiente"
+    "area_contrato": "Meio Ambiente",
+    "atualizado_em": "2026-06-24T09:50:03.372621"
   },
   {
     "id": "b99696b2-be24-43b3-a583-0cc7031dd530",

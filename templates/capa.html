@@ -120,7 +120,7 @@
 
         /* cards de vidro */
         .cards {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.25rem;
             width: 100%; animation: fade .75s .2s ease both;
         }
         .card {
@@ -142,6 +142,7 @@
         .card.c-dash::before { background: var(--cyan); }
         .card.c-fin::before  { background: var(--amber); }
         .card.c-rdo::before  { background: var(--green); }
+        .card.c-cons::before { background: #9b8cff; }
 
         .card .ic {
             width: 60px; height: 60px; border-radius: 14px;
@@ -152,6 +153,7 @@
         .card.c-dash .ic { color: var(--cyan);  background: rgba(43,178,238,.14); }
         .card.c-fin  .ic { color: var(--amber); background: rgba(232,163,61,.14); }
         .card.c-rdo  .ic { color: var(--green); background: rgba(70,194,106,.14); }
+        .card.c-cons .ic { color: #9b8cff; background: rgba(155,140,255,.14); }
 
         .card h2 {
             font-family: 'Archivo', sans-serif; font-size: 1.32rem; font-weight: 700;
@@ -174,6 +176,7 @@
         .card.c-dash:hover .go i { color: var(--cyan); }
         .card.c-fin:hover  .go i { color: var(--amber); }
         .card.c-rdo:hover  .go i { color: var(--green); }
+        .card.c-cons:hover .go i { color: #9b8cff; }
 
         .card.locked { cursor: not-allowed; }
         .card.locked .ic, .card.locked h2, .card.locked p { opacity: .55; }
@@ -253,6 +256,15 @@
 
         <!-- DESTINOS -->
         <nav class="cards">
+            {% if current_user and current_user.role in ['admin', 'master', 'rumo'] %}
+            <a href="{{ url_for('consolidado') }}" class="card c-cons">
+                <span class="ic"><i class="bi bi-grid-1x2"></i></span>
+                <h2>Consolidado</h2>
+                <p>Visão consolidada de todas as contratadas — KPIs, curvas S, milestones e suprimento.</p>
+                <span class="go">Abrir painel <i class="bi bi-arrow-right"></i></span>
+            </a>
+            {% endif %}
+
             <a {% if current_user %}href="{{ url_for('dashboard') }}"{% endif %} class="card c-dash{% if not current_user %} locked{% endif %}">
                 <span class="ic"><i class="bi bi-speedometer2"></i></span>
                 <h2>Contratadas</h2>
@@ -296,6 +308,9 @@
         if (e.key === '1') window.location = "{{ url_for('dashboard') }}";
         if (e.key === '2') window.location = "{{ url_for('financeiro') }}";
         if (e.key === '3') window.location = "{{ url_for('construcao') }}";
+        {% if current_user.role in ['admin', 'master', 'rumo'] %}
+        if (e.key === '4') window.location = "{{ url_for('consolidado') }}";
+        {% endif %}
     });
     {% endif %}
     </script>

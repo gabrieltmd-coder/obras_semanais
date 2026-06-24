@@ -101,15 +101,15 @@ main { position: relative; z-index: 1; }
 .ms-grid thead tr:last-child th {
     background:#0d2d47; color:rgba(255,255,255,.5);
     font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:500;
-    text-transform:uppercase; letter-spacing:.06em;
-    padding:.32rem .5rem; text-align:center;
+    text-transform:uppercase; letter-spacing:.04em;
+    padding:.32rem .35rem; text-align:center; min-width:34px;
     border:1px solid rgba(255,255,255,.07);
 }
 .ms-grid tbody tr { border-bottom:1px solid rgba(255,255,255,.05); }
 .ms-grid tbody tr:hover { background:rgba(255,255,255,.04); }
 .ms-grid tbody td { padding:.38rem .5rem; border:1px solid rgba(255,255,255,.05); vertical-align:middle; }
 .ms-grid tbody td:first-child { color:rgba(255,255,255,.9); font-weight:500; min-width:160px; max-width:220px; font-size:.77rem; line-height:1.3; }
-.ms-cell { text-align:center; white-space:nowrap; }
+.ms-cell { text-align:center; white-space:nowrap; min-width:34px; }
 .ms-marker { display:inline-flex; flex-direction:column; align-items:center; gap:1px; margin:1px 3px; }
 .ms-marker-icon { font-size:.9rem; line-height:1; }
 .ms-marker-label { font-family:'IBM Plex Mono',monospace; font-size:.52rem; font-weight:600; line-height:1; }
@@ -213,7 +213,7 @@ main { position: relative; z-index: 1; }
 {% endif %}
 
 <!-- CONTRATOS POR ÁREA + HISTOGRAMA -->
-<div class="d-flex flex-wrap gap-2 mt-2 align-items-start">
+<div class="d-flex flex-wrap gap-2 mt-2 align-items-stretch">
 
 {% if por_area %}
 {% set area_icons = {
@@ -223,7 +223,7 @@ main { position: relative; z-index: 1; }
     'Engenharia':            'cpu',
     'Meio Ambiente':         'tree'
 } %}
-<div class="gc" style="min-width:340px; max-width:420px; flex:1;">
+<div class="gc" style="flex:1.25 1 320px; min-width:320px;">
     <div class="gc-title"><span><i class="bi bi-diagram-3"></i>Contratos por Área</span></div>
     <div style="display:flex; align-items:center; gap:.7rem; padding:.6rem .8rem; background:rgba(240,179,77,.18); border:1px solid rgba(240,179,77,.3); border-radius:8px; margin-bottom:.5rem;">
         <i class="bi bi-building-fill-check" style="color:#F0B34D; font-size:1.15rem; flex-shrink:0;"></i>
@@ -251,12 +251,12 @@ main { position: relative; z-index: 1; }
 {% endif %}
 
 <!-- HISTOGRAMA -->
-<div class="gc" style="min-width:300px; max-width:380px; flex:1;">
+<div class="gc d-flex flex-column" style="flex:1 1 300px; min-width:300px;">
     <div class="gc-title">
         <span><i class="bi bi-people-fill"></i>Histograma</span>
         {% if hist_kpis.semana %}<span class="gc-sub">{{ hist_kpis.semana }}</span>{% endif %}
     </div>
-    <table style="width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace;">
+    <table style="width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace; margin:auto 0;">
         <!-- Cabeçalho -->
         <thead>
             <tr>
@@ -561,9 +561,8 @@ function _msEstado(m) {
     if (!table || !TMS_MILESTONES.length) return;
 
     const MES_BR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    const toBi  = ym => { const [y,m] = ym.slice(0,7).split('-').map(Number); return {y, bi: Math.ceil(m/2)}; };
-    const fmt   = ym => { const [y,m] = ym.slice(0,7).split('-').map(Number); return MES_BR[m-1]+'/'+String(y).slice(2); };
-    const ckey  = (y,bi) => `${y}-${bi}`;
+    const toMo  = ym => { const [y,m] = ym.slice(0,7).split('-').map(Number); return {y, mo: m}; };
+    const ckey  = (y,mo) => `${y}-${mo}`;
 
     // Intervalo de anos a partir dos dados
     const allY = new Set();
@@ -576,7 +575,7 @@ function _msEstado(m) {
     const years = [];
     for (let y = minY; y <= maxY; y++) years.push(y);
 
-    // ── Cabeçalho ────────────────────────────────────────────────────────────
+    // ── Cabeçalho (colunas = meses) ────────────────────────────────────────────
     const thead = table.createTHead();
     const tr1   = thead.insertRow();
     const tr2   = thead.insertRow();
@@ -589,12 +588,12 @@ function _msEstado(m) {
 
     years.forEach(y => {
         const thY = document.createElement('th');
-        thY.colSpan = 6;
+        thY.colSpan = 12;
         thY.textContent = y;
         tr1.appendChild(thY);
-        for (let bi = 1; bi <= 6; bi++) {
+        for (let mo = 1; mo <= 12; mo++) {
             const th2 = document.createElement('th');
-            th2.textContent = `${bi}ºBi`;
+            th2.textContent = MES_BR[mo-1];
             tr2.appendChild(th2);
         }
     });
@@ -607,33 +606,32 @@ function _msEstado(m) {
         const tdN = tr.insertCell();
         tdN.textContent = m.descricao;
 
-        // Monta mapa de marcadores por célula
+        // Monta mapa de marcadores por célula (chave = ano-mês)
         const markers = {};
         const addM = (ym, type) => {
             if (!ym) return;
-            const {y, bi} = toBi(ym);
-            const k = ckey(y, bi);
-            (markers[k] = markers[k] || []).push({type, label: fmt(ym)});
+            const {y, mo} = toMo(ym);
+            const k = ckey(y, mo);
+            (markers[k] = markers[k] || []).push({type});
         };
         addM(m.mes,      'plan');
         addM(m.forecast, 'fc');
         addM(m.entregue, 'done');
 
-        // Preenche células
+        // Preenche células (uma por mês)
         years.forEach(y => {
-            for (let bi = 1; bi <= 6; bi++) {
+            for (let mo = 1; mo <= 12; mo++) {
                 const td = tr.insertCell();
                 td.className = 'ms-cell';
-                const k = ckey(y, bi);
+                const k = ckey(y, mo);
                 if (markers[k]) {
-                    markers[k].forEach(({type, label}) => {
-                        let icon, color;
-                        if      (type === 'plan') { icon = '♦'; color = '#2BB2EE'; }
-                        else if (type === 'fc')   { icon = '♦'; color = '#F0B34D'; }
-                        else                       { icon = '<i class="bi bi-check-circle-fill" style="font-size:.8rem;"></i>'; color = '#46C26A'; }
-                        td.innerHTML += `<div class="ms-marker" style="color:${color};">
+                    markers[k].forEach(({type}) => {
+                        let icon, color, title;
+                        if      (type === 'plan') { icon = '♦'; color = '#2BB2EE'; title = 'Planejado'; }
+                        else if (type === 'fc')   { icon = '♦'; color = '#F0B34D'; title = 'Forecast'; }
+                        else                       { icon = '<i class="bi bi-check-circle-fill" style="font-size:.8rem;"></i>'; color = '#46C26A'; title = 'Realizado'; }
+                        td.innerHTML += `<div class="ms-marker" style="color:${color};" title="${title}">
                             <span class="ms-marker-icon">${icon}</span>
-                            <span class="ms-marker-label">${label}</span>
                         </div>`;
                     });
                 }
@@ -645,8 +643,12 @@ function _msEstado(m) {
 const LABELS     = {{ chart_labels|safe }};
 const CURVA_ACUM     = {{ curva_acum|safe }};
 const CURVA_BASE     = {{ curva_base|safe }};
+const CURVA_FC       = {{ curva_fc|safe }};
+const CURVA_REPL     = {{ curva_repl|safe }};
 const CURVA_FIS_ACUM = {{ curva_fis_acum|safe }};
 const CURVA_FIS_BASE = {{ curva_fis_base|safe }};
+const CURVA_FIS_FC   = {{ curva_fis_fc|safe }};
+const CURVA_FIS_REPL = {{ curva_fis_repl|safe }};
 const BAR_LABELS = {{ bar_labels|safe }};
 const BAR_MEDIDO = {{ bar_medido|safe }};
 const BAR_PCT    = {{ bar_pct|safe }};
@@ -663,17 +665,23 @@ Chart.defaults.set('plugins.datalabels', {
 
 // Curva S consolidada
 if (document.getElementById('chartCurva') && LABELS.length) {
+    const dsFin = [
+        { label:'Realizado (R$)', data:CURVA_ACUM, borderColor:'#2BB2EE', backgroundColor:'rgba(0,212,255,.08)',
+          borderWidth:2, pointRadius:3, pointBackgroundColor:'#2BB2EE', fill:true, tension:.45 },
+        { label:'Forecast (R$)', data:CURVA_FC, borderColor:'#A78BFA', backgroundColor:'rgba(167,139,250,.06)',
+          borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, tension:.4, spanGaps:false }
+    ];
+    if (CURVA_REPL) dsFin.push(
+        { label:'Replanejado', data:CURVA_REPL, borderColor:'#FF8FA3', borderWidth:1.5, borderDash:[2,3], pointRadius:0, fill:false, tension:.4 });
+    dsFin.push(
+        { label:'Linha de Base', data:CURVA_BASE, borderColor:'#46C26A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:.4 });
     new Chart(document.getElementById('chartCurva'), {
         type:'line',
-        data:{ labels:LABELS, datasets:[
-            { label:'Realizado (R$)', data:CURVA_ACUM, borderColor:'#2BB2EE', backgroundColor:'rgba(0,212,255,.08)',
-              borderWidth:2, pointRadius:3, pointBackgroundColor:'#2BB2EE', fill:true, tension:.45 },
-            { label:'Linha de Base', data:CURVA_BASE, borderColor:'#46C26A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:.4 }
-        ]},
+        data:{ labels:LABELS, datasets:dsFin },
         options:{ responsive:true, maintainAspectRatio:false, animation:{duration:600},
             plugins:{
                 legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
-                tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
+                tooltip:{ callbacks:{ label: ctx => ctx.dataset.label==='Linha de Base'?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
                 datalabels:{ display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null, align:'top', anchor:'end', color:'#7fd4f5', formatter: rs }
             },
             scales:{ x:{ grid:{color:GRID}, ticks:TICK }, y:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>rs(v) }} }
@@ -683,17 +691,23 @@ if (document.getElementById('chartCurva') && LABELS.length) {
 
 // Curva S Física consolidada
 if (document.getElementById('chartCurvaFis') && LABELS.length) {
+    const dsFis = [
+        { label:'Realizado (%)', data:CURVA_FIS_ACUM, borderColor:'#F0B34D', backgroundColor:'rgba(240,179,77,.08)',
+          borderWidth:2, pointRadius:3, pointBackgroundColor:'#F0B34D', fill:true, tension:.45 },
+        { label:'Forecast (%)', data:CURVA_FIS_FC, borderColor:'#A78BFA', backgroundColor:'rgba(167,139,250,.06)',
+          borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, tension:.4, spanGaps:false }
+    ];
+    if (CURVA_FIS_REPL) dsFis.push(
+        { label:'Replanejado', data:CURVA_FIS_REPL, borderColor:'#FF8FA3', borderWidth:1.5, borderDash:[2,3], pointRadius:0, fill:false, tension:.4 });
+    dsFis.push(
+        { label:'Linha de Base', data:CURVA_FIS_BASE, borderColor:'#46C26A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:.4 });
     new Chart(document.getElementById('chartCurvaFis'), {
         type:'line',
-        data:{ labels:LABELS, datasets:[
-            { label:'Realizado (%)', data:CURVA_FIS_ACUM, borderColor:'#F0B34D', backgroundColor:'rgba(240,179,77,.08)',
-              borderWidth:2, pointRadius:3, pointBackgroundColor:'#F0B34D', fill:true, tension:.45 },
-            { label:'Linha de Base', data:CURVA_FIS_BASE, borderColor:'#46C26A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:.4 }
-        ]},
+        data:{ labels:LABELS, datasets:dsFis },
         options:{ responsive:true, maintainAspectRatio:false, animation:{duration:600},
             plugins:{
                 legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
-                tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' '+ctx.parsed.y+'%' }},
+                tooltip:{ callbacks:{ label: ctx => ctx.dataset.label==='Linha de Base'?'':' '+ctx.parsed.y+'%' }},
                 datalabels:{ display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null, align:'top', anchor:'end', color:'#f7cc7a', formatter: v => v+'%' }
             },
             scales:{ x:{ grid:{color:GRID}, ticks:TICK }, y:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>v+'%' }, min:0, max:100 } }
