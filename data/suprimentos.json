@@ -1,0 +1,221 @@
+[
+  {
+    "id": "92396250-8b4f-4275-ae98-070e799ee5a3",
+    "descricao": "Dragagem do Porto Norte — Fase 1",
+    "contratada": "Dragagem Portuária Ltda",
+    "objeto": "Dragagem de aprofundamento do canal de acesso, vol. 120.000 m³",
+    "valor_estimado": 4200000.0,
+    "prioridade": "alta",
+    "status": "negociacao",
+    "data_inicio": "2026-04-10",
+    "data_prev_contrato": "2026-07-01",
+    "responsavel": "Carlos Mendes",
+    "notas": "Proposta técnica aprovada, aguardando ajuste de preço",
+    "historico": [
+      {
+        "data": "2026-04-10",
+        "nota": "Processo iniciado"
+      },
+      {
+        "data": "2026-05-02",
+        "nota": "Proposta recebida e analisada"
+      },
+      {
+        "data": "2026-06-01",
+        "nota": "Rodada de negociação — preço reduzido 8%"
+      }
+    ],
+    "area_contrato": "Obras civis"
+  },
+  {
+    "id": "cb0f55d2-0e44-4902-9986-b5308852831f",
+    "descricao": "Estruturas Metálicas dos Silos",
+    "contratada": "Naval Engenharia S.A.",
+    "objeto": "Fornecimento e montagem de estruturas metálicas (480 t)",
+    "valor_estimado": 6800000.0,
+    "prioridade": "alta",
+    "status": "negociacao",
+    "data_inicio": "2026-05-05",
+    "data_prev_contrato": "2026-08-15",
+    "responsavel": "Ana Lima",
+    "notas": "3 proponentes qualificadas, prazo de proposta encerra em 30/06",
+    "historico": [
+      {
+        "data": "2026-05-05",
+        "nota": "Edital publicado"
+      },
+      {
+        "data": "2026-05-20",
+        "nota": "Visita técnica realizada"
+      },
+      {
+        "data": "2026-06-19",
+        "status": "qualificacao",
+        "nota": "Recuou para Qualificação",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "prospeccao",
+        "nota": "Recuou para Prospecção",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "qualificacao",
+        "nota": "Avançou para Qualificação",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "proposta",
+        "nota": "Avançou para Proposta",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "negociacao",
+        "nota": "Avançou para Negociação",
+        "usuario": "Administrador"
+      }
+    ],
+    "atualizado_em": "2026-06-24T14:43:48.828347",
+    "area_contrato": "Obras eletromecânicas"
+  },
+  {
+    "id": "db836420-6e21-4839-a1c8-4c51f3c4c677",
+    "descricao": "Instalações Elétricas BT/AT",
+    "contratada": "Offshore Construções",
+    "objeto": "Rede elétrica BT e AT, subestação 13,8kV",
+    "valor_estimado": 1950000.0,
+    "prioridade": "media",
+    "status": "proposta",
+    "data_inicio": "2026-06-01",
+    "data_prev_contrato": "2026-09-01",
+    "responsavel": "Paulo Sérgio",
+    "notas": "Edital em elaboração, previsão de publicação em julho",
+    "historico": [
+      {
+        "data": "2026-06-01",
+        "nota": "Escopo preliminar aprovado pela engenharia"
+      }
+    ],
+    "area_contrato": "Obras eletromecânicas"
+  },
+  {
+    "id": "0e5a88c3-1471-4193-bc0c-ff2df37118af",
+    "descricao": "Pavimentação e Drenagem — Área Interna",
+    "contratada": "Hidro Estruturas Ltda",
+    "objeto": "Pavimento de concreto 18.000 m² + drenagem pluvial",
+    "valor_estimado": 2800000.0,
+    "prioridade": "media",
+    "status": "qualificacao",
+    "data_inicio": "2026-05-15",
+    "data_prev_contrato": "2026-09-30",
+    "responsavel": "Fernanda Costa",
+    "notas": "5 empresas convidadas, prazo de habilitação 20/06",
+    "historico": [
+      {
+        "data": "2026-05-15",
+        "nota": "Processo aberto"
+      },
+      {
+        "data": "2026-05-28",
+        "nota": "Convites enviados"
+      },
+      {
+        "data": "2026-06-19",
+        "status": "proposta",
+        "nota": "Avançou para Proposta",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "qualificacao",
+        "nota": "Recuou para Qualificação",
+        "usuario": "Administrador"
+      }
+    ],
+    "atualizado_em": "2026-06-24T14:37:04.775755",
+    "area_contrato": "Obras civis"
+  },
+  {
+    "id": "c95a2d0b-59a4-4689-a0bc-c41b574e2339",
+    "descricao": "Sistemas de Combate a Incêndio",
+    "contratada": "Marítima Obras S/A",
+    "objeto": "Sprinklers, hidrantes e central de alarme — área de 9.000 m²",
+    "valor_estimado": 870000.0,
+    "prioridade": "media",
+    "status": "qualificacao",
+    "data_inicio": "2026-06-10",
+    "data_prev_contrato": "2026-11-01",
+    "responsavel": "Rodrigo Alves",
+    "notas": "Projeto básico em fase de aprovação",
+    "historico": [
+      {
+        "data": "2026-06-10",
+        "nota": "Identificada demanda pelo setor de segurança"
+      },
+      {
+        "data": "2026-06-24",
+        "status": "qualificacao",
+        "nota": "Avançou para Qualificação",
+        "usuario": "Administrador"
+      }
+    ],
+    "area_contrato": "Meio Ambiente",
+    "atualizado_em": "2026-06-24T09:50:03.372621"
+  },
+  {
+    "id": "b99696b2-be24-43b3-a583-0cc7031dd530",
+    "descricao": "Monitoramento Geotécnico Instrumentado",
+    "contratada": "Porto Industrial Eng.",
+    "objeto": "Instalação e leitura de inclinômetros, piezômetros e marcos de recalque",
+    "valor_estimado": 520000.0,
+    "prioridade": "baixa",
+    "status": "prospeccao",
+    "data_inicio": "2026-06-15",
+    "data_prev_contrato": "2026-12-01",
+    "responsavel": "Luiz Neto",
+    "notas": "Aguarda definição do escopo pelo projetista geotécnico",
+    "historico": [
+      {
+        "data": "2026-06-15",
+        "nota": "Levantamento de necessidade realizado"
+      }
+    ],
+    "area_contrato": "Engenharia"
+  },
+  {
+    "id": "7063bbdc-c102-441a-9123-8010ab76d7d9",
+    "descricao": "Ensaios e Controle Tecnológico",
+    "contratada": "Sul Construtora Ltda",
+    "objeto": "Laboratório de ensaios de concreto, solos e asfalto por 24 meses",
+    "valor_estimado": 320000.0,
+    "prioridade": "baixa",
+    "status": "contrato",
+    "data_inicio": "2026-03-01",
+    "data_prev_contrato": "2026-05-01",
+    "responsavel": "Beatriz Dutra",
+    "notas": "Processo concluído — aguardando geração do contrato formal",
+    "historico": [
+      {
+        "data": "2026-03-01",
+        "nota": "Processo iniciado"
+      },
+      {
+        "data": "2026-03-22",
+        "nota": "Proposta recebida"
+      },
+      {
+        "data": "2026-04-10",
+        "nota": "Negociação finalizada"
+      },
+      {
+        "data": "2026-05-01",
+        "nota": "Contrato assinado digitalmente"
+      }
+    ],
+    "area_contrato": "Engenharia"
+  }
+]

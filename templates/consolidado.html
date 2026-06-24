@@ -7,57 +7,114 @@
 
 {% block content %}
 <style>
-body { background: #0b1828 !important; }
-.page-header { background: linear-gradient(135deg,#040c18 0%,#0b1828 100%) !important; padding:1rem 0 .85rem !important; margin-bottom:.85rem !important; }
-.app-footer  { background: #040c18 !important; margin-top:0 !important; padding:.6rem !important; }
-
-.gc {
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.09);
-    border-radius: 16px;
-    padding: .85rem 1rem;
-    backdrop-filter: blur(10px);
+/* ── PAINEL DE CONTROLE (grafite) ── */
+body {
+    background: #0E1B24 !important;
+    background-image:
+        linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px) !important;
+    background-size: 112px 112px, 112px 112px !important;
 }
+.page-header { background:#0A141C !important; border-bottom:1.5px solid rgba(255,255,255,.10) !important; padding:1rem 0 .9rem !important; margin-bottom:1rem !important; }
+.page-header h1 { color:#fff !important; } .page-header h1 i { color:#fff !important; }
+.page-header .breadcrumb { color:rgba(255,255,255,.45) !important; }
+.app-footer  { background:#0A141C !important; margin-top:1.2rem !important; }
+.btn-back-header { background:rgba(255,255,255,.05) !important; color:rgba(255,255,255,.85) !important; border-color:rgba(255,255,255,.18) !important; }
+.btn-back-header:hover { background:rgba(255,255,255,.14) !important; color:#fff !important; }
+
+.gc { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.9rem 1rem; }
 .gc-title {
-    font-size:.6rem; font-weight:800; text-transform:uppercase;
-    letter-spacing:.10em; color:rgba(255,255,255,.4);
-    margin-bottom:.6rem;
+    font-family:'IBM Plex Mono',monospace; font-size:.62rem; font-weight:500; text-transform:uppercase;
+    letter-spacing:.12em; color:rgba(255,255,255,.5);
+    margin-bottom:.7rem; padding-bottom:.55rem; border-bottom:1px solid rgba(255,255,255,.07);
     display:flex; align-items:center; justify-content:space-between;
 }
-.gc-title i { color:#00d4ff; margin-right:.3rem; }
-.gc-sub { font-size:.58rem; color:rgba(255,255,255,.25); }
+.gc-title i { color:#2BB2EE; margin-right:.35rem; }
+.gc-sub { font-family:'IBM Plex Mono',monospace; font-size:.58rem; color:rgba(255,255,255,.3); letter-spacing:.06em; }
 
 /* KPI STRIP (wrap) */
-.kpi-strip { display:flex; flex-wrap:wrap; gap:.55rem; margin-bottom:.7rem; }
-.kpi-mini {
-    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09);
-    border-radius:12px; padding:.55rem .85rem; flex:1 1 0; min-width:140px;
-    border-left:3px solid rgba(255,255,255,.15);
-}
-.kpi-mini.cy  { border-left-color:#00d4ff; }
-.kpi-mini.g   { border-left-color:#8DC63F; }
-.kpi-mini.am  { border-left-color:#f0a500; }
-.kpi-mini.red { border-left-color:#ff6b7a; }
-.kpi-ml { font-size:.56rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.38); margin-bottom:.18rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kpi-mv { font-family:'Montserrat',sans-serif; font-size:1rem; font-weight:800; color:#fff; line-height:1; }
+.kpi-strip { display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:.8rem; }
+.kpi-mini { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.6rem .85rem; flex:1 1 0; min-width:140px; position:relative; overflow:hidden; }
+.kpi-mini::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:rgba(255,255,255,.14); transform:skewX(-14deg) translateX(-1px); }
+.kpi-mini.cy::before  { background:#2BB2EE; }
+.kpi-mini.g::before   { background:#46C26A; }
+.kpi-mini.am::before  { background:#F0B34D; }
+.kpi-mini.red::before { background:#ff7a89; }
+.kpi-ml { font-family:'IBM Plex Mono',monospace; font-size:.56rem; font-weight:500; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.45); margin-bottom:.22rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-left:.3rem; }
+.kpi-mv { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:600; color:#fff; line-height:1; padding-left:.3rem; font-variant-numeric:tabular-nums; }
 .kpi-mv.sm { font-size:.78rem; }
 
 /* TABELA */
-.fin-table { width:100%; border-collapse:collapse; font-size:.78rem; }
-.fin-table thead tr { background:rgba(0,212,255,.10); }
+.fin-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+.fin-table thead tr { background:rgba(255,255,255,.04); }
 .fin-table th {
-    padding:.45rem .65rem; text-align:left;
-    font-size:.6rem; font-weight:700; text-transform:uppercase;
-    letter-spacing:.08em; color:rgba(255,255,255,.45);
-    border-bottom:1px solid rgba(255,255,255,.08);
+    padding:.5rem .65rem; text-align:left;
+    font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:500; text-transform:uppercase;
+    letter-spacing:.1em; color:rgba(255,255,255,.5); border-bottom:1px solid rgba(255,255,255,.1);
 }
 .fin-table th.r { text-align:right; }
-.fin-table td { padding:.42rem .65rem; border-bottom:1px solid rgba(255,255,255,.05); color:rgba(255,255,255,.85); vertical-align:middle; }
-.fin-table td.r { text-align:right; font-variant-numeric:tabular-nums; }
+.fin-table td { padding:.46rem .65rem; border-bottom:1px solid rgba(255,255,255,.05); color:rgba(255,255,255,.85); vertical-align:middle; }
+.fin-table td.r { text-align:right; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; }
 .fin-table tbody tr:hover { background:rgba(255,255,255,.04); }
-.fin-table tfoot td { padding:.5rem .65rem; border-top:2px solid rgba(0,212,255,.25); font-weight:800; color:#fff; font-variant-numeric:tabular-nums; }
-.prog-bar { height:6px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden; }
-.prog-fill { height:100%; border-radius:3px; transition:width .4s; }
+.fin-table tfoot td { padding:.55rem .65rem; border-top:1.5px solid rgba(43,178,238,.4); font-family:'IBM Plex Mono',monospace; font-weight:600; color:#fff; font-variant-numeric:tabular-nums; }
+.prog-bar { height:7px; background:rgba(255,255,255,.08); overflow:hidden; }
+.prog-fill { height:100%; transform:skewX(-14deg); transform-origin:left; transition:width .4s; }
+
+/* ── TEMA OCEÂNICO (override) ── */
+body {
+    background-color: #030e1a !important;
+    background-image:
+        radial-gradient(120% 70% at 50% -8%, #11567f 0%, transparent 52%),
+        linear-gradient(180deg, #0b3050 0%, #082338 40%, #051726 70%, #030e1a 100%) !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+}
+body::after {
+    content:''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+        radial-gradient(460px 460px at 95% 6%, rgba(43,178,238,.15), transparent 70%),
+        radial-gradient(400px 400px at 2% 94%, rgba(63,200,200,.11), transparent 70%);
+}
+.navbar-rumo { background: rgba(4,18,32,.72) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,.08) !important; }
+.page-header { background: transparent !important; border-bottom: 1px solid rgba(255,255,255,.10) !important; position: relative; z-index: 1; }
+main { position: relative; z-index: 1; }
+.app-footer { background: rgba(4,18,32,.6) !important; }
+.gc, .kpi-mini {
+    background: rgba(255,255,255,.055) !important;
+    border-color: rgba(255,255,255,.12) !important;
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+.gc { border-radius: 14px !important; }
+.kpi-mini { border-radius: 12px !important; }
+
+/* ── TABELA DE MILESTONES ── */
+.ms-grid { width:100%; border-collapse:collapse; font-size:.78rem; min-width:560px; }
+.ms-grid thead tr:first-child th {
+    background:#0a2035; color:#fff;
+    font-family:'IBM Plex Mono',monospace; font-size:.68rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.08em;
+    padding:.5rem .6rem; text-align:center;
+    border:1px solid rgba(255,255,255,.10);
+}
+.ms-grid thead tr:first-child th:first-child { text-align:left; }
+.ms-grid thead tr:last-child th {
+    background:#0d2d47; color:rgba(255,255,255,.5);
+    font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:500;
+    text-transform:uppercase; letter-spacing:.04em;
+    padding:.32rem .35rem; text-align:center; min-width:34px;
+    border:1px solid rgba(255,255,255,.07);
+}
+.ms-grid tbody tr { border-bottom:1px solid rgba(255,255,255,.05); }
+.ms-grid tbody tr:hover { background:rgba(255,255,255,.04); }
+.ms-grid tbody td { padding:.38rem .5rem; border:1px solid rgba(255,255,255,.05); vertical-align:middle; }
+.ms-grid tbody td:first-child { color:rgba(255,255,255,.9); font-weight:500; min-width:160px; max-width:220px; font-size:.77rem; line-height:1.3; }
+.ms-cell { text-align:center; white-space:nowrap; min-width:34px; }
+.ms-marker { display:inline-flex; flex-direction:column; align-items:center; gap:1px; margin:1px 3px; }
+.ms-marker-icon { font-size:.9rem; line-height:1; }
+.ms-marker-label { font-family:'IBM Plex Mono',monospace; font-size:.52rem; font-weight:600; line-height:1; }
+.ms-legend { display:flex; gap:1.1rem; align-items:center; flex-wrap:wrap; }
+.ms-legend span { font-family:'IBM Plex Mono',monospace; font-size:.65rem; display:flex; align-items:center; gap:.3rem; }
 </style>
 
 <div style="color:#fff;">
@@ -81,11 +138,11 @@ body { background: #0b1828 !important; }
     </div>
     <div class="kpi-mini {% if kpis.saldo >= 0 %}g{% else %}red{% endif %}">
         <div class="kpi-ml">Saldo a Medir</div>
-        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#7dda24{% else %}#ff6b7a{% endif %};">{{ kpis.saldo|currency }}</div>
+        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#46C26A{% else %}#ff7a89{% endif %};">{{ kpis.saldo|currency }}</div>
     </div>
     <div class="kpi-mini cy">
         <div class="kpi-ml">% Executado</div>
-        <div class="kpi-mv" style="color:#00d4ff;">{{ kpis.pct_global }}%</div>
+        <div class="kpi-mv" style="color:#2BB2EE;">{{ kpis.pct_global }}%</div>
     </div>
     <div class="kpi-mini g">
         <div class="kpi-ml">Medição da Semana</div>
@@ -105,20 +162,18 @@ body { background: #0b1828 !important; }
     </div>
 </div>
 
-<!-- ROW 1: Curva S consolidada | Distribuição do valor -->
-<div class="row g-2 mb-2 align-items-stretch">
-    <div class="col-lg-8 d-flex">
-        <div class="gc w-100 d-flex flex-column" style="min-height:240px;">
-            <div class="gc-title"><span><i class="bi bi-graph-up-arrow"></i>Curva S Financeira Consolidada</span><span class="gc-sub">R$ Acumulado — todas as contratadas</span></div>
-            <div style="position:relative;flex:1;min-height:190px;"><canvas id="chartCurva"></canvas></div>
-        </div>
-    </div>
-    <div class="col-lg-4 d-flex">
-        <div class="gc w-100 d-flex flex-column" style="min-height:240px;">
-            <div class="gc-title"><span><i class="bi bi-pie-chart"></i>Valor Contratado</span><span class="gc-sub">Distribuição</span></div>
-            <div style="position:relative;flex:1;min-height:190px;"><canvas id="chartDonut"></canvas></div>
-        </div>
-    </div>
+
+
+<!-- Curva S Financeira — largura total -->
+<div class="gc mb-2 d-flex flex-column" style="min-height:240px;">
+    <div class="gc-title"><span><i class="bi bi-graph-up-arrow"></i>Curva S Financeira Consolidada</span><span class="gc-sub">R$ Acumulado — todas as contratadas</span></div>
+    <div style="position:relative;flex:1;min-height:200px;"><canvas id="chartCurva"></canvas></div>
+</div>
+
+<!-- Curva S Física — largura total -->
+<div class="gc mb-2 d-flex flex-column" style="min-height:240px;">
+    <div class="gc-title"><span><i class="bi bi-activity"></i>Curva S Física Consolidada</span><span class="gc-sub">% Avanço — média ponderada por contrato</span></div>
+    <div style="position:relative;flex:1;min-height:200px;"><canvas id="chartCurvaFis"></canvas></div>
 </div>
 
 <!-- ROW 2: Medição por contratada | % Executado por contratada -->
@@ -137,51 +192,139 @@ body { background: #0b1828 !important; }
     </div>
 </div>
 
-<!-- TABELA CONSOLIDADA -->
-<div class="gc">
-    <div class="gc-title"><span><i class="bi bi-table"></i>Resumo por Contratada</span><span class="gc-sub">{{ por_contratada|length }} contratada(s)</span></div>
+<!-- TOTALIZADOR POR ÁREA -->
+{% endif %}
+
+<!-- TABELA DE ACOMPANHAMENTO DE MILESTONES -->
+{% if tms_milestones %}
+<div class="gc mt-2" id="ms-table-section">
+    <div class="gc-title">
+        <span><i class="bi bi-table"></i>Acompanhamento de Milestones</span>
+        <div class="ms-legend">
+            <span style="color:#2BB2EE;"><span style="font-size:1rem;line-height:1;">♦</span> Planejado</span>
+            <span style="color:#F0B34D;"><span style="font-size:1rem;line-height:1;">♦</span> Forecast</span>
+            <span style="color:#46C26A;"><i class="bi bi-check-circle-fill"></i> Realizado</span>
+        </div>
+    </div>
     <div style="overflow-x:auto;">
-    <table class="fin-table">
+        <table class="ms-grid" id="ms-grid"></table>
+    </div>
+</div>
+{% endif %}
+
+<!-- CONTRATOS POR ÁREA + HISTOGRAMA -->
+<div class="d-flex flex-wrap gap-2 mt-2 align-items-stretch">
+
+{% if por_area %}
+{% set area_icons = {
+    'Obras preliminares':    'cone-striped',
+    'Obras civis':           'building',
+    'Obras eletromecânicas': 'lightning-charge-fill',
+    'Engenharia':            'cpu',
+    'Meio Ambiente':         'tree'
+} %}
+<div class="gc" style="flex:1.25 1 320px; min-width:320px;">
+    <div class="gc-title"><span><i class="bi bi-diagram-3"></i>Contratos por Área</span></div>
+    <div style="display:flex; align-items:center; gap:.7rem; padding:.6rem .8rem; background:rgba(240,179,77,.18); border:1px solid rgba(240,179,77,.3); border-radius:8px; margin-bottom:.5rem;">
+        <i class="bi bi-building-fill-check" style="color:#F0B34D; font-size:1.15rem; flex-shrink:0;"></i>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#F0B34D; flex:1;">TOTAL Contratos</span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:1.15rem; font-weight:800; color:#F0B34D; min-width:2.2rem; text-align:right;">{{ '%02d'|format(kpis.n_contratos) }}</span>
+    </div>
+    {% for a in por_area %}
+    {% set icon = area_icons.get(a.area, 'tag') %}
+    {% set is_unclass = (a.area == 'Não classificado') %}
+    <div class="area-row" data-area="{{ a.area }}"
+         style="display:flex; align-items:center; gap:.7rem; padding:.45rem .8rem;
+                border-bottom:1px solid rgba(255,255,255,.06);
+                cursor:pointer; border-radius:6px; transition:background .15s;
+                {% if is_unclass %}opacity:.45;{% endif %}">
+        <i class="bi bi-{{ icon }}" style="color:rgba(255,255,255,.35); font-size:.95rem; flex-shrink:0; width:1.1rem; text-align:center;"></i>
+        <span style="font-size:.82rem; color:rgba(255,255,255,.78); flex:1;">{{ a.area }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:.95rem; font-weight:700; color:#fff; min-width:2.2rem; text-align:right;">{{ '%02d'|format(a.n_contratos) }}</span>
+        <i class="bi bi-chevron-right area-chevron" style="font-size:.65rem; color:rgba(255,255,255,.25); transition:transform .2s;"></i>
+    </div>
+    {% endfor %}
+    <div id="area-detail-panel" style="display:none; margin-top:.6rem;">
+        <div id="adp-cards"></div>
+    </div>
+</div>
+{% endif %}
+
+<!-- HISTOGRAMA -->
+<div class="gc d-flex flex-column" style="flex:1 1 300px; min-width:300px;">
+    <div class="gc-title">
+        <span><i class="bi bi-people-fill"></i>Histograma</span>
+        {% if hist_kpis.semana %}<span class="gc-sub">{{ hist_kpis.semana }}</span>{% endif %}
+    </div>
+    <table style="width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace; margin:auto 0;">
+        <!-- Cabeçalho -->
         <thead>
             <tr>
-                <th>Contratada</th>
-                <th class="r">Valor Contratado</th>
-                <th class="r">Total Medido</th>
-                <th class="r">Saldo a Medir</th>
-                <th style="text-align:center; width:150px;">% Executado</th>
+                <th colspan="2" style="padding:.3rem .5rem; background:#001f4d; color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; text-align:left; border-radius:4px 0 0 0;"></th>
+                <th style="padding:.3rem .6rem; background:#001f4d; color:#fff; font-size:.7rem; font-weight:800; text-align:center; letter-spacing:.06em;">P</th>
+                <th style="padding:.3rem .6rem; background:#001f4d; color:#fff; font-size:.7rem; font-weight:800; text-align:center; letter-spacing:.06em;">R</th>
+                <th style="padding:.3rem .6rem; background:#001f4d; color:#fff; font-size:.7rem; font-weight:800; text-align:center; letter-spacing:.06em; border-radius:0 4px 0 0;">Δ</th>
             </tr>
         </thead>
         <tbody>
-        {% for c in por_contratada %}
-        {% set pct_color = '#7dda24' if c.pct >= 80 else ('#f0a500' if c.pct >= 40 else '#00d4ff') %}
-        <tr>
-            <td style="font-weight:600;">{{ c.contratada }}</td>
-            <td class="r">{% if c.valor %}{{ c.valor|currency }}{% else %}<span style="color:rgba(255,255,255,.2);">—</span>{% endif %}</td>
-            <td class="r" style="color:#7dda24;">{{ c.medido|currency }}</td>
-            <td class="r" style="color:{% if c.saldo >= 0 %}#7dda24{% else %}#ff6b7a{% endif %};">{{ c.saldo|currency }}</td>
-            <td>
-                <div style="display:flex;align-items:center;gap:.45rem;">
-                    <div class="prog-bar" style="flex:1;"><div class="prog-fill" style="width:{{ [c.pct,100]|min }}%; background:{{ pct_color }};"></div></div>
-                    <span style="font-family:'Montserrat',sans-serif;font-size:.72rem;font-weight:800;color:{{ pct_color }};min-width:40px;text-align:right;">{{ c.pct }}%</span>
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td>TOTAL</td>
-                <td class="r">{{ kpis.total_valor_contrato|currency }}</td>
-                <td class="r" style="color:#7dda24;">{{ kpis.total_medido|currency }}</td>
-                <td class="r" style="color:{% if kpis.saldo >= 0 %}#7dda24{% else %}#ff6b7a{% endif %};">{{ kpis.saldo|currency }}</td>
-                <td style="text-align:center; color:#00d4ff;">{{ kpis.pct_global }}%</td>
+            <!-- Grupo Contratos -->
+            {% set rows = [
+                ('MOD', hist_kpis.mod_plan, hist_kpis.mod_real, hist_kpis.mod_delta),
+                ('MOI', hist_kpis.moi_plan, hist_kpis.moi_real, hist_kpis.moi_delta),
+                ('Total', hist_kpis.tot_plan, hist_kpis.tot_real, hist_kpis.tot_delta),
+            ] %}
+            {% for label, plan, real, delta in rows %}
+            {% set is_total = (label == 'Total') %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,.07); {% if is_total %}background:rgba(255,255,255,.05);{% endif %}">
+                {% if loop.first %}
+                <td rowspan="3" style="writing-mode:vertical-rl; transform:rotate(180deg); text-align:center; padding:.4rem .3rem; font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.45); background:rgba(255,255,255,.04); border-right:1px solid rgba(255,255,255,.08); white-space:nowrap; width:1.2rem;">Contratos</td>
+                {% endif %}
+                <td style="padding:.42rem .55rem; font-size:.78rem; font-weight:{% if is_total %}700{% else %}500{% endif %}; color:{% if is_total %}#fff{% else %}rgba(255,255,255,.8){% endif %};">{{ label }}</td>
+                <td style="padding:.42rem .6rem; text-align:center; font-size:.82rem; color:rgba(255,255,255,.65);">{{ plan or '—' }}</td>
+                <td style="padding:.42rem .6rem; text-align:center; font-size:.82rem; color:#2BB2EE; font-weight:600;">{{ real or '—' }}</td>
+                <td style="padding:.42rem .6rem; text-align:center; font-size:.78rem; font-weight:700; color:{% if delta > 0 %}#46C26A{% elif delta < 0 %}#ff7a89{% else %}rgba(255,255,255,.4){% endif %};">
+                    {% if delta > 0 %}▲{{ delta }}{% elif delta < 0 %}▼{{ delta|abs }}{% else %}0{% endif %}
+                </td>
             </tr>
-        </tfoot>
+            {% endfor %}
+            <!-- TMS/Rumo -->
+            <tr style="border-top:2px solid rgba(255,255,255,.12); background:rgba(43,178,238,.06);">
+                <td colspan="2" style="padding:.42rem .55rem; font-size:.78rem; font-weight:700; color:#2BB2EE; letter-spacing:.03em;">TMS/Rumo</td>
+                <td style="padding:.42rem .6rem; text-align:center; font-size:.82rem; color:rgba(255,255,255,.65);">{{ hist_kpis.tms_plan or '—' }}</td>
+                <td style="padding:.42rem .6rem; text-align:center; font-size:.82rem; color:#2BB2EE; font-weight:600;">{{ hist_kpis.tms_real or '—' }}</td>
+                <td style="padding:.42rem .6rem; text-align:center; font-size:.78rem; color:rgba(255,255,255,.4);">0</td>
+            </tr>
+        </tbody>
     </table>
-    </div>
 </div>
 
+</div><!-- fim flex row -->
+<style>
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+.area-row:hover { background:rgba(255,255,255,.06) !important; }
+.area-row.active { background:rgba(43,178,238,.1) !important; border-color:rgba(43,178,238,.25) !important; }
+.area-row.active .area-chevron { transform:rotate(90deg); color:rgba(43,178,238,.7) !important; }
+</style>
+
+<!-- ═══════════════════ SUPRIMENTO PIPELINE ══════════════════════════════════ -->
+{% if sup_total > 0 %}
+<div class="gc mt-3">
+    <div class="gc-title">
+        <span><i class="bi bi-funnel-fill" style="color:#F0B34D;"></i>Pipeline de Suprimento</span>
+        <span style="margin-left:auto; font-size:.68rem; color:rgba(255,255,255,.35); font-family:'IBM Plex Mono',monospace; letter-spacing:.04em;">
+            {{ sup_total }} processo{{ 's' if sup_total > 1 }} &nbsp;·&nbsp; R$&nbsp;{{ "{:,.0f}".format(sup_valor_total).replace(',','.') }}
+        </span>
+    </div>
+
+    <div style="display:grid; grid-template-columns:2fr 1fr; gap:.85rem;">
+        <div style="position:relative; height:220px;"><canvas id="chartSupEtapa"></canvas></div>
+        <div style="position:relative; height:220px; border-left:1px solid rgba(255,255,255,.06); padding-left:.85rem;">
+            <canvas id="chartSupArea"></canvas>
+        </div>
+    </div>
+</div>
 {% endif %}
+
 </div>
 {% endblock %}
 
@@ -191,12 +334,323 @@ body { background: #0b1828 !important; }
 <script>
 Chart.register(ChartDataLabels);
 
+// ── Painel de detalhe por área — cards por contrato ──
+const POR_AREA           = {{ por_area|tojson }};
+const CONTRATOS_POR_AREA = {{ contratos_por_area|tojson }};
+const AREA_ICONS = {
+    'Obras preliminares':    'cone-striped',
+    'Obras civis':           'building',
+    'Obras eletromecânicas': 'lightning-charge-fill',
+    'Engenharia':            'cpu',
+    'Meio Ambiente':         'tree'
+};
+const fmtBRL   = v => 'R$ ' + parseFloat(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+const pctColor = p => p >= 80 ? '#46C26A' : (p >= 40 ? '#F0B34D' : '#2BB2EE');
+
+function _contractCard(c, icon, areaName) {
+    const color = pctColor(c.pct);
+    const saldoColor = c.saldo >= 0 ? '#46C26A' : '#ff7a89';
+    const pct = Math.min(c.pct, 100);
+    return `<div style="background:rgba(10,30,50,.55);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:.7rem .85rem;animation:fadeSlideIn .18s ease;backdrop-filter:blur(10px);">
+        <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:.6rem;">
+            <i class="bi bi-${icon}" style="color:#2BB2EE;font-size:.95rem;flex-shrink:0;"></i>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.65);flex:1;line-height:1.2;">${c.contratada}</span>
+            <span style="font-size:.56rem;background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);padding:.1rem .38rem;border-radius:20px;white-space:nowrap;">CT ${c.contrato}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem .8rem;margin-bottom:.55rem;">
+            <div>
+                <div style="font-size:.48rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.08rem;">Contratado</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;color:#fff;">${fmtBRL(c.valor)}</div>
+            </div>
+            <div>
+                <div style="font-size:.48rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.08rem;">Medido</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;color:#46C26A;">${fmtBRL(c.medido)}</div>
+            </div>
+            <div>
+                <div style="font-size:.48rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.08rem;">Saldo</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;font-weight:600;color:${saldoColor};">${fmtBRL(c.saldo)}</div>
+            </div>
+            <div>
+                <div style="font-size:.48rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.08rem;">% Executado</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:.88rem;font-weight:800;color:${color};">${c.pct}%</div>
+            </div>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color};"></div></div>
+    </div>`;
+}
+
+function showAreaDetail(areaName) {
+    const panel = document.getElementById('area-detail-panel');
+    const isOpen = panel.style.display !== 'none' && panel.dataset.area === areaName;
+
+    document.querySelectorAll('.area-row').forEach(r => r.classList.remove('active'));
+    if (isOpen) { panel.style.display = 'none'; panel.dataset.area = ''; return; }
+
+    const row = document.querySelector(`.area-row[data-area="${CSS.escape(areaName)}"]`);
+    if (row) row.classList.add('active');
+
+    const contratos = CONTRATOS_POR_AREA[areaName] || [];
+    const icon = AREA_ICONS[areaName] || 'tag';
+    const cards = contratos.map(c => _contractCard(c, icon, areaName)).join('');
+    document.getElementById('adp-cards').innerHTML = cards;
+
+    panel.style.display = '';
+    panel.dataset.area  = areaName;
+}
+
+document.querySelectorAll('.area-row').forEach(row => {
+    row.addEventListener('click', () => showAreaDetail(row.dataset.area));
+});
+
+// ── Milestones Timeline ──
+const TMS_MILESTONES = {{ tms_milestones|tojson }};
+const TMS_INICIO     = "{{ tms_cfg.get('data_inicio','') }}";
+const TMS_FIM        = "{{ tms_cfg.get('data_fim','') }}";
+
+// Cor/ícone por estado do milestone
+function _msEstado(m) {
+    const hoje = new Date().toISOString().slice(0,10);
+    if (m.entregue)                        return { cor: '#46C26A', icon: 'bi-check-circle-fill' };
+    if (m.forecast && m.forecast > m.mes)  return { cor: '#ff7a89', icon: 'bi-flag-fill' };
+    if (m.mes < hoje && !m.entregue)       return { cor: '#F0B34D', icon: 'bi-exclamation-circle-fill' };
+    return { cor: '#2BB2EE', icon: 'bi-flag-fill' };
+}
+
+(function buildTimeline() {
+    if (!TMS_MILESTONES.length) return;
+    const wrap = document.getElementById('ms-pins');
+    if (!wrap) return;
+
+    // Compute month range — inclui datas de forecast
+    const meses = TMS_MILESTONES.flatMap(m => {
+        const arr = [m.mes.slice(0,7)];
+        if (m.forecast) arr.push(m.forecast.slice(0,7));
+        return arr;
+    }).sort();
+    let start = TMS_INICIO ? TMS_INICIO.slice(0,7) : meses[0];
+    let end   = TMS_FIM    ? TMS_FIM.slice(0,7)    : meses[meses.length - 1];
+    if (start > meses[0]) start = meses[0];
+    if (end   < meses[meses.length - 1]) end = meses[meses.length - 1];
+
+    // Generate full month list
+    const months = [];
+    let cur = new Date(start + '-01');
+    const endDate = new Date(end + '-01');
+    while (cur <= endDate) {
+        months.push(cur.toISOString().slice(0,7));
+        cur.setMonth(cur.getMonth() + 1);
+    }
+
+    const MES_BR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const fmtMes = ym => { const [y,m] = ym.split('-'); return MES_BR[+m-1]+"'"+y.slice(2); };
+
+    // Group milestones by month — planejado e forecast em mapas separados
+    const msMap = {};    // planejado
+    const fcMap = {};    // forecast
+    TMS_MILESTONES.forEach(m => {
+        const key = m.mes.slice(0,7);
+        (msMap[key] = msMap[key] || []).push(m);
+        if (m.forecast && m.forecast !== m.mes) {
+            const fk = m.forecast.slice(0,7);
+            (fcMap[fk] = fcMap[fk] || []).push(m);
+        }
+    });
+
+    // Largura das colunas ajustada ao container — sem scrollbar
+    const container = document.getElementById('ms-timeline-wrap');
+    const avail = container.clientWidth - 16; // 8px padding cada lado
+    const COL_W = Math.max(36, Math.floor(avail / months.length));
+    wrap.style.width = (months.length * COL_W) + 'px';
+
+    months.forEach((ym, i) => {
+        const ms = msMap[ym] || [];
+        const col = document.createElement('div');
+        col.style.cssText = `position:absolute; left:${i * COL_W}px; top:0; width:${COL_W}px; display:flex; flex-direction:column; align-items:center;`;
+
+        // ── Pins ACIMA da linha ─────────────────────────────────────────────
+        let pinsHtml = '';
+        if (!ms.length) {
+            pinsHtml = `<div style="height:1.9rem;"></div>`;
+        } else if (ms.length === 1) {
+            // Único: haste + ícone centrados
+            const cfg = _msEstado(ms[0]);
+            const tip = (ms[0].descricao + ' · ' + fmtMes(ms[0].mes.slice(0,7))).replace(/"/g,'&quot;');
+            pinsHtml = `<div style="display:flex;flex-direction:column;align-items:center;">
+                <div style="width:1px;height:10px;background:${cfg.cor};opacity:.65;"></div>
+                <i class="bi ${cfg.icon}" style="color:${cfg.cor};font-size:.9rem;z-index:2;cursor:default;"
+                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="${tip}"></i>
+            </div>`;
+        } else {
+            // Múltiplos: leque horizontal — ícones lado a lado, hastes convergindo
+            let iconsRow = '';
+            ms.forEach(m => {
+                const cfg = _msEstado(m);
+                const tip = (m.descricao + ' · ' + fmtMes(m.mes.slice(0,7))).replace(/"/g,'&quot;');
+                iconsRow += `<div style="display:flex;flex-direction:column;align-items:center;">
+                    <i class="bi ${cfg.icon}" style="color:${cfg.cor};font-size:.82rem;cursor:default;z-index:2;"
+                       data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="${tip}"></i>
+                    <div style="width:1px;height:5px;background:${cfg.cor};opacity:.55;"></div>
+                </div>`;
+            });
+            pinsHtml = `<div style="display:flex;flex-direction:column;align-items:center;">
+                <div style="display:flex;gap:4px;align-items:flex-end;">${iconsRow}</div>
+                <div style="width:1px;height:5px;background:rgba(255,255,255,.22);"></div>
+            </div>`;
+        }
+
+        // ── Pins ABAIXO da linha (forecast) ─────────────────────────────────
+        const fcMs = fcMap[ym] || [];
+        let fcHtml = '';
+        if (fcMs.length === 1) {
+            const m = fcMs[0];
+            const cfg = _msEstado(m);
+            const late = m.forecast > m.mes;
+            const tip = ('FC: ' + m.descricao + ' · ' + fmtMes(m.forecast.slice(0,7))).replace(/"/g,'&quot;');
+            fcHtml = `<div style="display:flex;flex-direction:column;align-items:center;margin-top:2px;">
+                <div style="width:1px;height:8px;background:${late?'#ff7a89':'#46C26A'};opacity:.5;border-left:1px dashed ${late?'#ff7a89':'#46C26A'};"></div>
+                <i class="bi ${cfg.icon}" style="color:${late?'#ff7a89':'#46C26A'};font-size:.8rem;opacity:.9;cursor:default;"
+                   data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="${tip}"></i>
+            </div>`;
+        } else if (fcMs.length > 1) {
+            let fcRow = '';
+            fcMs.forEach(m => {
+                const cfg = _msEstado(m);
+                const late = m.forecast > m.mes;
+                const tip = ('FC: ' + m.descricao + ' · ' + fmtMes(m.forecast.slice(0,7))).replace(/"/g,'&quot;');
+                fcRow += `<div style="display:flex;flex-direction:column;align-items:center;">
+                    <div style="width:1px;height:4px;background:${late?'#ff7a89':'#46C26A'};opacity:.5;"></div>
+                    <i class="bi ${cfg.icon}" style="color:${late?'#ff7a89':'#46C26A'};font-size:.78rem;opacity:.9;cursor:default;"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="${tip}"></i>
+                </div>`;
+            });
+            fcHtml = `<div style="display:flex;flex-direction:column;align-items:center;margin-top:2px;">
+                <div style="width:1px;height:4px;background:rgba(255,255,255,.2);"></div>
+                <div style="display:flex;gap:4px;align-items:flex-start;">${fcRow}</div>
+            </div>`;
+        }
+
+        // ── Rótulo do mês ────────────────────────────────────────────────────
+        const isNewYear = ym.endsWith('-01');
+        const [ymY, ymM] = ym.split('-');
+        const monthLabel = isNewYear
+            ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:.5rem;font-weight:700;color:rgba(255,255,255,.8);text-align:center;line-height:1.1;">${fmtMes(ym)}<br><span style="font-size:.45rem;opacity:.55;">${ymY}</span></div>`
+            : `<div style="font-family:'IBM Plex Mono',monospace;font-size:.48rem;font-weight:400;color:rgba(255,255,255,.45);text-align:center;line-height:1;">${fmtMes(ym)}</div>`;
+
+        const tickH = (ms.length || fcMs.length) ? 0 : 4;
+        col.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;">${pinsHtml}</div>
+            <div style="width:1px;height:${tickH}px;background:rgba(255,255,255,.2);"></div>
+            ${monthLabel}
+            ${fcHtml ? `<div style="display:flex;flex-direction:column;align-items:center;">${fcHtml}</div>` : ''}
+        `;
+        wrap.appendChild(col);
+    });
+
+    // Altura fixa — ícones são sempre horizontais, não empilham
+    const padTop = 1.9;
+    container.style.paddingTop = `${padTop}rem`;
+    document.querySelector('#ms-timeline-wrap > div:first-child').style.top = `calc(${padTop}rem + 8px)`;
+
+    // Inicializa tooltips Bootstrap
+    wrap.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el, { trigger: 'hover' }));
+})();
+
+// ── Tabela de acompanhamento de milestones ──────────────────────────────────
+(function buildMsGrid() {
+    const table = document.getElementById('ms-grid');
+    if (!table || !TMS_MILESTONES.length) return;
+
+    const MES_BR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const toMo  = ym => { const [y,m] = ym.slice(0,7).split('-').map(Number); return {y, mo: m}; };
+    const ckey  = (y,mo) => `${y}-${mo}`;
+
+    // Intervalo de anos a partir dos dados
+    const allY = new Set();
+    TMS_MILESTONES.forEach(m => {
+        if (m.mes)      allY.add(+m.mes.slice(0,4));
+        if (m.forecast) allY.add(+m.forecast.slice(0,4));
+        if (m.entregue) allY.add(+m.entregue.slice(0,4));
+    });
+    const minY = Math.min(...allY), maxY = Math.max(...allY);
+    const years = [];
+    for (let y = minY; y <= maxY; y++) years.push(y);
+
+    // ── Cabeçalho (colunas = meses) ────────────────────────────────────────────
+    const thead = table.createTHead();
+    const tr1   = thead.insertRow();
+    const tr2   = thead.insertRow();
+
+    const thName = document.createElement('th');
+    thName.rowSpan = 2;
+    thName.textContent = 'Marco';
+    thName.style.cssText = 'text-align:left;min-width:180px;width:220px;';
+    tr1.appendChild(thName);
+
+    years.forEach(y => {
+        const thY = document.createElement('th');
+        thY.colSpan = 12;
+        thY.textContent = y;
+        tr1.appendChild(thY);
+        for (let mo = 1; mo <= 12; mo++) {
+            const th2 = document.createElement('th');
+            th2.textContent = MES_BR[mo-1];
+            tr2.appendChild(th2);
+        }
+    });
+
+    // ── Linhas ───────────────────────────────────────────────────────────────
+    const tbody = table.createTBody();
+    TMS_MILESTONES.forEach(m => {
+        const tr = tbody.insertRow();
+
+        const tdN = tr.insertCell();
+        tdN.textContent = m.descricao;
+
+        // Monta mapa de marcadores por célula (chave = ano-mês)
+        const markers = {};
+        const addM = (ym, type) => {
+            if (!ym) return;
+            const {y, mo} = toMo(ym);
+            const k = ckey(y, mo);
+            (markers[k] = markers[k] || []).push({type});
+        };
+        addM(m.mes,      'plan');
+        addM(m.forecast, 'fc');
+        addM(m.entregue, 'done');
+
+        // Preenche células (uma por mês)
+        years.forEach(y => {
+            for (let mo = 1; mo <= 12; mo++) {
+                const td = tr.insertCell();
+                td.className = 'ms-cell';
+                const k = ckey(y, mo);
+                if (markers[k]) {
+                    markers[k].forEach(({type}) => {
+                        let icon, color, title;
+                        if      (type === 'plan') { icon = '♦'; color = '#2BB2EE'; title = 'Planejado'; }
+                        else if (type === 'fc')   { icon = '♦'; color = '#F0B34D'; title = 'Forecast'; }
+                        else                       { icon = '<i class="bi bi-check-circle-fill" style="font-size:.8rem;"></i>'; color = '#46C26A'; title = 'Realizado'; }
+                        td.innerHTML += `<div class="ms-marker" style="color:${color};" title="${title}">
+                            <span class="ms-marker-icon">${icon}</span>
+                        </div>`;
+                    });
+                }
+            }
+        });
+    });
+})();
+
 const LABELS     = {{ chart_labels|safe }};
-const CURVA_ACUM = {{ curva_acum|safe }};
-const CURVA_BASE = {{ curva_base|safe }};
+const CURVA_ACUM     = {{ curva_acum|safe }};
+const CURVA_BASE     = {{ curva_base|safe }};
+const CURVA_FC       = {{ curva_fc|safe }};
+const CURVA_REPL     = {{ curva_repl|safe }};
+const CURVA_FIS_ACUM = {{ curva_fis_acum|safe }};
+const CURVA_FIS_BASE = {{ curva_fis_base|safe }};
+const CURVA_FIS_FC   = {{ curva_fis_fc|safe }};
+const CURVA_FIS_REPL = {{ curva_fis_repl|safe }};
 const BAR_LABELS = {{ bar_labels|safe }};
 const BAR_MEDIDO = {{ bar_medido|safe }};
-const BAR_VALOR  = {{ bar_valor|safe }};
 const BAR_PCT    = {{ bar_pct|safe }};
 const CORES      = {{ cores|safe }};
 
@@ -205,42 +659,58 @@ const TICK = { color:'rgba(255,255,255,.35)', font:{ size:10 } };
 const rs = v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k';
 
 Chart.defaults.set('plugins.datalabels', {
-    color:'#fff', font:{ size:10, weight:700, family:"'Inter',sans-serif" },
+    color:'#fff', font:{ size:10, weight:700, family:"'IBM Plex Mono',monospace" },
     display: ctx => ctx.dataset.data[ctx.dataIndex] != null,
 });
 
 // Curva S consolidada
 if (document.getElementById('chartCurva') && LABELS.length) {
+    const dsFin = [
+        { label:'Realizado (R$)', data:CURVA_ACUM, borderColor:'#2BB2EE', backgroundColor:'rgba(0,212,255,.08)',
+          borderWidth:2, pointRadius:3, pointBackgroundColor:'#2BB2EE', fill:true, tension:.45 },
+        { label:'Forecast (R$)', data:CURVA_FC, borderColor:'#A78BFA', backgroundColor:'rgba(167,139,250,.06)',
+          borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, tension:.4, spanGaps:false }
+    ];
+    if (CURVA_REPL) dsFin.push(
+        { label:'Replanejado', data:CURVA_REPL, borderColor:'#FF8FA3', borderWidth:1.5, borderDash:[2,3], pointRadius:0, fill:false, tension:.4 });
+    dsFin.push(
+        { label:'Linha de Base', data:CURVA_BASE, borderColor:'#46C26A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:.4 });
     new Chart(document.getElementById('chartCurva'), {
         type:'line',
-        data:{ labels:LABELS, datasets:[
-            { label:'Realizado (R$)', data:CURVA_ACUM, borderColor:'#00d4ff', backgroundColor:'rgba(0,212,255,.08)',
-              borderWidth:2, pointRadius:3, pointBackgroundColor:'#00d4ff', fill:true, tension:.45 },
-            { label:'Linha de Base', data:CURVA_BASE, borderColor:'#8DC63F', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:.4 }
-        ]},
+        data:{ labels:LABELS, datasets:dsFin },
         options:{ responsive:true, maintainAspectRatio:false, animation:{duration:600},
             plugins:{
                 legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
-                tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
-                datalabels:{ display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null, align:'top', anchor:'end', color:'#5fe0ff', formatter: rs }
+                tooltip:{ callbacks:{ label: ctx => ctx.dataset.label==='Linha de Base'?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
+                datalabels:{ display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null, align:'top', anchor:'end', color:'#7fd4f5', formatter: rs }
             },
             scales:{ x:{ grid:{color:GRID}, ticks:TICK }, y:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>rs(v) }} }
         }
     });
 }
 
-// Donut: distribuição do valor contratado
-if (document.getElementById('chartDonut') && BAR_VALOR.length) {
-    new Chart(document.getElementById('chartDonut'), {
-        type:'doughnut',
-        data:{ labels:BAR_LABELS, datasets:[{ data:BAR_VALOR, backgroundColor:CORES, borderWidth:2, borderColor:'rgba(11,24,40,.6)', hoverOffset:4 }]},
-        options:{ responsive:true, maintainAspectRatio:false, cutout:'58%', animation:{duration:600},
+// Curva S Física consolidada
+if (document.getElementById('chartCurvaFis') && LABELS.length) {
+    const dsFis = [
+        { label:'Realizado (%)', data:CURVA_FIS_ACUM, borderColor:'#F0B34D', backgroundColor:'rgba(240,179,77,.08)',
+          borderWidth:2, pointRadius:3, pointBackgroundColor:'#F0B34D', fill:true, tension:.45 },
+        { label:'Forecast (%)', data:CURVA_FIS_FC, borderColor:'#A78BFA', backgroundColor:'rgba(167,139,250,.06)',
+          borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, tension:.4, spanGaps:false }
+    ];
+    if (CURVA_FIS_REPL) dsFis.push(
+        { label:'Replanejado', data:CURVA_FIS_REPL, borderColor:'#FF8FA3', borderWidth:1.5, borderDash:[2,3], pointRadius:0, fill:false, tension:.4 });
+    dsFis.push(
+        { label:'Linha de Base', data:CURVA_FIS_BASE, borderColor:'#46C26A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:.4 });
+    new Chart(document.getElementById('chartCurvaFis'), {
+        type:'line',
+        data:{ labels:LABELS, datasets:dsFis },
+        options:{ responsive:true, maintainAspectRatio:false, animation:{duration:600},
             plugins:{
-                legend:{ position:'bottom', labels:{ font:{size:9}, usePointStyle:true, padding:8, color:'rgba(255,255,255,.55)' }},
-                tooltip:{ callbacks:{ label: ctx=>' '+ctx.label+': R$ '+ctx.parsed.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
-                datalabels:{ color:'#fff', font:{size:9, weight:800},
-                    formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((a,b)=>a+b,0); const p=t?Math.round(v/t*100):0; return p>=6?p+'%':''; } }
-            }
+                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
+                tooltip:{ callbacks:{ label: ctx => ctx.dataset.label==='Linha de Base'?'':' '+ctx.parsed.y+'%' }},
+                datalabels:{ display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null, align:'top', anchor:'end', color:'#f7cc7a', formatter: v => v+'%' }
+            },
+            scales:{ x:{ grid:{color:GRID}, ticks:TICK }, y:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>v+'%' }, min:0, max:100 } }
         }
     });
 }
@@ -266,7 +736,7 @@ if (document.getElementById('chartPct') && BAR_LABELS.length) {
     new Chart(document.getElementById('chartPct'), {
         type:'bar',
         data:{ labels:BAR_LABELS, datasets:[{ label:'% Executado', data:BAR_PCT,
-            backgroundColor: BAR_PCT.map(p => p>=80?'rgba(125,218,36,.85)':(p>=40?'rgba(240,165,0,.85)':'rgba(0,212,255,.85)')),
+            backgroundColor: BAR_PCT.map(p => p>=80?'rgba(70,194,106,.9)':(p>=40?'rgba(240,179,77,.9)':'rgba(43,178,238,.9)')),
             borderRadius:4, borderSkipped:false }]},
         options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:{duration:600}, layout:{padding:{right:42}},
             plugins:{ legend:{display:false},
@@ -275,6 +745,86 @@ if (document.getElementById('chartPct') && BAR_LABELS.length) {
             },
             scales:{ x:{ grid:{color:GRID}, ticks:{ ...TICK, callback:v=>v+'%' }, max:100, beginAtZero:true },
                      y:{ grid:{display:false}, ticks:TICK } }
+        }
+    });
+}
+
+// ── Suprimento: gráfico por etapa (barra horizontal) ──────────────────────
+const SUP_ETAPA_LABELS = {{ sup_por_etapa_labels|safe }};
+const SUP_ETAPA_VALS   = {{ sup_por_etapa_vals|safe }};
+const SUP_ETAPA_CORES  = {{ sup_por_etapa_cores|safe }};
+const SUP_AREA_LABELS  = {{ sup_por_area_labels|safe }};
+const SUP_AREA_VALS    = {{ sup_por_area_vals|safe }};
+
+if (document.getElementById('chartSupEtapa') && SUP_ETAPA_VALS.reduce((a,b)=>a+b,0) > 0) {
+    new Chart(document.getElementById('chartSupEtapa'), {
+        type: 'bar',
+        data: {
+            labels: SUP_ETAPA_LABELS,
+            datasets: [{
+                label: 'Processos',
+                data: SUP_ETAPA_VALS,
+                backgroundColor: SUP_ETAPA_CORES.map(c => c + 'aa'),
+                borderColor:     SUP_ETAPA_CORES,
+                borderWidth: 1.5,
+                borderRadius: 6,
+                barThickness: 18,
+            }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            animation: { duration: 500 },
+            layout: { padding: { right: 30, top: 4, bottom: 4 } },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => '  ' + ctx.parsed.x + ' processo(s)' } },
+                datalabels: {
+                    anchor: 'end', align: 'end', clip: false,
+                    color: '#fff', font: { size: 11, weight: 700, family: "'IBM Plex Mono',monospace" },
+                    formatter: v => v > 0 ? v : ''
+                }
+            },
+            scales: {
+                x: { display: false, beginAtZero: true, max: Math.max(...SUP_ETAPA_VALS) + 1 },
+                y: { grid: { display: false },
+                     ticks: { color: 'rgba(255,255,255,.65)', font: { size: 10.5 }, padding: 4 } }
+            }
+        }
+    });
+}
+
+if (document.getElementById('chartSupArea') && SUP_AREA_VALS.reduce((a,b)=>a+b,0) > 0) {
+    const _aC = ['#2BB2EE','#46C26A','#F0B34D','#e07b00','#ff7a89','#a78bfa'];
+    new Chart(document.getElementById('chartSupArea'), {
+        type: 'doughnut',
+        data: {
+            labels: SUP_AREA_LABELS,
+            datasets: [{
+                data: SUP_AREA_VALS,
+                backgroundColor: _aC.slice(0, SUP_AREA_LABELS.length).map(c => c + 'b0'),
+                borderColor:     _aC.slice(0, SUP_AREA_LABELS.length),
+                borderWidth: 1.5, hoverOffset: 5
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '55%',
+            animation: { duration: 500 },
+            layout: { padding: 4 },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: 'rgba(255,255,255,.6)', font: { size: 9 }, usePointStyle: true, padding: 6, boxWidth: 8 }
+                },
+                tooltip: { callbacks: { label: ctx => '  ' + ctx.label + ': ' + ctx.parsed } },
+                datalabels: {
+                    color: '#fff', font: { size: 10, weight: 800 },
+                    formatter: (v, ctx) => {
+                        const t = ctx.dataset.data.reduce((a,b)=>a+b,0);
+                        const p = t ? Math.round(v/t*100) : 0;
+                        return p >= 8 ? p + '%' : '';
+                    }
+                }
+            }
         }
     });
 }

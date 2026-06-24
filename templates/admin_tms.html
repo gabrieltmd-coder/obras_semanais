@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações TMS{% endblock %}
+{% block page_icon %}<i class="bi bi-gear-wide-connected"></i>{% endblock %}
+{% block page_title %}Configurações TMS{% endblock %}
+{% block breadcrumb %}Programa Mãe — configurações globais{% endblock %}
+
+{% block content %}
+<style>
+.sec-title {
+    font-family:'Archivo',sans-serif; font-size:.84rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.02em; color:var(--ink);
+    display:flex; align-items:center; gap:.5rem;
+    border-bottom:1.5px solid var(--ink); padding-bottom:.55rem; margin-bottom:1rem;
+}
+.sec-title::before { content:''; width:9px; height:1em; background:var(--cyan); transform:skewX(-14deg); flex-shrink:0; }
+.sec-title i { color:var(--ink); font-size:1rem; }
+.adm-input {
+    width:100%; border:1px solid var(--tms-border); border-radius:4px;
+    padding:.35rem .65rem; font-size:.8rem; color:var(--tms-text);
+    background:#fff; transition:border-color .15s;
+}
+.adm-input:focus { outline:none; border-color:var(--tms-cyan); box-shadow:0 0 0 3px rgba(27,159,216,.16); }
+.btn-add-row {
+    background: none; border:1px dashed var(--tms-cyan); color:var(--tms-cyan);
+    border-radius:4px; padding:.3rem .9rem; font-size:.72rem; font-weight:700;
+    cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:.3rem;
+}
+.btn-add-row:hover { background:rgba(27,159,216,.1); }
+.hth {
+    font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--tms-muted); padding:.38rem .45rem; background:#eef2f7;
+    border-bottom:2px solid var(--tms-dark); border-right:1px solid #dce6f0;
+    white-space:nowrap; text-align:center; position:sticky; top:0; z-index:2;
+}
+.hth-fix { text-align:left; z-index:4 !important; }
+.htd {
+    padding:.25rem .3rem; border-bottom:1px solid #f0f4f8;
+    border-right:1px solid #eef2f7; vertical-align:middle;
+}
+.serie-cell { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary-rumo btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar ao Dashboard
+    </a>
+</div>
+
+<form method="post" id="tmsForm">
+    <!-- IDENTIDADE DO PROGRAMA -->
+    <div class="card-rumo mb-4">
+        <div class="card-header">
+            <i class="bi bi-briefcase"></i>Identidade do Programa
+        </div>
+        <div class="p-4">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">Nome do Programa</label>
+                    <input type="text" name="nome_programa" class="form-control"
+                           value="{{ cfg.get('nome_programa', '') }}"
+                           placeholder="Ex: Programa de Obras Ferroviárias TMS">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Sigla</label>
+                    <input type="text" name="sigla" class="form-control"
+                           value="{{ cfg.get('sigla', '') }}"
+                           placeholder="Ex: TMS">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Cliente / Contratante</label>
+                    <input type="text" name="cliente" class="form-control"
+                           value="{{ cfg.get('cliente', '') }}"
+                           placeholder="Nome do cliente ou órgão contratante">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Local / Região</label>
+                    <input type="text" name="local" class="form-control"
+                           value="{{ cfg.get('local', '') }}"
+                           placeholder="Ex: São Paulo — SP">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Objeto / Descrição</label>
+                    <textarea name="objeto" class="form-control" rows="3"
+                              placeholder="Descrição resumida do escopo do programa">{{ cfg.get('objeto', '') }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATAS E VALOR -->
+    <div class="card-rumo mb-4">
+        <div class="card-header">
+            <i class="bi bi-calendar-range"></i>Prazo e Valor
+        </div>
+        <div class="p-4">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Data de Início</label>
+                    <input type="month" name="data_inicio" id="tmsDataInicio" class="form-control"
+                           value="{{ cfg.get('data_inicio', '') }}" onchange="onTmsDatesChange()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data de Término Prevista</label>
+                    <input type="month" name="data_fim" id="tmsDataFim" class="form-control"
+                           value="{{ cfg.get('data_fim', '') }}" onchange="onTmsDatesChange()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Valor Total do Programa (R$)</label>
+                    <input type="number" name="valor_programa" class="form-control"
+                           step="0.01" min="0"
+                           value="{{ cfg.get('valor_programa', '') }}"
+                           placeholder="0,00">
+                    <small class="text-muted" style="font-size:.7rem;">Referência geral — independe do somatório dos contratos.</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Responsável Técnico</label>
+                    <input type="text" name="responsavel" class="form-control"
+                           value="{{ cfg.get('responsavel', '') }}"
+                           placeholder="Nome do gerente ou responsável técnico">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LINHA DE BASE FINANCEIRA (matriz mensal) -->
+    <div class="card-rumo mb-4">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-cash-stack"></i>Linha de Base Financeira por Mês</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Valor financeiro planejado mês a mês para o programa. As colunas são geradas
+                automaticamente a partir do <strong>Início</strong> e do <strong>Término</strong> definidos acima.
+            </p>
+            <div id="finNoDates" style="padding:1.5rem; text-align:center; color:var(--tms-muted);
+                 font-size:.82rem; background:var(--tms-bg); border-radius:8px;
+                 border:1px dashed var(--tms-border);">
+                <i class="bi bi-calendar-range" style="font-size:1.8rem; display:block; margin-bottom:.5rem; color:var(--tms-border);"></i>
+                Defina o Início e o Término do programa para gerar as colunas de mês.
+            </div>
+            <div id="finWrap" style="display:none;">
+                <div id="finTableWrap" style="overflow-x:auto; border:1px solid var(--tms-border);
+                     border-radius:8px; max-height:260px; overflow-y:auto;">
+                    <table id="finTable" style="border-collapse:collapse; min-width:100%;">
+                        <thead id="finThead"></thead>
+                        <tbody id="finTbody"></tbody>
+                    </table>
+                </div>
+                <div class="d-flex gap-2 mt-2 flex-wrap">
+                    <button type="button" class="btn-add-row" style="width:auto;" onclick="addFinMes()">
+                        <i class="bi bi-calendar-plus"></i>Adicionar Mês
+                    </button>
+                    <button type="button" class="btn-add-row" style="width:auto;" id="btnFinRepl" onclick="addFinReplanejado()">
+                        <i class="bi bi-arrow-repeat"></i><span id="btnFinReplLbl">Adicionar Replanejado</span>
+                    </button>
+                </div>
+            </div>
+            <input type="hidden" name="lb_fin_json"       id="lbFinJson">
+            <input type="hidden" name="lb_fin_fcst_json"  id="lbFinFcstJson">
+            <input type="hidden" name="lb_fin_repls_json" id="lbFinReplsJson">
+            <input type="hidden" name="lb_fin_repl_n"     id="lbFinReplN" value="0">
+            <input type="hidden" name="lb_fin_extra_json" id="lbFinExtraJson">
+        </div>
+    </div>
+
+    <!-- LINHA DE BASE FÍSICA (matriz mensal) -->
+    <div class="card-rumo mb-4">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-bar-chart-line"></i>Linha de Base Física por Mês</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Percentual de avanço físico planejado mês a mês para o programa. As colunas são geradas
+                automaticamente a partir do <strong>Início</strong> e do <strong>Término</strong> definidos acima.
+            </p>
+            <div id="fisNoDates" style="padding:1.5rem; text-align:center; color:var(--tms-muted);
+                 font-size:.82rem; background:var(--tms-bg); border-radius:8px;
+                 border:1px dashed var(--tms-border);">
+                <i class="bi bi-calendar-range" style="font-size:1.8rem; display:block; margin-bottom:.5rem; color:var(--tms-border);"></i>
+                Defina o Início e o Término do programa para gerar as colunas de mês.
+            </div>
+            <div id="fisWrap" style="display:none;">
+                <div id="fisTableWrap" style="overflow-x:auto; border:1px solid var(--tms-border);
+                     border-radius:8px; max-height:260px; overflow-y:auto;">
+                    <table id="fisTable" style="border-collapse:collapse; min-width:100%;">
+                        <thead id="fisThead"></thead>
+                        <tbody id="fisTbody"></tbody>
+                    </table>
+                </div>
+                <div class="d-flex gap-2 mt-2 flex-wrap">
+                    <button type="button" class="btn-add-row" style="width:auto;" onclick="addFisMes()">
+                        <i class="bi bi-calendar-plus"></i>Adicionar Mês
+                    </button>
+                    <button type="button" class="btn-add-row" style="width:auto;" id="btnFisRepl" onclick="addFisReplanejado()">
+                        <i class="bi bi-arrow-repeat"></i><span id="btnFisReplLbl">Adicionar Replanejado</span>
+                    </button>
+                </div>
+            </div>
+            <input type="hidden" name="lb_fis_json"       id="lbFisJson">
+            <input type="hidden" name="lb_fis_fcst_json"  id="lbFisFcstJson">
+            <input type="hidden" name="lb_fis_repls_json" id="lbFisReplsJson">
+            <input type="hidden" name="lb_fis_repl_n"     id="lbFisReplN" value="0">
+            <input type="hidden" name="lb_fis_extra_json" id="lbFisExtraJson">
+        </div>
+    </div>
+
+    <!-- MILESTONES -->
+    <div class="card-rumo mb-4">
+        <div class="card-header" style="display:flex; align-items:center; justify-content:space-between;">
+            <span><i class="bi bi-flag-fill"></i>Milestones do Projeto</span>
+            <button type="button" onclick="addMsRow()" class="btn btn-primary-rumo btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>Adicionar
+            </button>
+        </div>
+        <div class="p-3">
+            <table style="width:100%; border-collapse:collapse; font-size:.82rem;" id="ms-table">
+                <thead>
+                    <tr style="background:var(--tms-bg);">
+                        <th style="padding:.4rem .6rem; font-size:.65rem; text-transform:uppercase; color:var(--tms-muted); font-weight:700; letter-spacing:.06em; width:148px;">Data Planejada</th>
+                        <th style="padding:.4rem .6rem; font-size:.65rem; text-transform:uppercase; color:#b35309; font-weight:700; letter-spacing:.06em; width:148px;"><i class="bi bi-arrow-right me-1"></i>Forecast</th>
+                        <th style="padding:.4rem .6rem; font-size:.65rem; text-transform:uppercase; color:#1f9e4a; font-weight:700; letter-spacing:.06em; width:148px;"><i class="bi bi-check-circle me-1"></i>Entregue</th>
+                        <th style="padding:.4rem .6rem; font-size:.65rem; text-transform:uppercase; color:var(--tms-muted); font-weight:700; letter-spacing:.06em;">Descrição</th>
+                        <th style="width:36px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="ms-tbody"></tbody>
+            </table>
+            <div id="ms-vazio" style="text-align:center; padding:1.5rem; color:var(--tms-muted); font-size:.8rem; display:none;">
+                <i class="bi bi-flag" style="font-size:1.4rem; display:block; margin-bottom:.35rem; opacity:.3;"></i>
+                Nenhum milestone cadastrado. Clique em "Adicionar" para começar.
+            </div>
+            <input type="hidden" name="milestones_json" id="milestones-json" value="">
+        </div>
+    </div>
+
+    {% if cfg.get('atualizado_em') %}
+    <p style="font-size:.7rem; color:var(--tms-muted);">
+        <i class="bi bi-clock me-1"></i>Última atualização: {{ cfg.atualizado_em[:16].replace('T',' ') }}
+        por <strong>{{ cfg.get('atualizado_por', '—') }}</strong>
+    </p>
+    {% endif %}
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary-rumo">
+            <i class="bi bi-floppy me-1"></i>Salvar Configurações
+        </button>
+        <a href="{{ url_for('admin') }}" class="btn btn-secondary-rumo">Cancelar</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MS_INIT = {{ cfg.get('milestones', [])|tojson }};
+
+function addMsRow(ms) {
+    const mes      = ms ? ms.mes       : '';
+    const desc     = ms ? ms.descricao : '';
+    const forecast = ms ? (ms.forecast  || '') : '';
+    const entregue = ms ? (ms.entregue  || '') : '';
+    const fcStyle  = forecast && forecast !== mes ? 'border-color:#f59e0b;background:rgba(245,158,11,.06);' : '';
+    const enStyle  = entregue ? 'border-color:#1f9e4a;background:rgba(31,158,74,.06);' : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td style="padding:.3rem .4rem;">
+            <input type="month" class="form-control form-control-sm ms-mes" value="${mes}" required style="min-width:140px;">
+        </td>
+        <td style="padding:.3rem .4rem;">
+            <input type="month" class="form-control form-control-sm ms-forecast" value="${forecast}"
+                   style="min-width:140px;${fcStyle}" oninput="updateFcStyle(this)">
+        </td>
+        <td style="padding:.3rem .4rem;">
+            <input type="month" class="form-control form-control-sm ms-entregue" value="${entregue}"
+                   style="min-width:140px;${enStyle}" oninput="updateEntregueStyle(this)">
+        </td>
+        <td style="padding:.3rem .4rem;">
+            <input type="text" class="form-control form-control-sm ms-desc" value="${desc ? desc.replace(/"/g,'&quot;') : ''}" placeholder="Descrição do milestone" required>
+        </td>
+        <td style="padding:.3rem .2rem; text-align:center;">
+            <button type="button" onclick="this.closest('tr').remove(); _refreshEmpty();"
+                    class="btn btn-danger-rumo btn-sm" title="Remover">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>`;
+    document.getElementById('ms-tbody').appendChild(tr);
+    _refreshEmpty();
+}
+
+function updateFcStyle(inp) {
+    const mes = inp.closest('tr').querySelector('.ms-mes').value;
+    if (inp.value && inp.value !== mes) {
+        inp.style.borderColor = '#f59e0b'; inp.style.background = 'rgba(245,158,11,.06)';
+    } else { inp.style.borderColor = ''; inp.style.background = ''; }
+}
+
+function updateEntregueStyle(inp) {
+    if (inp.value) {
+        inp.style.borderColor = '#1f9e4a'; inp.style.background = 'rgba(31,158,74,.06)';
+    } else { inp.style.borderColor = ''; inp.style.background = ''; }
+}
+
+function _refreshEmpty() {
+    const rows = document.getElementById('ms-tbody').rows.length;
+    document.getElementById('ms-vazio').style.display = rows ? 'none' : '';
+    document.querySelector('#ms-table thead').style.display = rows ? '' : 'none';
+}
+
+
+// Serialize on submit
+document.getElementById('tmsForm').addEventListener('submit', function() {
+    const rows = document.querySelectorAll('#ms-tbody tr');
+    const data = [];
+    rows.forEach(tr => {
+        const mes      = tr.querySelector('.ms-mes').value.trim();
+        const desc     = tr.querySelector('.ms-desc').value.trim();
+        const forecast = tr.querySelector('.ms-forecast').value.trim();
+        const entregue = tr.querySelector('.ms-entregue').value.trim();
+        if (mes && desc) {
+            const obj = { mes, descricao: desc };
+            if (forecast) obj.forecast = forecast;
+            if (entregue) obj.entregue = entregue;
+            data.push(obj);
+        }
+    });
+    // Sort by month
+    data.sort((a, b) => a.mes.localeCompare(b.mes));
+    document.getElementById('milestones-json').value = JSON.stringify(data);
+});
+
+// Init
+MS_INIT.forEach(ms => addMsRow(ms));
+if (!MS_INIT.length) _refreshEmpty();
+
+
+// ════════════ LINHAS DE BASE MENSAIS (Financeira + Física) ════════════════════
+const _LB_FIN_INIT  = {{ cfg.get('lb_fin_planejado',     {})|tojson }};
+const _LB_FIN_LEG   = {{ cfg.get('linha_base_financeira',[])|tojson }};
+const _LB_FIN_FCST  = {{ cfg.get('lb_fin_forecast',      {})|tojson }};
+const _LB_FIN_REPLS = {{ cfg.get('lb_fin_replanejados',  [])|tojson }};
+const _FIN_REPL_N_I = {{ cfg.get('lb_fin_repl_n',         0)|tojson }};
+const _LB_FIN_EXTRA = {{ cfg.get('lb_fin_extra',         [])|tojson }};
+const _LB_FIS_INIT  = {{ cfg.get('lb_fis_planejado',     {})|tojson }};
+const _LB_FIS_LEG   = {{ cfg.get('linha_base_fisica',    [])|tojson }};
+const _LB_FIS_FCST  = {{ cfg.get('lb_fis_forecast',      {})|tojson }};
+const _LB_FIS_REPLS = {{ cfg.get('lb_fis_replanejados',  [])|tojson }};
+const _FIS_REPL_N_I = {{ cfg.get('lb_fis_repl_n',         0)|tojson }};
+const _LB_FIS_EXTRA = {{ cfg.get('lb_fis_extra',         [])|tojson }};
+const _FIN_REAL = {};   // sem realizado a nível de programa
+const _FIS_REAL = {};
+const REPL_MAX = 3;
+const REPL_COLORS = ['#7a4ddb', '#c2185b', '#00796b'];   // roxo, magenta, teal
+
+function _fmtMonth(ym) {
+    const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const [y, mo] = ym.split('-');
+    return M[+mo - 1] + "'" + y.slice(2);
+}
+
+// Gera meses "YYYY-MM" entre início e fim (ambos no formato YYYY-MM)
+function _genMonthsTMS(startYM, endYM) {
+    if (!startYM || !endYM || startYM > endYM) return [];
+    let [y, m] = startYM.split('-').map(Number);
+    const [ey, em] = endYM.split('-').map(Number);
+    const out = [];
+    while (y < ey || (y === ey && m <= em)) {
+        out.push(`${y}-${String(m).padStart(2, '0')}`);
+        m++; if (m > 12) { m = 1; y++; }
+    }
+    return out;
+}
+
+let _baseMonths = [];
+let _finPlan = {}, _finFcst = {}, _finRepls = [], _finReplN = 0, _finExtra = [];
+let _fisPlan = {}, _fisFcst = {}, _fisRepls = [], _fisReplN = 0, _fisExtra = [];
+function _finMonthsAll() { return _baseMonths.concat(_finExtra); }
+function _fisMonthsAll() { return _baseMonths.concat(_fisExtra); }
+
+function _syncFinFromDOM() {
+    const months = _finMonthsAll();
+    document.querySelectorAll('[data-fp]').forEach(el => {
+        const mi = +el.dataset.fp;
+        if (months[mi] !== undefined) _finPlan[months[mi]] = parseFloat(el.value) || 0;
+    });
+    document.querySelectorAll('[data-ff]').forEach(el => {
+        const mi = +el.dataset.ff;
+        if (months[mi] !== undefined) _finFcst[months[mi]] = parseFloat(el.value) || 0;
+    });
+    document.querySelectorAll('[data-frp]').forEach(el => {
+        const [ms, is] = el.dataset.frp.split(':');
+        const mi = +ms, ii = +is;
+        if (months[mi] !== undefined) {
+            while (_finRepls.length <= ii) _finRepls.push({});
+            _finRepls[ii][months[mi]] = parseFloat(el.value) || 0;
+        }
+    });
+}
+
+function _syncFisFromDOM() {
+    const months = _fisMonthsAll();
+    document.querySelectorAll('[data-gp]').forEach(el => {
+        const mi = +el.dataset.gp;
+        if (months[mi] !== undefined) _fisPlan[months[mi]] = parseFloat(el.value) || 0;
+    });
+    document.querySelectorAll('[data-gf]').forEach(el => {
+        const mi = +el.dataset.gf;
+        if (months[mi] !== undefined) _fisFcst[months[mi]] = parseFloat(el.value) || 0;
+    });
+    document.querySelectorAll('[data-grp]').forEach(el => {
+        const [ms, is] = el.dataset.grp.split(':');
+        const mi = +ms, ii = +is;
+        if (months[mi] !== undefined) {
+            while (_fisRepls.length <= ii) _fisRepls.push({});
+            _fisRepls[ii][months[mi]] = parseFloat(el.value) || 0;
+        }
+    });
+}
+
+// Constrói a tabela mensal (compartilhado por Financeira e Física)
+function _rebuildMonthTable(cfg) {
+    const { wrapId, noDatesId, theadId, tbodyId, monthsAll, extraList,
+            plan, fcst, repls, replN, realData,
+            planAttr, fcstAttr, replAttr, unit, step,
+            removeMonthFn, removeReplFn } = cfg;
+    const wrap = document.getElementById(wrapId);
+    const noDates = document.getElementById(noDatesId);
+    const months = monthsAll();
+    if (months.length === 0) {
+        wrap.style.display = 'none'; noDates.style.display = '';
+        return;
+    }
+    wrap.style.display = ''; noDates.style.display = 'none';
+
+    // última mês com realizado → Replanejado só a partir daqui
+    let lastReal = null;
+    months.forEach(ym => { if (realData[ym] != null) lastReal = ym; });
+
+    // cabeçalho
+    let hHtml = '<tr>';
+    hHtml += `<th class="hth hth-fix" style="position:sticky;left:0;min-width:110px;background:#eef2f7;">Série</th>`;
+    months.forEach(ym => {
+        const isExtra = extraList.includes(ym);
+        hHtml += `<th class="hth" style="min-width:90px;${isExtra ? 'background:#fff3e0;' : ''}">` +
+                 _fmtMonth(ym) +
+                 (isExtra ? `<br><button type="button" onclick="${removeMonthFn}('${ym}')" ` +
+                     `style="border:none;background:none;color:#c8324b;cursor:pointer;font-size:.6rem;padding:0;line-height:1;">✕</button>` : '') +
+                 `</th>`;
+    });
+    hHtml += `</tr>`;
+    document.getElementById(theadId).innerHTML = hHtml;
+
+    const SERIES = [
+        { key:'plan', label:'Planejado', color:'#5B6B7B' },
+        { key:'fcst', label:'Forecast',  color:'#127aa8' },
+        { key:'real', label:'Real',      color:'#2e7d32' },
+    ];
+    for (let i = 0; i < replN; i++) {
+        SERIES.push({ key:'repl', idx:i, color: REPL_COLORS[i],
+            label: 'Replanejado' + (replN > 1 ? ' ' + (i + 1) : '') });
+    }
+
+    let bHtml = '';
+    SERIES.forEach((s, si) => {
+        const bg = si % 2 === 0 ? '#fff' : '#f8fafc';
+        bHtml += `<tr>`;
+        if (s.key === 'repl') {
+            bHtml += `<td class="htd serie-cell" style="position:sticky;left:0;z-index:1;background:${bg};min-width:110px;color:${s.color};">${s.label} ` +
+                     `<button type="button" onclick="${removeReplFn}(${s.idx})" style="border:none;background:none;color:${s.color};cursor:pointer;font-size:.7rem;padding:0;">✕</button></td>`;
+        } else {
+            bHtml += `<td class="htd serie-cell" style="position:sticky;left:0;z-index:1;background:${bg};min-width:110px;color:${s.color};">${s.label}</td>`;
+        }
+        months.forEach((ym, mi) => {
+            if (s.key === 'plan') {
+                const v = plan[ym] !== undefined ? plan[ym] : '';
+                bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                    `<input type="number" class="adm-input" data-${planAttr}="${mi}" value="${v}" min="0" step="${step}" ` +
+                    `style="width:84px;text-align:right;padding:.22rem .4rem;font-size:.78rem;" placeholder="0"></td>`;
+            } else if (s.key === 'fcst') {
+                let fv = fcst[ym] !== undefined ? fcst[ym] : (plan[ym] !== undefined ? plan[ym] : '');
+                const pv = parseFloat(plan[ym]) || 0, fvn = parseFloat(fv);
+                let fcolor = '#0a2540';
+                if (!isNaN(fvn) && fvn !== pv) fcolor = fvn > pv ? '#c8324b' : '#1f9e4a';
+                bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                    `<input type="number" class="adm-input" data-${fcstAttr}="${mi}" value="${fv}" min="0" step="${step}" ` +
+                    `style="width:84px;text-align:right;padding:.22rem .4rem;font-size:.78rem;font-weight:600;color:${fcolor};" placeholder="0"></td>`;
+            } else if (s.key === 'real') {
+                const rv = realData[ym];
+                const pv = parseFloat(plan[ym]) || 0;
+                let rcolor = '#5B6B7B';
+                if (rv != null) rcolor = rv < pv ? '#c8324b' : (rv > pv ? '#1f9e4a' : '#5B6B7B');
+                const disp = rv != null
+                    ? (unit === '%' ? rv.toFixed(1) + '%' : 'R$ ' + rv.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0}))
+                    : null;
+                bHtml += `<td class="htd" style="background:${bg};text-align:right;padding-right:.5rem;font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:600;color:${rcolor};">` +
+                    (disp ? disp : `<span style="color:#c0ccd8;">—</span>`) + `</td>`;
+            } else if (s.key === 'repl') {
+                if (lastReal === null || ym >= lastReal) {
+                    const rpv = repls[s.idx] ? (repls[s.idx][ym] !== undefined ? repls[s.idx][ym] : '') : '';
+                    bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                        `<input type="number" class="adm-input" data-${replAttr}="${mi}:${s.idx}" value="${rpv}" min="0" step="${step}" ` +
+                        `style="width:84px;text-align:right;padding:.22rem .4rem;font-size:.78rem;font-weight:600;color:${s.color};" placeholder="0"></td>`;
+                } else {
+                    bHtml += `<td class="htd" style="background:${bg};text-align:center;color:#c0ccd8;">—</td>`;
+                }
+            }
+        });
+        bHtml += `</tr>`;
+    });
+    document.getElementById(tbodyId).innerHTML = bHtml;
+}
+
+function _rebuildFin() {
+    _rebuildMonthTable({
+        wrapId:'finWrap', noDatesId:'finNoDates', theadId:'finThead', tbodyId:'finTbody',
+        monthsAll: _finMonthsAll, extraList: _finExtra,
+        plan: _finPlan, fcst: _finFcst, repls: _finRepls, replN: _finReplN, realData: _FIN_REAL,
+        planAttr:'fp', fcstAttr:'ff', replAttr:'frp', unit:'R$', step:'1',
+        removeMonthFn:'removeFinMes', removeReplFn:'removeFinReplanejado',
+    });
+}
+
+function _rebuildFis() {
+    _rebuildMonthTable({
+        wrapId:'fisWrap', noDatesId:'fisNoDates', theadId:'fisThead', tbodyId:'fisTbody',
+        monthsAll: _fisMonthsAll, extraList: _fisExtra,
+        plan: _fisPlan, fcst: _fisFcst, repls: _fisRepls, replN: _fisReplN, realData: _FIS_REAL,
+        planAttr:'gp', fcstAttr:'gf', replAttr:'grp', unit:'%', step:'0.01',
+        removeMonthFn:'removeFisMes', removeReplFn:'removeFisReplanejado',
+    });
+}
+
+// Financeira — ações dos botões
+function addFinMes() {
+    _syncFinFromDOM();
+    const months = _finMonthsAll();
+    let nextM;
+    if (months.length) {
+        let [y, m] = months[months.length - 1].split('-').map(Number);
+        m++; if (m > 12) { m = 1; y++; }
+        nextM = `${y}-${String(m).padStart(2, '0')}`;
+    } else {
+        const now = new Date();
+        nextM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+    if (!_finExtra.includes(nextM)) _finExtra.push(nextM);
+    _rebuildFin();
+}
+function removeFinMes(ym) { _syncFinFromDOM(); _finExtra = _finExtra.filter(m => m !== ym); _rebuildFin(); }
+function _updateFinReplBtn() {
+    const lbl = document.getElementById('btnFinReplLbl');
+    const btn = document.getElementById('btnFinRepl');
+    if (lbl) lbl.textContent = `Adicionar Replanejado (${_finReplN}/${REPL_MAX})`;
+    if (btn) { btn.disabled = _finReplN >= REPL_MAX; btn.style.opacity = _finReplN >= REPL_MAX ? '.5' : ''; btn.style.cursor = _finReplN >= REPL_MAX ? 'not-allowed' : ''; }
+}
+function addFinReplanejado() {
+    if (_finReplN >= REPL_MAX) return;
+    _syncFinFromDOM(); _finReplN++; _updateFinReplBtn(); _rebuildFin();
+}
+function removeFinReplanejado(idx) {
+    _syncFinFromDOM(); _finRepls.splice(idx, 1); _finReplN = Math.max(0, _finReplN - 1); _updateFinReplBtn(); _rebuildFin();
+}
+function serializeFin() {
+    _syncFinFromDOM();
+    document.getElementById('lbFinJson').value      = JSON.stringify(_finPlan);
+    document.getElementById('lbFinFcstJson').value  = JSON.stringify(_finFcst);
+    document.getElementById('lbFinReplsJson').value = JSON.stringify(_finRepls);
+    document.getElementById('lbFinReplN').value     = String(_finReplN);
+    document.getElementById('lbFinExtraJson').value = JSON.stringify(_finExtra);
+}
+
+// Física — ações dos botões
+function addFisMes() {
+    _syncFisFromDOM();
+    const months = _fisMonthsAll();
+    let nextM;
+    if (months.length) {
+        let [y, m] = months[months.length - 1].split('-').map(Number);
+        m++; if (m > 12) { m = 1; y++; }
+        nextM = `${y}-${String(m).padStart(2, '0')}`;
+    } else {
+        const now = new Date();
+        nextM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+    if (!_fisExtra.includes(nextM)) _fisExtra.push(nextM);
+    _rebuildFis();
+}
+function removeFisMes(ym) { _syncFisFromDOM(); _fisExtra = _fisExtra.filter(m => m !== ym); _rebuildFis(); }
+function _updateFisReplBtn() {
+    const lbl = document.getElementById('btnFisReplLbl');
+    const btn = document.getElementById('btnFisRepl');
+    if (lbl) lbl.textContent = `Adicionar Replanejado (${_fisReplN}/${REPL_MAX})`;
+    if (btn) { btn.disabled = _fisReplN >= REPL_MAX; btn.style.opacity = _fisReplN >= REPL_MAX ? '.5' : ''; btn.style.cursor = _fisReplN >= REPL_MAX ? 'not-allowed' : ''; }
+}
+function addFisReplanejado() {
+    if (_fisReplN >= REPL_MAX) return;
+    _syncFisFromDOM(); _fisReplN++; _updateFisReplBtn(); _rebuildFis();
+}
+function removeFisReplanejado(idx) {
+    _syncFisFromDOM(); _fisRepls.splice(idx, 1); _fisReplN = Math.max(0, _fisReplN - 1); _updateFisReplBtn(); _rebuildFis();
+}
+function serializeFis() {
+    _syncFisFromDOM();
+    document.getElementById('lbFisJson').value      = JSON.stringify(_fisPlan);
+    document.getElementById('lbFisFcstJson').value  = JSON.stringify(_fisFcst);
+    document.getElementById('lbFisReplsJson').value = JSON.stringify(_fisRepls);
+    document.getElementById('lbFisReplN').value     = String(_fisReplN);
+    document.getElementById('lbFisExtraJson').value = JSON.stringify(_fisExtra);
+}
+
+// Recalcula as colunas quando as datas do programa mudam
+function onTmsDatesChange() {
+    _syncFinFromDOM(); _syncFisFromDOM();
+    const s = document.getElementById('tmsDataInicio').value;
+    const e = document.getElementById('tmsDataFim').value;
+    _baseMonths = _genMonthsTMS(s, e);
+    _rebuildFin(); _rebuildFis();
+}
+
+// Inicializa estado das linhas de base (migra do formato legado se necessário)
+(function _initBaselines() {
+    if (_LB_FIN_INIT && Object.keys(_LB_FIN_INIT).length > 0) {
+        _finPlan = Object.assign({}, _LB_FIN_INIT);
+    } else {
+        (_LB_FIN_LEG || []).forEach(item => { _finPlan[item.semana] = item.valor; });
+    }
+    _finFcst  = Object.assign({}, _LB_FIN_FCST  || {});
+    _finRepls = (_LB_FIN_REPLS || []).map(r => Object.assign({}, r));
+    _finExtra = (_LB_FIN_EXTRA || []).slice();
+    _finReplN = Math.min(REPL_MAX, (_FIN_REPL_N_I || 0) || _finRepls.length);
+    _updateFinReplBtn();
+
+    if (_LB_FIS_INIT && Object.keys(_LB_FIS_INIT).length > 0) {
+        _fisPlan = Object.assign({}, _LB_FIS_INIT);
+    } else {
+        (_LB_FIS_LEG || []).forEach(item => { _fisPlan[item.semana] = item.percentual; });
+    }
+    _fisFcst  = Object.assign({}, _LB_FIS_FCST  || {});
+    _fisRepls = (_LB_FIS_REPLS || []).map(r => Object.assign({}, r));
+    _fisExtra = (_LB_FIS_EXTRA || []).slice();
+    _fisReplN = Math.min(REPL_MAX, (_FIS_REPL_N_I || 0) || _fisRepls.length);
+    _updateFisReplBtn();
+
+    onTmsDatesChange();
+})();
+
+// Serializa as linhas de base ao enviar o formulário
+document.getElementById('tmsForm').addEventListener('submit', function() {
+    serializeFin();
+    serializeFis();
+});
+</script>
+{% endblock %}

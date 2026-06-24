@@ -8,12 +8,13 @@
 {% block content %}
 <style>
 .sec-title {
-    font-family:'Montserrat',sans-serif; font-size:.72rem; font-weight:800;
-    text-transform:uppercase; letter-spacing:.10em; color:var(--tms-dark);
-    display:flex; align-items:center; gap:.45rem;
-    border-bottom:2px solid var(--tms-border); padding-bottom:.55rem; margin-bottom:1rem;
+    font-family:'Archivo',sans-serif; font-size:.84rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.02em; color:var(--ink);
+    display:flex; align-items:center; gap:.5rem;
+    border-bottom:1.5px solid var(--ink); padding-bottom:.55rem; margin-bottom:1rem;
 }
-.sec-title i { color:var(--tms-cyan); font-size:1rem; }
+.sec-title::before { content:''; width:9px; height:1em; background:var(--cyan); transform:skewX(-14deg); flex-shrink:0; }
+.sec-title i { color:var(--ink); font-size:1rem; }
 .adm-table { width:100%; border-collapse:collapse; }
 .adm-table th {
     font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
@@ -23,24 +24,24 @@
 .adm-table td { padding:.35rem .5rem; vertical-align:middle; }
 .adm-table tr:not(:last-child) td { border-bottom:1px solid #f0f4f8; }
 .adm-input {
-    width:100%; border:1px solid var(--tms-border); border-radius:7px;
+    width:100%; border:1px solid var(--tms-border); border-radius:4px;
     padding:.35rem .65rem; font-size:.8rem; color:var(--tms-text);
     background:#fff; transition:border-color .15s;
 }
-.adm-input:focus { outline:none; border-color:var(--tms-cyan); box-shadow:0 0 0 3px rgba(0,174,239,.12); }
+.adm-input:focus { outline:none; border-color:var(--tms-cyan); box-shadow:0 0 0 3px rgba(27,159,216,.16); }
 .adm-input[readonly] { background:#f0f4f8; color:#9aa7b4; cursor:not-allowed; }
 .adm-select {
-    width:100%; border:1px solid var(--tms-border); border-radius:7px;
+    width:100%; border:1px solid var(--tms-border); border-radius:4px;
     padding:.35rem .65rem; font-size:.8rem; color:var(--tms-text);
     background:#fff; cursor:pointer;
 }
 .adm-select:focus { outline:none; border-color:var(--tms-cyan); }
 .btn-add-row {
     background: none; border:1px dashed var(--tms-cyan); color:var(--tms-cyan);
-    border-radius:7px; padding:.3rem .9rem; font-size:.72rem; font-weight:700;
+    border-radius:4px; padding:.3rem .9rem; font-size:.72rem; font-weight:700;
     cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:.3rem;
 }
-.btn-add-row:hover { background:rgba(0,174,239,.08); }
+.btn-add-row:hover { background:rgba(27,159,216,.1); }
 .btn-del-row {
     background:none; border:none; color:#dc3545; cursor:pointer;
     font-size:.95rem; padding:.15rem .3rem; border-radius:5px; transition:background .15s;
@@ -64,6 +65,11 @@
     padding:.25rem .3rem; border-bottom:1px solid #f0f4f8;
     border-right:1px solid #eef2f7; vertical-align:middle;
 }
+.serie-cell { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+.serie-cell.s-plan { color:#5B6B7B; }
+.serie-cell.s-fcst { color:#127aa8; }
+.serie-cell.s-real { color:#2e7d32; }
+.serie-cell.s-repl { color:#7a4ddb; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -83,10 +89,36 @@
     <input type="hidden" name="contratada" value="{{ contrato.contratada }}">
     <input type="hidden" name="contrato"   value="{{ contrato.contrato }}">
 
-    <!-- VALOR DO CONTRATO -->
+    <!-- IMPORTAR / EXPORTAR PLANEJAMENTO -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-file-earmark-excel"></i>Importar / Exportar Planejamento</div>
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <a href="{{ url_for('admin_contrato_template', key=key) }}"
+                   class="btn btn-secondary-rumo btn-sm" target="_blank">
+                    <i class="bi bi-download me-1"></i>Baixar Modelo Excel
+                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="file" id="importFile" accept=".xlsx"
+                           style="display:none;" onchange="importarExcel(this)">
+                    <button type="button" class="btn btn-secondary-rumo btn-sm"
+                            onclick="document.getElementById('importFile').click()">
+                        <i class="bi bi-upload me-1"></i>Importar Excel
+                    </button>
+                    <span id="importStatus" style="font-size:.75rem;"></span>
+                </div>
+            </div>
+            <p style="font-size:.72rem; color:var(--tms-muted); margin-top:.5rem; margin-bottom:0;">
+                Baixe o modelo pré-preenchido com as colunas do contrato, edite os valores e faça upload para alimentar automaticamente
+                <strong>Financeira, Física, Histograma e Ações Notáveis</strong>.
+            </p>
+        </div>
+    </div>
+
+    <!-- INFORMAÇÕES DO CONTRATO -->
     <div class="card-rumo mb-3">
         <div style="padding:1.25rem 1.4rem;">
-            <div class="sec-title"><i class="bi bi-currency-dollar"></i>Valor do Contrato</div>
+            <div class="sec-title"><i class="bi bi-file-text"></i>Informações do Contrato</div>
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Valor Total (R$)</label>
@@ -111,6 +143,18 @@
             </div>
             <div class="row g-3 mt-1">
                 <div class="col-md-4">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Área do Contrato</label>
+                    <select name="area_contrato" class="adm-select">
+                        <option value="">— Selecione —</option>
+                        {% set area_atual = contrato.get('area_contrato', '') %}
+                        <option value="Obras preliminares" {% if area_atual == 'Obras preliminares' %}selected{% endif %}>Obras preliminares</option>
+                        <option value="Obras civis" {% if area_atual == 'Obras civis' %}selected{% endif %}>Obras civis</option>
+                        <option value="Obras eletromecânicas" {% if area_atual == 'Obras eletromecânicas' %}selected{% endif %}>Obras eletromecânicas</option>
+                        <option value="Engenharia" {% if area_atual == 'Engenharia' %}selected{% endif %}>Engenharia</option>
+                        <option value="Meio Ambiente" {% if area_atual == 'Meio Ambiente' %}selected{% endif %}>Meio Ambiente</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
                     <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Status do Contrato</label>
                     <select name="status_manual" class="adm-select">
                         <option value="auto" {% if contrato.get('status_manual', 'auto') == 'auto' %}selected{% endif %}>Automático (por data)</option>
@@ -123,126 +167,81 @@
         </div>
     </div>
 
-    <!-- ADITIVOS -->
+    <!-- LINHA DE BASE FINANCEIRA (matriz mensal) -->
     <div class="card-rumo mb-3">
         <div style="padding:1.25rem 1.4rem;">
-            <div class="sec-title"><i class="bi bi-file-earmark-plus"></i>Aditivos do Contrato</div>
+            <div class="sec-title"><i class="bi bi-graph-up-arrow"></i>Linha de Base Financeira por Mês</div>
             <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
-                Registre aditivos de <strong>valor</strong> (acréscimo financeiro) ou de <strong>prazo</strong> (nova data de término).
+                Valor financeiro planejado mês a mês. Usado na Curva S Financeira.
+                As colunas são geradas automaticamente a partir do <strong>Início</strong> e do <strong>Término do Contrato</strong>.
             </p>
-            <table class="adm-table" id="tblAdit">
-                <thead>
-                    <tr>
-                        <th style="width:120px;">Tipo</th>
-                        <th style="width:160px;">Valor (R$)</th>
-                        <th style="width:160px;">Novo Prazo</th>
-                        <th style="width:140px;">Data do Aditivo</th>
-                        <th>Descrição</th>
-                        <th style="width:40px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="bodyAdit">
-                    {% for a in contrato.get('aditivos', []) %}
-                    <tr>
-                        <td>
-                            <select name="adit_tipo[]" class="adm-select" onchange="aditToggle(this)">
-                                <option value="valor" {% if a.tipo=='valor' %}selected{% endif %}>Valor</option>
-                                <option value="prazo" {% if a.tipo=='prazo' %}selected{% endif %}>Prazo</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="adit_valor[]" class="adm-input" placeholder="0,00"
-                                   value="{% if a.tipo=='valor' and a.valor %}{{ '%.2f'|format(a.valor)|replace('.', ',') }}{% endif %}"
-                                   {% if a.tipo != 'valor' %}readonly{% endif %}></td>
-                        <td><input type="week" name="adit_prazo[]" class="adm-input"
-                                   value="{{ a.prazo or '' }}" {% if a.tipo != 'prazo' %}readonly{% endif %}></td>
-                        <td><input type="date" name="adit_data[]" class="adm-input" value="{{ a.data or '' }}"></td>
-                        <td><input type="text" name="adit_desc[]" class="adm-input" value="{{ a.descricao or '' }}" placeholder="Observação..."></td>
-                        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button type="button" class="btn-add-row mt-2" onclick="addAditRow()">
-                <i class="bi bi-plus-lg"></i>Adicionar Aditivo
-            </button>
-
-            {% set base = contrato.get('valor_contrato', 0) or 0 %}
-            {% set add_valor = contrato.get('aditivos', [])|selectattr('tipo','equalto','valor')|map(attribute='valor')|sum %}
-            {% set prazos = contrato.get('aditivos', [])|selectattr('tipo','equalto','prazo')|map(attribute='prazo')|select|list %}
-            <div style="margin-top:1.1rem; padding-top:.9rem; border-top:1px dashed var(--tms-border); display:flex; gap:1.6rem; flex-wrap:wrap; font-size:.8rem;">
-                <div><span style="color:var(--tms-muted);">Valor base:</span> <strong>{{ base|currency }}</strong></div>
-                <div><span style="color:var(--tms-muted);">Aditivos de valor:</span> <strong style="color:#3a7a00;">+ {{ add_valor|currency }}</strong></div>
-                <div><span style="color:var(--tms-muted);">Valor efetivo:</span> <strong style="color:var(--tms-cyan);">{{ (base + add_valor)|currency }}</strong></div>
-                {% if prazos %}
-                <div><span style="color:var(--tms-muted);">Prazo vigente (último aditivo):</span> <strong>{{ prazos[-1] }}</strong></div>
-                {% endif %}
+            <div id="finNoDates" style="padding:1.5rem; text-align:center; color:var(--tms-muted);
+                 font-size:.82rem; background:var(--tms-bg); border-radius:8px;
+                 border:1px dashed var(--tms-border);">
+                <i class="bi bi-calendar-range" style="font-size:1.8rem; display:block; margin-bottom:.5rem; color:var(--tms-border);"></i>
+                Defina o Início e o Término do Contrato para gerar as colunas de mês.
             </div>
+            <div id="finWrap" style="display:none;">
+                <div id="finTableWrap" style="overflow-x:auto; border:1px solid var(--tms-border);
+                     border-radius:8px; max-height:260px; overflow-y:auto;">
+                    <table id="finTable" style="border-collapse:collapse; min-width:100%;">
+                        <thead id="finThead"></thead>
+                        <tbody id="finTbody"></tbody>
+                    </table>
+                </div>
+                <div class="d-flex gap-2 mt-2 flex-wrap">
+                    <button type="button" class="btn-add-row" style="width:auto;" onclick="addFinMes()">
+                        <i class="bi bi-calendar-plus"></i>Adicionar Mês
+                    </button>
+                    <button type="button" class="btn-add-row" style="width:auto;" id="btnFinRepl" onclick="addFinReplanejado()">
+                        <i class="bi bi-arrow-repeat"></i><span id="btnFinReplLbl">Adicionar Replanejado</span>
+                    </button>
+                </div>
+            </div>
+            <input type="hidden" name="lb_fin_json"       id="lbFinJson">
+            <input type="hidden" name="lb_fin_fcst_json"  id="lbFinFcstJson">
+            <input type="hidden" name="lb_fin_repls_json" id="lbFinReplsJson">
+            <input type="hidden" name="lb_fin_repl_n"     id="lbFinReplN" value="0">
+            <input type="hidden" name="lb_fin_extra_json" id="lbFinExtraJson">
         </div>
     </div>
 
-    <!-- LINHAS BASE FINANCEIRA + FÍSICA -->
-    <div class="row g-3 mb-3">
-        <div class="col-md-6">
-            <div class="card-rumo" style="height:100%;">
-                <div style="padding:1.25rem 1.4rem;">
-                    <div class="sec-title"><i class="bi bi-graph-up-arrow"></i>Linha de Base Financeira por Mês</div>
-                    <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
-                        Valor planejado mês a mês. Usado na Curva S Financeira.
-                    </p>
-                    <table class="adm-table" id="tblFin">
-                        <thead>
-                            <tr>
-                                <th style="width:160px;">Mês</th>
-                                <th>Valor Planejado (R$)</th>
-                                <th style="width:40px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="bodyFin">
-                            {% for item in contrato.get('linha_base_financeira', []) %}
-                            <tr>
-                                <td><input type="month" name="fin_semana[]" class="adm-input" value="{{ item.semana }}" required></td>
-                                <td><input type="text" name="fin_valor[]" class="adm-input" value="{{ '%.2f'|format(item.valor)|replace('.', ',') }}" placeholder="0,00"></td>
-                                <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
+    <!-- LINHA DE BASE FÍSICA (matriz mensal) -->
+    <div class="card-rumo mb-3">
+        <div style="padding:1.25rem 1.4rem;">
+            <div class="sec-title"><i class="bi bi-bar-chart-line"></i>Linha de Base Física por Mês</div>
+            <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
+                Percentual de avanço físico planejado mês a mês. Usado na Curva S Física.
+                As colunas são geradas automaticamente a partir do <strong>Início</strong> e do <strong>Término do Contrato</strong>.
+            </p>
+            <div id="fisNoDates" style="padding:1.5rem; text-align:center; color:var(--tms-muted);
+                 font-size:.82rem; background:var(--tms-bg); border-radius:8px;
+                 border:1px dashed var(--tms-border);">
+                <i class="bi bi-calendar-range" style="font-size:1.8rem; display:block; margin-bottom:.5rem; color:var(--tms-border);"></i>
+                Defina o Início e o Término do Contrato para gerar as colunas de mês.
+            </div>
+            <div id="fisWrap" style="display:none;">
+                <div id="fisTableWrap" style="overflow-x:auto; border:1px solid var(--tms-border);
+                     border-radius:8px; max-height:260px; overflow-y:auto;">
+                    <table id="fisTable" style="border-collapse:collapse; min-width:100%;">
+                        <thead id="fisThead"></thead>
+                        <tbody id="fisTbody"></tbody>
                     </table>
-                    <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFin','fin')">
-                        <i class="bi bi-plus-lg"></i>Adicionar Mês
+                </div>
+                <div class="d-flex gap-2 mt-2 flex-wrap">
+                    <button type="button" class="btn-add-row" style="width:auto;" onclick="addFisMes()">
+                        <i class="bi bi-calendar-plus"></i>Adicionar Mês
+                    </button>
+                    <button type="button" class="btn-add-row" style="width:auto;" id="btnFisRepl" onclick="addFisReplanejado()">
+                        <i class="bi bi-arrow-repeat"></i><span id="btnFisReplLbl">Adicionar Replanejado</span>
                     </button>
                 </div>
             </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card-rumo" style="height:100%;">
-                <div style="padding:1.25rem 1.4rem;">
-                    <div class="sec-title"><i class="bi bi-bar-chart-line"></i>Linha de Base Física por Mês</div>
-                    <p style="font-size:.78rem; color:var(--tms-muted); margin-bottom:1rem;">
-                        Percentual de avanço físico planejado mês a mês. Usado na Curva S Física.
-                    </p>
-                    <table class="adm-table" id="tblFis">
-                        <thead>
-                            <tr>
-                                <th style="width:160px;">Mês</th>
-                                <th>Avanço Planejado (%)</th>
-                                <th style="width:40px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="bodyFis">
-                            {% for item in contrato.get('linha_base_fisica', []) %}
-                            <tr>
-                                <td><input type="month" name="fis_semana[]" class="adm-input" value="{{ item.semana }}" required></td>
-                                <td><input type="number" name="fis_perc[]" class="adm-input" value="{{ item.percentual }}" placeholder="0.00" min="0" step="0.01"></td>
-                                <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    <button type="button" class="btn-add-row mt-2" onclick="addRow('bodyFis','fis')">
-                        <i class="bi bi-plus-lg"></i>Adicionar Mês
-                    </button>
-                </div>
-            </div>
+            <input type="hidden" name="lb_fis_json"       id="lbFisJson">
+            <input type="hidden" name="lb_fis_fcst_json"  id="lbFisFcstJson">
+            <input type="hidden" name="lb_fis_repls_json" id="lbFisReplsJson">
+            <input type="hidden" name="lb_fis_repl_n"     id="lbFisReplN" value="0">
+            <input type="hidden" name="lb_fis_extra_json" id="lbFisExtraJson">
         </div>
     </div>
 
@@ -304,12 +303,65 @@
                         <tbody id="acoesTbody"></tbody>
                     </table>
                 </div>
-                <button type="button" class="btn-add-row mt-2" onclick="addAcaoRow()">
-                    <i class="bi bi-plus-lg"></i>Adicionar Ação
-                </button>
+                <div class="d-flex gap-2 mt-2 flex-wrap">
+                    <button type="button" class="btn-add-row" style="width:auto;" onclick="addAcaoRow()">
+                        <i class="bi bi-plus-lg"></i>Adicionar Ação
+                    </button>
+                    <button type="button" class="btn-add-row" style="width:auto;" onclick="addAcaoSemana()">
+                        <i class="bi bi-calendar-plus"></i>Adicionar Semana
+                    </button>
+                    <button type="button" class="btn-add-row" style="width:auto;" id="btnRepl" onclick="addReplanejado()">
+                        <i class="bi bi-arrow-repeat"></i><span id="btnReplLbl">Adicionar Replanejado</span>
+                    </button>
+                </div>
             </div>
 
             <input type="hidden" name="acoes_json" id="acoesJson">
+            <input type="hidden" name="acoes_extra_json" id="acoesExtraJson">
+            <input type="hidden" name="acoes_repl_n" id="acoesReplN" value="0">
+
+            <!-- Sugestões de ações notáveis de construção civil (autocomplete; aceita texto livre) -->
+            <datalist id="acoes-notaveis-opcoes">
+                <option value="Serviços preliminares"></option>
+                <option value="Instalação do canteiro de obras"></option>
+                <option value="Demolição"></option>
+                <option value="Terraplenagem"></option>
+                <option value="Movimentação de terra / Aterro"></option>
+                <option value="Escavação"></option>
+                <option value="Fundação — estacas"></option>
+                <option value="Fundação — sapatas"></option>
+                <option value="Fundação — blocos de coroamento"></option>
+                <option value="Montagem de armação (aço)"></option>
+                <option value="Montagem de fôrmas"></option>
+                <option value="Concretagem de fundação"></option>
+                <option value="Concretagem de pilares"></option>
+                <option value="Concretagem de vigas"></option>
+                <option value="Concretagem de lajes"></option>
+                <option value="Estrutura de concreto armado"></option>
+                <option value="Montagem de estrutura metálica"></option>
+                <option value="Montagem de pré-moldados"></option>
+                <option value="Alvenaria de vedação"></option>
+                <option value="Alvenaria estrutural"></option>
+                <option value="Cobertura / Telhado"></option>
+                <option value="Impermeabilização"></option>
+                <option value="Instalações elétricas"></option>
+                <option value="Instalações hidrossanitárias"></option>
+                <option value="Instalações de combate a incêndio"></option>
+                <option value="Chapisco, emboço e reboco"></option>
+                <option value="Contrapiso"></option>
+                <option value="Revestimento cerâmico / Porcelanato"></option>
+                <option value="Assentamento de pisos"></option>
+                <option value="Forro de gesso / Drywall"></option>
+                <option value="Esquadrias (portas e janelas)"></option>
+                <option value="Pintura"></option>
+                <option value="Fachada / Pele de vidro"></option>
+                <option value="Drenagem"></option>
+                <option value="Pavimentação asfáltica"></option>
+                <option value="Pavimentação intertravada"></option>
+                <option value="Urbanização e paisagismo"></option>
+                <option value="Acabamentos finais"></option>
+                <option value="Limpeza final da obra"></option>
+            </datalist>
         </div>
     </div>
 
@@ -328,56 +380,391 @@ const _HIST_INICIO  = {{ contrato.get('data_inicio_contrato', '')|tojson }};
 const _HIST_FIM     = {{ contrato.get('data_fim_contrato',    '')|tojson }};
 const _HIST_FUNCOES = {{ funcoes_mao_obra|tojson }};
 const _ACOES_INIT   = {{ contrato.get('linha_base_acoes', [])|tojson }};
-const ACOES_REAL_MAP = {{ acoes_real_map|tojson }};
+const _ACOES_REAL   = {{ acoes_real|default({})|tojson }};
+const _ACOES_EXTRA  = {{ contrato.get('acoes_semanas_extra', [])|tojson }};
+const _ACOES_REPL_N = {{ contrato.get('acoes_replanejado_n', 0)|tojson }};
+const _IMPORT_URL   = {{ url_for('admin_contrato_import_excel', key=key)|tojson }};
+// Linhas de base por mês (nova estrutura matricial)
+const _LB_FIN_INIT  = {{ contrato.get('lb_fin_planejado',     {})|tojson }};
+const _LB_FIN_LEG   = {{ contrato.get('linha_base_financeira',[])|tojson }};
+const _LB_FIN_FCST  = {{ contrato.get('lb_fin_forecast',      {})|tojson }};
+const _LB_FIN_REPLS = {{ contrato.get('lb_fin_replanejados',  [])|tojson }};
+const _FIN_REPL_N_I = {{ contrato.get('lb_fin_repl_n',         0)|tojson }};
+const _LB_FIN_EXTRA = {{ contrato.get('lb_fin_extra',         [])|tojson }};
+const _FIN_REAL     = {{ fin_real|default({})|tojson }};
+const _LB_FIS_INIT  = {{ contrato.get('lb_fis_planejado',     {})|tojson }};
+const _LB_FIS_LEG   = {{ contrato.get('linha_base_fisica',    [])|tojson }};
+const _LB_FIS_FCST  = {{ contrato.get('lb_fis_forecast',      {})|tojson }};
+const _LB_FIS_REPLS = {{ contrato.get('lb_fis_replanejados',  [])|tojson }};
+const _FIS_REPL_N_I = {{ contrato.get('lb_fis_repl_n',         0)|tojson }};
+const _LB_FIS_EXTRA = {{ contrato.get('lb_fis_extra',         [])|tojson }};
+const _FIS_REAL     = {{ fis_real|default({})|tojson }};
 </script>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// ── Financeira / Física ───────────────────────────────────────────────────────
-function delRow(btn) { btn.closest('tr').remove(); }
+// ── Importar Excel ─────────────────────────────────────────────────────────────
+function importarExcel(input) {
+    if (!input.files.length) return;
+    const status = document.getElementById('importStatus');
+    status.textContent = 'Processando...';
+    status.style.color = 'var(--tms-muted)';
 
-function addRow(bodyId, prefix) {
-    const tbody = document.getElementById(bodyId);
-    const tr = document.createElement('tr');
-    if (prefix === 'fin') {
-        tr.innerHTML = `
-          <td><input type="month" name="fin_semana[]" class="adm-input" required></td>
-          <td><input type="text"   name="fin_valor[]" class="adm-input" placeholder="0,00"></td>
-          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
-    } else {
-        tr.innerHTML = `
-          <td><input type="month"  name="fis_semana[]" class="adm-input" required></td>
-          <td><input type="number" name="fis_perc[]"   class="adm-input" placeholder="0.00" min="0" step="0.01"></td>
-          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
+    const fd = new FormData();
+    fd.append('file', input.files[0]);
+
+    fetch(_IMPORT_URL, { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if (d.error) {
+                status.textContent = '❌ ' + d.error;
+                status.style.color = '#c8324b';
+                return;
+            }
+            // sincroniza DOM → estado antes de sobrescrever
+            _syncFromDOM(); _syncAcoesFromDOM(); _syncFinFromDOM(); _syncFisFromDOM();
+
+            const resumo = [];
+
+            // Financeira
+            if (d.financeira) {
+                if (d.financeira.planejado && Object.keys(d.financeira.planejado).length) {
+                    _finPlan = d.financeira.planejado;
+                    // garante que meses importados aparecem na tabela mesmo fora do range do contrato
+                    const baseFinSet = new Set(_baseMonths);
+                    Object.keys(_finPlan).sort().forEach(m => {
+                        if (!baseFinSet.has(m) && !_finExtra.includes(m)) _finExtra.push(m);
+                    });
+                    resumo.push(`Financeira (${Object.keys(_finPlan).length} meses)`);
+                }
+                if (d.financeira.forecast && Object.keys(d.financeira.forecast).length)
+                    _finFcst = d.financeira.forecast;
+                if (d.financeira.replanejados && d.financeira.replanejados.length) {
+                    _finRepls = d.financeira.replanejados;
+                    _finReplN = Math.min(REPL_MAX, d.financeira.repl_n || _finRepls.length);
+                    _updateFinReplBtn();
+                }
+            }
+            // Física
+            if (d.fisica) {
+                if (d.fisica.planejado && Object.keys(d.fisica.planejado).length) {
+                    _fisPlan = d.fisica.planejado;
+                    const baseFisSet = new Set(_baseMonths);
+                    Object.keys(_fisPlan).sort().forEach(m => {
+                        if (!baseFisSet.has(m) && !_fisExtra.includes(m)) _fisExtra.push(m);
+                    });
+                    resumo.push(`Física (${Object.keys(_fisPlan).length} meses)`);
+                }
+                if (d.fisica.forecast && Object.keys(d.fisica.forecast).length)
+                    _fisFcst = d.fisica.forecast;
+                if (d.fisica.replanejados && d.fisica.replanejados.length) {
+                    _fisRepls = d.fisica.replanejados;
+                    _fisReplN = Math.min(REPL_MAX, d.fisica.repl_n || _fisRepls.length);
+                    _updateFisReplBtn();
+                }
+            }
+            // Histograma
+            if (d.histograma && d.histograma.length) {
+                _hRows = d.histograma;
+                resumo.push(`Histograma (${_hRows.length} funções)`);
+            }
+            // Ações Notáveis
+            if (d.acoes && d.acoes.length) {
+                _aRows = d.acoes;
+                // garante que semanas importadas aparecem na tabela mesmo fora do range do contrato
+                const weekSet = new Set(_hWeeks.concat(_aExtra));
+                _aRows.forEach(row => {
+                    Object.keys(row.semanas || {}).sort().forEach(w => {
+                        if (!weekSet.has(w)) { _aExtra.push(w); weekSet.add(w); }
+                    });
+                });
+                resumo.push(`Ações (${_aRows.length} ações)`);
+            }
+
+            _rebuildHist();
+            _rebuildAcoes();
+            _rebuildFin();
+            _rebuildFis();
+
+            const resumoTxt = resumo.length ? resumo.join(', ') : 'nenhum dado';
+            status.innerHTML = `✔ Importado: ${resumoTxt}. <strong>Clique em Salvar para persistir os dados.</strong>`;
+            status.style.color = '#1f9e4a';
+            input.value = '';
+        })
+        .catch(err => {
+            status.textContent = '❌ Erro: ' + err.message;
+            status.style.color = '#c8324b';
+        });
+}
+
+// ── Linhas de base por mês — helpers ─────────────────────────────────────────
+function _genMonths(startYW, endYW) {
+    const sd = _monOfWeek(startYW), ed = _monOfWeek(endYW);
+    const months = [];
+    let y = sd.getUTCFullYear(), m = sd.getUTCMonth();
+    const ey = ed.getUTCFullYear(), em = ed.getUTCMonth();
+    while (y < ey || (y === ey && m <= em)) {
+        months.push(`${y}-${String(m + 1).padStart(2, '0')}`);
+        m++; if (m > 11) { m = 0; y++; }
     }
-    tbody.appendChild(tr);
-    tr.querySelector('input').focus();
+    return months;
 }
 
-// ── Aditivos (valor / prazo) ──────────────────────────────────────────────────
-function aditToggle(sel) {
-    const tr = sel.closest('tr');
-    const valorEl = tr.querySelector('[name="adit_valor[]"]');
-    const prazoEl = tr.querySelector('[name="adit_prazo[]"]');
-    const isValor = sel.value === 'valor';
-    valorEl.readOnly = !isValor; if (!isValor) valorEl.value = '';
-    prazoEl.readOnly = isValor;  if (isValor)  prazoEl.value = '';
+function _fmtMonth(ym) {
+    const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const [y, mo] = ym.split('-');
+    return M[+mo - 1] + "'" + y.slice(2);
 }
 
-function addAditRow() {
-    const tbody = document.getElementById('bodyAdit');
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><select name="adit_tipo[]" class="adm-select" onchange="aditToggle(this)">
-          <option value="valor">Valor</option><option value="prazo">Prazo</option></select></td>
-      <td><input type="text" name="adit_valor[]" class="adm-input" placeholder="0,00"></td>
-      <td><input type="week" name="adit_prazo[]" class="adm-input" readonly></td>
-      <td><input type="date" name="adit_data[]" class="adm-input"></td>
-      <td><input type="text" name="adit_desc[]" class="adm-input" placeholder="Observação..."></td>
-      <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-x-circle"></i></button></td>`;
-    tbody.appendChild(tr);
-    tr.querySelector('select').focus();
+// ── Estado das tabelas mensais ─────────────────────────────────────────────────
+let _baseMonths = [];
+let _finPlan = {}, _finFcst = {}, _finRepls = [], _finReplN = 0, _finExtra = [];
+let _fisPlan = {}, _fisFcst = {}, _fisRepls = [], _fisReplN = 0, _fisExtra = [];
+
+function _finMonthsAll() { return _baseMonths.concat(_finExtra); }
+function _fisMonthsAll() { return _baseMonths.concat(_fisExtra); }
+
+function _syncFinFromDOM() {
+    const months = _finMonthsAll();
+    document.querySelectorAll('[data-fp]').forEach(el => {
+        const mi = +el.dataset.fp;
+        if (months[mi] !== undefined) _finPlan[months[mi]] = parseFloat(el.value) || 0;
+    });
+    document.querySelectorAll('[data-ff]').forEach(el => {
+        const mi = +el.dataset.ff;
+        if (months[mi] !== undefined) _finFcst[months[mi]] = parseFloat(el.value) || 0;
+    });
+    document.querySelectorAll('[data-frp]').forEach(el => {
+        const [ms, is] = el.dataset.frp.split(':');
+        const mi = +ms, ii = +is;
+        if (months[mi] !== undefined) {
+            while (_finRepls.length <= ii) _finRepls.push({});
+            _finRepls[ii][months[mi]] = parseFloat(el.value) || 0;
+        }
+    });
+}
+
+function _syncFisFromDOM() {
+    const months = _fisMonthsAll();
+    document.querySelectorAll('[data-gp]').forEach(el => {
+        const mi = +el.dataset.gp;
+        if (months[mi] !== undefined) _fisPlan[months[mi]] = parseFloat(el.value) || 0;
+    });
+    document.querySelectorAll('[data-gf]').forEach(el => {
+        const mi = +el.dataset.gf;
+        if (months[mi] !== undefined) _fisFcst[months[mi]] = parseFloat(el.value) || 0;
+    });
+    document.querySelectorAll('[data-grp]').forEach(el => {
+        const [ms, is] = el.dataset.grp.split(':');
+        const mi = +ms, ii = +is;
+        if (months[mi] !== undefined) {
+            while (_fisRepls.length <= ii) _fisRepls.push({});
+            _fisRepls[ii][months[mi]] = parseFloat(el.value) || 0;
+        }
+    });
+}
+
+// Constrói a tabela mensal (compartilhado por Financeira e Física)
+function _rebuildMonthTable(cfg) {
+    const { wrapId, noDatesId, theadId, tbodyId, monthsAll, extraList,
+            plan, fcst, repls, replN, realData,
+            planAttr, fcstAttr, replAttr, unit, step,
+            removeMonthFn, removeReplFn } = cfg;
+    const wrap = document.getElementById(wrapId);
+    const noDates = document.getElementById(noDatesId);
+    const months = monthsAll();
+    if (months.length === 0) {
+        wrap.style.display = 'none'; noDates.style.display = '';
+        return;
+    }
+    wrap.style.display = ''; noDates.style.display = 'none';
+
+    // última semana com realizado → Replanejado só a partir daqui
+    let lastReal = null;
+    months.forEach(ym => { if (realData[ym] != null) lastReal = ym; });
+
+    // cabeçalho
+    let hHtml = '<tr>';
+    hHtml += `<th class="hth hth-fix" style="position:sticky;left:0;min-width:110px;background:#eef2f7;">Série</th>`;
+    months.forEach(ym => {
+        const isExtra = extraList.includes(ym);
+        hHtml += `<th class="hth" style="min-width:90px;${isExtra ? 'background:#fff3e0;' : ''}">` +
+                 _fmtMonth(ym) +
+                 (isExtra ? `<br><button type="button" onclick="${removeMonthFn}('${ym}')" ` +
+                     `style="border:none;background:none;color:#c8324b;cursor:pointer;font-size:.6rem;padding:0;line-height:1;">✕</button>` : '') +
+                 `</th>`;
+    });
+    hHtml += `</tr>`;
+    document.getElementById(theadId).innerHTML = hHtml;
+
+    const SERIES = [
+        { key:'plan', label:'Planejado', color:'#5B6B7B' },
+        { key:'fcst', label:'Forecast',  color:'#127aa8' },
+        { key:'real', label:'Real',      color:'#2e7d32' },
+    ];
+    for (let i = 0; i < replN; i++) {
+        SERIES.push({ key:'repl', idx:i, color: REPL_COLORS[i],
+            label: 'Replanejado' + (replN > 1 ? ' ' + (i + 1) : '') });
+    }
+
+    let bHtml = '';
+    SERIES.forEach((s, si) => {
+        const bg = si % 2 === 0 ? '#fff' : '#f8fafc';
+        bHtml += `<tr>`;
+        // rótulo série
+        if (s.key === 'repl') {
+            bHtml += `<td class="htd serie-cell" style="position:sticky;left:0;z-index:1;background:${bg};min-width:110px;color:${s.color};">${s.label} ` +
+                     `<button type="button" onclick="${removeReplFn}(${s.idx})" style="border:none;background:none;color:${s.color};cursor:pointer;font-size:.7rem;padding:0;">✕</button></td>`;
+        } else {
+            bHtml += `<td class="htd serie-cell" style="position:sticky;left:0;z-index:1;background:${bg};min-width:110px;color:${s.color};">${s.label}</td>`;
+        }
+        months.forEach((ym, mi) => {
+            if (s.key === 'plan') {
+                const v = plan[ym] !== undefined ? plan[ym] : '';
+                bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                    `<input type="number" class="adm-input" data-${planAttr}="${mi}" value="${v}" min="0" step="${step}" ` +
+                    `style="width:84px;text-align:right;padding:.22rem .4rem;font-size:.78rem;" placeholder="0"></td>`;
+            } else if (s.key === 'fcst') {
+                let fv = fcst[ym] !== undefined ? fcst[ym] : (plan[ym] !== undefined ? plan[ym] : '');
+                const pv = parseFloat(plan[ym]) || 0, fvn = parseFloat(fv);
+                let fcolor = '#0a2540';
+                if (!isNaN(fvn) && fvn !== pv) fcolor = fvn > pv ? '#c8324b' : '#1f9e4a';
+                bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                    `<input type="number" class="adm-input" data-${fcstAttr}="${mi}" value="${fv}" min="0" step="${step}" ` +
+                    `style="width:84px;text-align:right;padding:.22rem .4rem;font-size:.78rem;font-weight:600;color:${fcolor};" placeholder="0"></td>`;
+            } else if (s.key === 'real') {
+                const rv = realData[ym];
+                const pv = parseFloat(plan[ym]) || 0;
+                let rcolor = '#5B6B7B';
+                if (rv != null) rcolor = rv < pv ? '#c8324b' : (rv > pv ? '#1f9e4a' : '#5B6B7B');
+                const disp = rv != null
+                    ? (unit === '%' ? rv.toFixed(1) + '%' : 'R$ ' + rv.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0}))
+                    : null;
+                bHtml += `<td class="htd" style="background:${bg};text-align:right;padding-right:.5rem;font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:600;color:${rcolor};">` +
+                    (disp ? disp : `<span style="color:#c0ccd8;">—</span>`) + `</td>`;
+            } else if (s.key === 'repl') {
+                if (lastReal === null || ym >= lastReal) {
+                    const rpv = repls[s.idx] ? (repls[s.idx][ym] !== undefined ? repls[s.idx][ym] : '') : '';
+                    bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                        `<input type="number" class="adm-input" data-${replAttr}="${mi}:${s.idx}" value="${rpv}" min="0" step="${step}" ` +
+                        `style="width:84px;text-align:right;padding:.22rem .4rem;font-size:.78rem;font-weight:600;color:${s.color};" placeholder="0"></td>`;
+                } else {
+                    bHtml += `<td class="htd" style="background:${bg};text-align:center;color:#c0ccd8;">—</td>`;
+                }
+            }
+        });
+        bHtml += `</tr>`;
+    });
+    document.getElementById(tbodyId).innerHTML = bHtml;
+}
+
+function _rebuildFin() {
+    _rebuildMonthTable({
+        wrapId:'finWrap', noDatesId:'finNoDates', theadId:'finThead', tbodyId:'finTbody',
+        monthsAll: _finMonthsAll, extraList: _finExtra,
+        plan: _finPlan, fcst: _finFcst, repls: _finRepls, replN: _finReplN, realData: _FIN_REAL,
+        planAttr:'fp', fcstAttr:'ff', replAttr:'frp', unit:'R$', step:'1',
+        removeMonthFn:'removeFinMes', removeReplFn:'removeFinReplanejado',
+    });
+}
+
+function _rebuildFis() {
+    _rebuildMonthTable({
+        wrapId:'fisWrap', noDatesId:'fisNoDates', theadId:'fisThead', tbodyId:'fisTbody',
+        monthsAll: _fisMonthsAll, extraList: _fisExtra,
+        plan: _fisPlan, fcst: _fisFcst, repls: _fisRepls, replN: _fisReplN, realData: _FIS_REAL,
+        planAttr:'gp', fcstAttr:'gf', replAttr:'grp', unit:'%', step:'0.01',
+        removeMonthFn:'removeFisMes', removeReplFn:'removeFisReplanejado',
+    });
+}
+
+// Financeira — ações dos botões
+function addFinMes() {
+    _syncFinFromDOM();
+    const months = _finMonthsAll();
+    let nextM;
+    if (months.length) {
+        let [y, m] = months[months.length - 1].split('-').map(Number);
+        m++; if (m > 12) { m = 1; y++; }
+        nextM = `${y}-${String(m).padStart(2, '0')}`;
+    } else {
+        const now = new Date();
+        nextM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+    if (!_finExtra.includes(nextM)) _finExtra.push(nextM);
+    _rebuildFin();
+}
+
+function removeFinMes(ym) { _syncFinFromDOM(); _finExtra = _finExtra.filter(m => m !== ym); _rebuildFin(); }
+
+function _updateFinReplBtn() {
+    const lbl = document.getElementById('btnFinReplLbl');
+    const btn = document.getElementById('btnFinRepl');
+    if (lbl) lbl.textContent = `Adicionar Replanejado (${_finReplN}/${REPL_MAX})`;
+    if (btn) { btn.disabled = _finReplN >= REPL_MAX; btn.style.opacity = _finReplN >= REPL_MAX ? '.5' : ''; btn.style.cursor = _finReplN >= REPL_MAX ? 'not-allowed' : ''; }
+}
+
+function addFinReplanejado() {
+    if (_finReplN >= REPL_MAX) return;
+    _syncFinFromDOM(); _finReplN++; _updateFinReplBtn(); _rebuildFin();
+}
+
+function removeFinReplanejado(idx) {
+    _syncFinFromDOM(); _finRepls.splice(idx, 1); _finReplN = Math.max(0, _finReplN - 1); _updateFinReplBtn(); _rebuildFin();
+}
+
+function serializeFin() {
+    _syncFinFromDOM();
+    document.getElementById('lbFinJson').value      = JSON.stringify(_finPlan);
+    document.getElementById('lbFinFcstJson').value  = JSON.stringify(_finFcst);
+    document.getElementById('lbFinReplsJson').value = JSON.stringify(_finRepls);
+    document.getElementById('lbFinReplN').value     = String(_finReplN);
+    document.getElementById('lbFinExtraJson').value = JSON.stringify(_finExtra);
+}
+
+// Física — ações dos botões
+function addFisMes() {
+    _syncFisFromDOM();
+    const months = _fisMonthsAll();
+    let nextM;
+    if (months.length) {
+        let [y, m] = months[months.length - 1].split('-').map(Number);
+        m++; if (m > 12) { m = 1; y++; }
+        nextM = `${y}-${String(m).padStart(2, '0')}`;
+    } else {
+        const now = new Date();
+        nextM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+    if (!_fisExtra.includes(nextM)) _fisExtra.push(nextM);
+    _rebuildFis();
+}
+
+function removeFisMes(ym) { _syncFisFromDOM(); _fisExtra = _fisExtra.filter(m => m !== ym); _rebuildFis(); }
+
+function _updateFisReplBtn() {
+    const lbl = document.getElementById('btnFisReplLbl');
+    const btn = document.getElementById('btnFisRepl');
+    if (lbl) lbl.textContent = `Adicionar Replanejado (${_fisReplN}/${REPL_MAX})`;
+    if (btn) { btn.disabled = _fisReplN >= REPL_MAX; btn.style.opacity = _fisReplN >= REPL_MAX ? '.5' : ''; btn.style.cursor = _fisReplN >= REPL_MAX ? 'not-allowed' : ''; }
+}
+
+function addFisReplanejado() {
+    if (_fisReplN >= REPL_MAX) return;
+    _syncFisFromDOM(); _fisReplN++; _updateFisReplBtn(); _rebuildFis();
+}
+
+function removeFisReplanejado(idx) {
+    _syncFisFromDOM(); _fisRepls.splice(idx, 1); _fisReplN = Math.max(0, _fisReplN - 1); _updateFisReplBtn(); _rebuildFis();
+}
+
+function serializeFis() {
+    _syncFisFromDOM();
+    document.getElementById('lbFisJson').value      = JSON.stringify(_fisPlan);
+    document.getElementById('lbFisFcstJson').value  = JSON.stringify(_fisFcst);
+    document.getElementById('lbFisReplsJson').value = JSON.stringify(_fisRepls);
+    document.getElementById('lbFisReplN').value     = String(_fisReplN);
+    document.getElementById('lbFisExtraJson').value = JSON.stringify(_fisExtra);
 }
 
 // ── Histograma: estado ────────────────────────────────────────────────────────
@@ -487,7 +874,7 @@ function _rebuildHist() {
         const monday   = _monOfWeek(yw);
         const dateStr  = _fmtDate(monday);
         hHtml += `<th class="hth" style="min-width:62px;">W${wn}` +
-                 `<br><span style="font-size:.58rem;color:#00AEEF;font-weight:700;">${dateStr}</span>` +
+                 `<br><span style="font-size:.58rem;color:#1B9FD8;font-weight:600;">${dateStr}</span>` +
                  `<br><span style="font-size:.52rem;color:#b0bece;">'${yr.slice(2)}</span></th>`;
     });
     hHtml += `<th class="hth" style="min-width:36px;border-right:none;"></th></tr>`;
@@ -543,11 +930,16 @@ function autoSetTipo(ri, cargo) {
 function onContractDateChange() {
     _syncFromDOM();
     _syncAcoesFromDOM();
+    _syncFinFromDOM();
+    _syncFisFromDOM();
     const s = document.getElementById('dataInicio').value;
     const e = document.getElementById('dataFim').value;
-    _hWeeks = (s && e && s <= e) ? _genWeeks(s, e) : [];
+    _hWeeks     = (s && e && s <= e) ? _genWeeks(s, e)  : [];
+    _baseMonths = (s && e && s <= e) ? _genMonths(s, e) : [];
     _rebuildHist();
     _rebuildAcoes();
+    _rebuildFin();
+    _rebuildFis();
 }
 
 function addHistRow() {
@@ -569,8 +961,16 @@ function serializeHist() {
 
 // ── Ações Notáveis: estado ────────────────────────────────────────────────────
 let _aRows = [];
+let _aExtra = [];   // semanas extras adicionadas manualmente (além das datas do contrato)
+let _aReplN = 0;    // nº de linhas "Replanejado" (0–3), ligadas pelo botão
+const REPL_MAX = 3;
+const REPL_COLORS = ['#7a4ddb', '#c2185b', '#00796b'];   // roxo, magenta, teal
+
+// semanas das Ações = semanas do contrato + extras
+function _acoesWeeks() { return _hWeeks.concat(_aExtra); }
 
 function _syncAcoesFromDOM() {
+    const weeks = _acoesWeeks();
     document.querySelectorAll('[data-af]').forEach(el => {
         const i = +el.dataset.af;
         if (_aRows[i]) _aRows[i].acao = el.value;
@@ -582,62 +982,39 @@ function _syncAcoesFromDOM() {
     document.querySelectorAll('[data-aq]').forEach(el => {
         const [rs, ws] = el.dataset.aq.split(':');
         const ri = +rs, wi = +ws;
-        if (_aRows[ri] && _hWeeks[wi] !== undefined) {
+        if (_aRows[ri] && weeks[wi] !== undefined) {
             if (!_aRows[ri].semanas) _aRows[ri].semanas = {};
             const v = parseFloat(el.value);
-            _aRows[ri].semanas[_hWeeks[wi]] = isNaN(v) ? 0 : v;
+            _aRows[ri].semanas[weeks[wi]] = isNaN(v) ? 0 : v;
         }
     });
     document.querySelectorAll('[data-afc]').forEach(el => {
         const [rs, ws] = el.dataset.afc.split(':');
         const ri = +rs, wi = +ws;
-        if (_aRows[ri] && _hWeeks[wi] !== undefined) {
-            if (!_aRows[ri].forecast_semanal) _aRows[ri].forecast_semanal = {};
+        if (_aRows[ri] && weeks[wi] !== undefined) {
+            if (!_aRows[ri].forecast) _aRows[ri].forecast = {};
             const v = parseFloat(el.value);
-            _aRows[ri].forecast_semanal[_hWeeks[wi]] = isNaN(v) ? null : v;
+            _aRows[ri].forecast[weeks[wi]] = isNaN(v) ? 0 : v;
+        }
+    });
+    document.querySelectorAll('[data-arp]').forEach(el => {
+        const [rs, ws, is] = el.dataset.arp.split(':');
+        const ri = +rs, wi = +ws, ii = +is;
+        if (_aRows[ri] && weeks[wi] !== undefined) {
+            if (!Array.isArray(_aRows[ri].replanejados)) _aRows[ri].replanejados = [];
+            while (_aRows[ri].replanejados.length <= ii) _aRows[ri].replanejados.push({});
+            const v = parseFloat(el.value);
+            _aRows[ri].replanejados[ii][weeks[wi]] = isNaN(v) ? 0 : v;
         }
     });
 }
-
-// ── Helpers de estilo Forecast ───────────────────────────────────────────────
-function _fcstDelta(ri, wi) {
-    // >0 aumentou (déficit), <0 reduziu (superávit), 0 igual ao baseline
-    const baseEl = document.querySelector(`[data-aq="${ri}:${wi}"]`);
-    const fcstEl = document.querySelector(`[data-afc="${ri}:${wi}"]`);
-    if (!baseEl || !fcstEl) return 0;
-    const b = parseFloat(baseEl.value), f = parseFloat(fcstEl.value);
-    if (isNaN(b) || isNaN(f)) return 0;
-    return f - b;
-}
-
-function _applyFcstStyle(ri, wi) {
-    const delta = _fcstDelta(ri, wi);
-    const input = document.querySelector(`[data-afc="${ri}:${wi}"]`);
-    const cell  = document.getElementById(`afc-${ri}-${wi}`);
-    const bgF   = ri % 2 === 0 ? '#fffbf0' : '#fff8e8';
-
-    const isUp   = delta > 0.001;   // déficit → laranja
-    const isDown = delta < -0.001;  // superávit → verde
-
-    if (input) {
-        input.style.borderColor = isUp ? '#f0a500' : isDown ? '#2e7d32' : '';
-        input.style.color       = isUp ? '#b35c00' : isDown ? '#2e7d32' : '';
-        input.style.fontWeight  = (isUp || isDown) ? '700' : '';
-    }
-    if (cell) {
-        cell.style.background = isUp   ? 'rgba(240,165,0,.13)' :
-                                isDown ? 'rgba(46,125,50,.08)'  : bgF;
-    }
-}
-
-function _onBaselineChange(ri, wi) { _applyFcstStyle(ri, wi); }
-function _onForecastChange(ri, wi) { _applyFcstStyle(ri, wi); }
 
 function _rebuildAcoes() {
     const wrap    = document.getElementById('acoesWrap');
     const noDates = document.getElementById('acoesNoDates');
 
-    if (_hWeeks.length === 0) {
+    const weeks = _acoesWeeks();
+    if (weeks.length === 0) {
         wrap.style.display    = 'none';
         noDates.style.display = '';
         return;
@@ -645,108 +1022,178 @@ function _rebuildAcoes() {
     wrap.style.display    = '';
     noDates.style.display = 'none';
 
-    // Cabeçalho
+    const L0 = 0, L1 = 200, L2 = 280;   // colunas fixas: Ação | Unidade | Série
+
     let hHtml = '<tr>';
-    hHtml += `<th class="hth hth-fix" style="position:sticky;left:0;min-width:260px;background:#eef2f7;">Ação Notável</th>`;
-    hHtml += `<th class="hth" style="min-width:90px;background:#eef2f7;">Unidade</th>`;
-    hHtml += `<th class="hth" style="min-width:52px;background:#eef2f7;"></th>`;
-    _hWeeks.forEach(yw => {
+    hHtml += `<th class="hth hth-fix" style="position:sticky;left:${L0}px;min-width:200px;background:#eef2f7;">Ação Notável</th>`;
+    hHtml += `<th class="hth hth-fix" style="position:sticky;left:${L1}px;min-width:80px;background:#eef2f7;">Unidade</th>`;
+    hHtml += `<th class="hth hth-fix" style="position:sticky;left:${L2}px;min-width:96px;background:#eef2f7;">Série</th>`;
+    weeks.forEach((yw, wi) => {
         const [yr, wn] = yw.split('-W');
-        const monday   = _monOfWeek(yw);
-        const dateStr  = _fmtDate(monday);
-        hHtml += `<th class="hth" style="min-width:72px;">W${wn}` +
-                 `<br><span style="font-size:.58rem;color:#00AEEF;font-weight:700;">${dateStr}</span>` +
-                 `<br><span style="font-size:.52rem;color:#b0bece;">'${yr.slice(2)}</span></th>`;
+        const dateStr  = _fmtDate(_monOfWeek(yw));
+        const extra = wi >= _hWeeks.length;   // semana adicionada manualmente
+        hHtml += `<th class="hth" style="min-width:72px;${extra ? 'background:#fff3e0;' : ''}">W${wn}` +
+                 `<br><span style="font-size:.58rem;color:#1B9FD8;font-weight:600;">${dateStr}</span>` +
+                 `<br>` + (extra
+                     ? `<button type="button" onclick="removeAcaoSemana('${yw}')" title="Remover semana" style="border:none;background:none;color:#c8324b;cursor:pointer;font-size:.6rem;padding:0;line-height:1;">✕</button>`
+                     : `<span style="font-size:.52rem;color:#b0bece;">'${yr.slice(2)}</span>`) +
+                 `</th>`;
     });
     hHtml += `<th class="hth" style="min-width:36px;border-right:none;"></th></tr>`;
     document.getElementById('acoesThead').innerHTML = hHtml;
 
+    const SERIES = [
+        { key:'plan', label:'Planejado', cls:'s-plan' },
+        { key:'fcst', label:'Forecast',  cls:'s-fcst' },
+        { key:'real', label:'Real',      cls:'s-real' },
+    ];
+    // Linhas "Replanejado" (até 3), adicionadas pelo botão — cada uma com cor própria
+    for (let i = 0; i < _aReplN; i++) {
+        SERIES.push({ key:'repl', idx:i, color: REPL_COLORS[i % REPL_COLORS.length],
+                      label: 'Replanejado' + (_aReplN > 1 ? ' ' + (i + 1) : '') });
+    }
+
+    // última semana (global) com realizado — o Replanejado só é editável a partir dela
+    let lastReal = null;
+    weeks.forEach(w => {
+        for (const ac in _ACOES_REAL) {
+            if (_ACOES_REAL[ac] && _ACOES_REAL[ac][w] !== undefined) { lastReal = w; break; }
+        }
+    });
+
     let bHtml = '';
     _aRows.forEach((row, ri) => {
-        const bg  = ri % 2 === 0 ? '#fff'    : '#f8fafc';
-        const bgF = ri % 2 === 0 ? '#fffbf0' : '#fff8e8';
-        const _unOpts = ['m²','m³','m','Unid'].map(u =>
-            `<option value="${u}" ${row.unidade===u?'selected':''}>${u}</option>`).join('');
+        const bg      = ri % 2 === 0 ? '#fff' : '#f8fafc';
+        const realMap = (_ACOES_REAL && _ACOES_REAL[row.acao]) ? _ACOES_REAL[row.acao] : {};
 
-        const bgR = ri % 2 === 0 ? '#f0f7f0' : '#e8f5e9';
+        SERIES.forEach((s, si) => {
+            const first = si === 0;
+            const top   = first ? 'border-top:2px solid #cfdcea;' : '';
+            bHtml += `<tr>`;
 
-        // ── Linha 1: Planejado (baseline) ──
-        bHtml += `<tr>`;
-        bHtml += `<td class="htd" rowspan="3" style="position:sticky;left:0;z-index:1;background:${bg};min-width:260px;vertical-align:middle;">` +
-                 `<input type="text" class="adm-input" data-af="${ri}" value="${_esc(row.acao)}" ` +
-                 `placeholder="Descreva a ação..." style="min-width:248px;"></td>`;
-        bHtml += `<td class="htd" rowspan="3" style="background:${bg};min-width:90px;vertical-align:middle;">` +
-                 `<select class="adm-select" data-au="${ri}" style="min-width:82px;">` +
-                 `<option value="">—</option>${_unOpts}</select></td>`;
-        bHtml += `<td class="htd" style="background:${bg};text-align:center;padding:.12rem .2rem;">` +
-                 `<span style="font-size:.58rem;font-weight:800;letter-spacing:.04em;color:var(--tms-dark);` +
-                 `background:rgba(0,51,102,.07);padding:.12rem .32rem;border-radius:4px;">Plan.</span></td>`;
-        _hWeeks.forEach((yw, wi) => {
-            const v = (row.semanas && row.semanas[yw] !== undefined && row.semanas[yw] !== '') ? row.semanas[yw] : '';
-            bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
-                     `<input type="number" class="adm-input" data-aq="${ri}:${wi}" value="${v}" ` +
-                     `min="0" step="0.1" ` +
-                     `style="width:68px;text-align:center;padding:.22rem .1rem;font-size:.78rem;" ` +
-                     `placeholder="" onchange="_onBaselineChange(${ri},${wi})"></td>`;
+            // Ação (input só na 1ª sub-linha; demais ficam vazias mantendo a coluna fixa)
+            bHtml += `<td class="htd" style="position:sticky;left:${L0}px;z-index:1;background:${bg};min-width:200px;${top}">`;
+            if (first) bHtml += `<input type="text" class="adm-input" data-af="${ri}" list="acoes-notaveis-opcoes" value="${_esc(row.acao)}" placeholder="Selecione ou digite a ação..." style="min-width:188px;">`;
+            bHtml += `</td>`;
+
+            // Unidade
+            bHtml += `<td class="htd" style="position:sticky;left:${L1}px;z-index:1;background:${bg};min-width:80px;${top}">`;
+            if (first) {
+                const _unOpts = ['m²','m³','m','Unid'].map(u => `<option value="${u}" ${row.unidade===u?'selected':''}>${u}</option>`).join('');
+                bHtml += `<select class="adm-select" data-au="${ri}" style="min-width:72px;"><option value="">—</option>${_unOpts}</select>`;
+            }
+            bHtml += `</td>`;
+
+            // Série (rótulo)
+            if (s.key === 'repl') {
+                const rm = (ri === 0) ? ` <button type="button" onclick="removeReplanejado(${s.idx})" title="Remover esta linha de replanejamento" style="border:none;background:none;color:${s.color};cursor:pointer;font-size:.7rem;padding:0;line-height:1;">✕</button>` : '';
+                bHtml += `<td class="htd serie-cell" style="position:sticky;left:${L2}px;z-index:1;background:${bg};min-width:96px;${top}color:${s.color};">${s.label}${rm}</td>`;
+            } else {
+                bHtml += `<td class="htd serie-cell ${s.cls}" style="position:sticky;left:${L2}px;z-index:1;background:${bg};min-width:96px;${top}">${s.label}</td>`;
+            }
+
+            // Semanas
+            weeks.forEach((yw, wi) => {
+                if (s.key === 'plan') {
+                    const v = (row.semanas && row.semanas[yw] !== undefined && row.semanas[yw] !== '') ? row.semanas[yw] : '';
+                    bHtml += `<td class="htd" style="background:${bg};${top}padding:.18rem .12rem;">` +
+                             `<input type="number" class="adm-input" data-aq="${ri}:${wi}" value="${v}" min="0" step="0.1" style="width:64px;text-align:center;padding:.22rem .1rem;font-size:.78rem;" placeholder="0"></td>`;
+                } else if (s.key === 'fcst') {
+                    let fv = (row.forecast && row.forecast[yw] !== undefined && row.forecast[yw] !== '') ? row.forecast[yw] : '';
+                    if (fv === '' && row.semanas && row.semanas[yw] !== undefined && row.semanas[yw] !== '') fv = row.semanas[yw];
+                    // cor: vermelho se forecast aumentou vs planejado (atraso), verde se reduziu (acima)
+                    const pvF = parseFloat((row.semanas && row.semanas[yw] !== undefined) ? row.semanas[yw] : 0) || 0;
+                    const fvn = parseFloat(fv);
+                    let fcolor = '#0a2540';
+                    if (!isNaN(fvn)) fcolor = fvn > pvF ? '#c8324b' : (fvn < pvF ? '#1f9e4a' : '#0a2540');
+                    bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                             `<input type="number" class="adm-input" data-afc="${ri}:${wi}" value="${fv}" min="0" step="0.1" style="width:64px;text-align:center;padding:.22rem .1rem;font-size:.78rem;font-weight:600;color:${fcolor};" placeholder="0"></td>`;
+                } else if (s.key === 'repl') {
+                    // só edita a partir da última semana com realizado (não replaneja o passado)
+                    if (lastReal === null || yw >= lastReal) {
+                        const arr = row.replanejados || [];
+                        const rpv = (arr[s.idx] && arr[s.idx][yw] !== undefined && arr[s.idx][yw] !== '') ? arr[s.idx][yw] : '';
+                        bHtml += `<td class="htd" style="background:${bg};padding:.18rem .12rem;">` +
+                                 `<input type="number" class="adm-input" data-arp="${ri}:${wi}:${s.idx}" value="${rpv}" min="0" step="0.1" style="width:64px;text-align:center;padding:.22rem .1rem;font-size:.78rem;font-weight:600;color:${s.color};" placeholder="0"></td>`;
+                    } else {
+                        bHtml += `<td class="htd" style="background:${bg};text-align:center;color:#c0ccd8;">—</td>`;
+                    }
+                } else {
+                    const rv = (realMap[yw] !== undefined && realMap[yw] !== '') ? realMap[yw] : '';
+                    let rcolor = '#5B6B7B';
+                    if (rv !== '') {
+                        const pv  = parseFloat((row.semanas && row.semanas[yw] !== undefined) ? row.semanas[yw] : 0) || 0;
+                        const rvn = parseFloat(rv);
+                        rcolor = rvn < pv ? '#c8324b' : (rvn > pv ? '#1f9e4a' : '#5B6B7B');
+                    }
+                    bHtml += `<td class="htd" style="background:${bg};text-align:center;font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:600;color:${rcolor};">` +
+                             (rv === '' ? `<span style="color:#c0ccd8;">—</span>` : rv) + `</td>`;
+                }
+            });
+
+            // Excluir (só na 1ª sub-linha)
+            bHtml += `<td class="htd" style="background:${bg};border-right:none;${top}">`;
+            if (first) bHtml += `<button type="button" class="btn-del-row" onclick="delAcaoRow(${ri})"><i class="bi bi-x-circle"></i></button>`;
+            bHtml += `</td>`;
+
+            bHtml += `</tr>`;
         });
-        bHtml += `<td class="htd" rowspan="3" style="background:${bg};border-right:none;vertical-align:middle;">` +
-                 `<button type="button" class="btn-del-row" onclick="delAcaoRow(${ri})">` +
-                 `<i class="bi bi-x-circle"></i></button></td></tr>`;
-
-        // ── Linha 2: Forecast ──
-        bHtml += `<tr>`;
-        bHtml += `<td class="htd" style="background:${bgF};text-align:center;padding:.12rem .2rem;border-top:1px dashed rgba(240,165,0,.35);">` +
-                 `<span style="font-size:.58rem;font-weight:800;letter-spacing:.04em;color:#b35c00;` +
-                 `background:rgba(240,165,0,.12);padding:.12rem .32rem;border-radius:4px;">Fcst</span></td>`;
-        _hWeeks.forEach((yw, wi) => {
-            const baseline = (row.semanas && row.semanas[yw] !== undefined && row.semanas[yw] !== '')
-                             ? parseFloat(row.semanas[yw]) : null;
-            const saved    = (row.forecast_semanal && row.forecast_semanal[yw] !== undefined && row.forecast_semanal[yw] !== null)
-                             ? row.forecast_semanal[yw] : null;
-            const fv       = saved !== null ? saved : (baseline !== null ? baseline : '');
-            const delta    = (fv !== '' && baseline !== null) ? parseFloat(fv) - baseline : 0;
-            const isUp     = delta > 0.001;
-            const isDown   = delta < -0.001;
-            const cellBg   = isUp   ? 'rgba(240,165,0,.13)' :
-                             isDown ? 'rgba(46,125,50,.08)'  : bgF;
-            const inp      = `width:68px;text-align:center;padding:.22rem .1rem;font-size:.78rem;` +
-                             (isUp   ? 'border-color:#f0a500;color:#b35c00;font-weight:700;' :
-                              isDown ? 'border-color:#2e7d32;color:#2e7d32;font-weight:700;' : '');
-            bHtml += `<td class="htd" id="afc-${ri}-${wi}" ` +
-                     `style="background:${cellBg};padding:.18rem .12rem;border-top:1px dashed rgba(240,165,0,.35);">` +
-                     `<input type="number" class="adm-input" data-afc="${ri}:${wi}" value="${fv}" ` +
-                     `min="0" step="0.1" style="${inp}" placeholder="" ` +
-                     `onchange="_onForecastChange(${ri},${wi})"></td>`;
-        });
-        bHtml += `</tr>`;
-
-        // ── Linha 3: Realizado ──
-        bHtml += `<tr>`;
-        bHtml += `<td class="htd" style="background:${bgR};text-align:center;padding:.12rem .2rem;border-top:1px dashed rgba(46,125,50,.35);">` +
-                 `<span style="font-size:.58rem;font-weight:800;letter-spacing:.04em;color:#1b5e20;` +
-                 `background:rgba(46,125,50,.12);padding:.12rem .32rem;border-radius:4px;">Real.</span></td>`;
-        _hWeeks.forEach(yw => {
-            const realMap = ACOES_REAL_MAP[row.acao] || {};
-            const rv      = realMap[yw] !== undefined ? realMap[yw] : '';
-            const plan    = (row.semanas && row.semanas[yw] !== undefined && row.semanas[yw] !== '')
-                            ? parseFloat(row.semanas[yw]) : null;
-            const isAbove = rv !== '' && plan !== null && parseFloat(rv) > plan;
-            const isBelow = rv !== '' && plan !== null && parseFloat(rv) < plan;
-            const valStyle = isAbove ? 'color:#2e7d32;font-weight:700;' :
-                             isBelow ? 'color:#c62828;font-weight:700;' :
-                             rv !== '' ? 'color:#1b5e20;font-weight:600;' : 'color:#ccc;';
-            bHtml += `<td class="htd" style="background:${bgR};padding:.18rem .12rem;text-align:center;` +
-                     `border-top:1px dashed rgba(46,125,50,.35);">` +
-                     `<span style="font-size:.78rem;${valStyle}">${rv !== '' ? rv : '—'}</span></td>`;
-        });
-        bHtml += `</tr>`;
     });
     document.getElementById('acoesTbody').innerHTML = bHtml;
 }
 
 function addAcaoRow() {
     _syncAcoesFromDOM();
-    _aRows.push({ acao: '', unidade: '', semanas: {} });
+    _aRows.push({ acao: '', unidade: '', semanas: {}, forecast: {}, replanejados: [] });
+    _rebuildAcoes();
+}
+
+// Adiciona uma coluna de semana (a semana seguinte à última) e faz surgir a linha Replanejado
+function addAcaoSemana() {
+    _syncAcoesFromDOM();
+    const weeks = _acoesWeeks();
+    let nextWk;
+    if (weeks.length) {
+        const last = weeks[weeks.length - 1];
+        nextWk = _toISOWeek(new Date(_monOfWeek(last).getTime() + 7 * 864e5));
+    } else {
+        nextWk = _toISOWeek(new Date());
+    }
+    if (!weeks.includes(nextWk)) _aExtra.push(nextWk);
+    _rebuildAcoes();
+}
+
+function removeAcaoSemana(wk) {
+    _syncAcoesFromDOM();
+    _aExtra = _aExtra.filter(w => w !== wk);
+    _rebuildAcoes();
+}
+
+function _updateReplBtn() {
+    const lbl = document.getElementById('btnReplLbl');
+    const btn = document.getElementById('btnRepl');
+    if (lbl) lbl.textContent = `Adicionar Replanejado (${_aReplN}/${REPL_MAX})`;
+    if (btn) {
+        const full = _aReplN >= REPL_MAX;
+        btn.disabled = full;
+        btn.style.opacity = full ? '.5' : '';
+        btn.style.cursor  = full ? 'not-allowed' : 'pointer';
+    }
+}
+
+function addReplanejado() {
+    if (_aReplN >= REPL_MAX) return;
+    _syncAcoesFromDOM();
+    _aReplN++;
+    _updateReplBtn();
+    _rebuildAcoes();
+}
+
+function removeReplanejado(idx) {
+    _syncAcoesFromDOM();
+    _aRows.forEach(r => { if (Array.isArray(r.replanejados)) r.replanejados.splice(idx, 1); });
+    _aReplN = Math.max(0, _aReplN - 1);
+    _updateReplBtn();
     _rebuildAcoes();
 }
 
@@ -759,6 +1206,8 @@ function delAcaoRow(ri) {
 function serializeAcoes() {
     _syncAcoesFromDOM();
     document.getElementById('acoesJson').value = JSON.stringify(_aRows);
+    document.getElementById('acoesExtraJson').value = JSON.stringify(_aExtra);
+    document.getElementById('acoesReplN').value = String(_aReplN);
 }
 
 // Inicialização
@@ -768,15 +1217,51 @@ document.addEventListener('DOMContentLoaded', function () {
         tipo:    r.tipo    || 'direto',
         semanas: r.semanas || {},
     }));
-    _aRows = (_ACOES_INIT || []).map(a => ({
-        acao:             a.acao             || '',
-        unidade:          a.unidade          || '',
-        semanas:          a.semanas          || {},
-        forecast_semanal: a.forecast_semanal || {},
-    }));
+    _aRows = (_ACOES_INIT || []).map(a => {
+        const repls = Array.isArray(a.replanejados) ? a.replanejados
+                    : (a.replanejado && Object.keys(a.replanejado).length ? [a.replanejado] : []);
+        return {
+            acao:         a.acao     || '',
+            unidade:      a.unidade  || '',
+            semanas:      a.semanas  || {},
+            forecast:     a.forecast || {},
+            replanejados: repls,
+        };
+    });
+    _aExtra = (_ACOES_EXTRA || []).slice();
+    const _maxRepl = _aRows.reduce((m, r) => Math.max(m, (r.replanejados || []).length), 0);
+    _aReplN = Math.min(REPL_MAX, (typeof _ACOES_REPL_N === 'number' ? _ACOES_REPL_N : 0) || _maxRepl);
+    _updateReplBtn();
+
+    // Inicializa Financeira (migra do formato legado se necessário)
+    if (_LB_FIN_INIT && Object.keys(_LB_FIN_INIT).length > 0) {
+        _finPlan = Object.assign({}, _LB_FIN_INIT);
+    } else {
+        (_LB_FIN_LEG || []).forEach(item => { _finPlan[item.semana] = item.valor; });
+    }
+    _finFcst  = Object.assign({}, _LB_FIN_FCST  || {});
+    _finRepls = (_LB_FIN_REPLS || []).map(r => Object.assign({}, r));
+    _finExtra = (_LB_FIN_EXTRA || []).slice();
+    _finReplN = Math.min(REPL_MAX, (_FIN_REPL_N_I || 0) || _finRepls.length);
+    _updateFinReplBtn();
+
+    // Inicializa Física (migra do formato legado se necessário)
+    if (_LB_FIS_INIT && Object.keys(_LB_FIS_INIT).length > 0) {
+        _fisPlan = Object.assign({}, _LB_FIS_INIT);
+    } else {
+        (_LB_FIS_LEG || []).forEach(item => { _fisPlan[item.semana] = item.percentual; });
+    }
+    _fisFcst  = Object.assign({}, _LB_FIS_FCST  || {});
+    _fisRepls = (_LB_FIS_REPLS || []).map(r => Object.assign({}, r));
+    _fisExtra = (_LB_FIS_EXTRA || []).slice();
+    _fisReplN = Math.min(REPL_MAX, (_FIS_REPL_N_I || 0) || _fisRepls.length);
+    _updateFisReplBtn();
+
     document.getElementById('adminForm').addEventListener('submit', function() {
         serializeHist();
         serializeAcoes();
+        serializeFin();
+        serializeFis();
     });
     if (_HIST_INICIO) document.getElementById('dataInicio').value = _HIST_INICIO;
     if (_HIST_FIM)    document.getElementById('dataFim').value    = _HIST_FIM;

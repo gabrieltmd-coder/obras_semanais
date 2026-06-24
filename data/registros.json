@@ -247,7 +247,7 @@
     "equipamentos": [],
     "pontos_atencao": "Nenhuma ocorrência relevante.",
     "valor_medido": 0.0,
-    "avanco_fisico": 41.0,
+    "avanco_fisico": 48.0,
     "pluviometria": {
       "segunda": "Tempo Bom",
       "terca": "Tempo Bom",
@@ -258,12 +258,16 @@
       "domingo": "Sem Expediente"
     },
     "criado_em": "2026-06-12T08:30:00.000000",
-    "atualizado_em": "2026-06-16T15:53:46.236769",
+    "atualizado_em": "2026-06-24T09:26:15.608736",
     "acoes_realizadas": {
-      "Concretagem de Pilares": 25,
-      "Alvenaria de Vedação": 50
+      "Concretagem de Pilares": 15,
+      "Alvenaria de Vedação": 12,
+      "Fundação — estacas": 5
     },
-    "alterado_em": "2026-06-16T15:53:46.236777",
+    "alterado_em": "2026-06-24T09:26:15.608750",
+    "acoes_justificativas": {
+      "Alvenaria de Vedação": "ddrtgth"
+    },
     "equipamentos_realizados": {
       "Escavadeira Hidráulica": 2,
       "Caminhão Basculante": 4,
@@ -275,7 +279,8 @@
       "Encarregado": 5,
       "Mestre de Obras": 2
     },
-    "alterado_por": "gabrieltmd@gmail.com"
+    "alterado_por": "gabrieltmd@gmail.com",
+    "avanco_fisico_forecast": {}
   },
   {
     "id": "b2c3d4e5-0002-4002-8002-200000000001",
@@ -769,12 +774,41 @@
     "contratada": "TechBuild Engenharia",
     "semana_referencia": "2026-05-18",
     "trabalhos_notaveis": "Escavação de valas trecho A concluída. Instalação do eletroduto PVC 100mm.",
-    "efetivo": [],
-    "total_direto": 0,
-    "total_indireto": 0,
-    "equipamentos": [],
+    "efetivo": [
+      {
+        "funcao": "Eletricista",
+        "quantidade": 8,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Engenheiro Civil",
+        "quantidade": 2,
+        "tipo": "indireto"
+      },
+      {
+        "funcao": "Técnico de Segurança",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 8,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Retroescavadeira",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Caminhão Munck",
+        "quantidade": 1
+      },
+      {
+        "descricao": "Compactador de Placa",
+        "quantidade": 2
+      }
+    ],
     "pontos_atencao": "Solo argiloso no trecho B — necessário reforço de escoramento.",
-    "valor_medido": 0.0,
+    "valor_medido": 25000.0,
     "avanco_fisico": 12.0,
     "pluviometria": {
       "segunda": "Tempo Bom",
@@ -786,23 +820,7 @@
       "domingo": "Sem Expediente"
     },
     "criado_em": "2026-05-22T16:30:00.000000",
-    "atualizado_em": "2026-06-16T15:46:21.117956",
-    "acoes_realizadas": {
-      "Instalação Elétrica": 90,
-      "Escavação de Valas": 50
-    },
-    "equipamentos_realizados": {
-      "Retroescavadeira": 2,
-      "Gerador de Energia": 1,
-      "Compressor de Ar": 1
-    },
-    "histograma_realizados": {
-      "Eletricista": 8,
-      "Engenheiro Civil": 2,
-      "Técnico de Segurança": 1
-    },
-    "alterado_em": "2026-06-16T15:46:21.117965",
-    "alterado_por": "gabrieltmd@gmail.com"
+    "atualizado_em": "2026-05-22T16:30:00.000000"
   },
   {
     "id": "c3d4e5f6-0003-4003-8003-300000000003",
@@ -961,5 +979,3449 @@
     },
     "criado_em": "2026-06-12T10:00:00.000000",
     "atualizado_em": "2026-06-12T10:00:00.000000"
+  },
+  {
+    "id": "59cc07b3-b560-4667-a3d6-f17b885f5108",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-01-05",
+    "trabalhos_notaveis": "Semana 1: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 280000.0,
+    "avanco_fisico": 3.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-05T08:00:00.000000",
+    "atualizado_em": "2026-01-05T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "fe8e9a8e-76e0-4da3-837b-a261c3cf6d8d",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-01-19",
+    "trabalhos_notaveis": "Semana 2: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 16,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 16,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 420000.0,
+    "avanco_fisico": 8.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-19T08:00:00.000000",
+    "atualizado_em": "2026-01-19T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "79ea902b-12b6-4c80-9bfd-7cafb324809e",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-02-02",
+    "trabalhos_notaveis": "Semana 3: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 18,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 560000.0,
+    "avanco_fisico": 15.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-02T08:00:00.000000",
+    "atualizado_em": "2026-02-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "dbda3c41-7946-490a-9bdf-40ed280019cd",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-02-16",
+    "trabalhos_notaveis": "Semana 4: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 20,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 5,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 20,
+    "total_indireto": 5,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 650000.0,
+    "avanco_fisico": 22.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-16T08:00:00.000000",
+    "atualizado_em": "2026-02-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "63b663e0-1e5b-4b09-b65c-cecd2b668306",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-03-02",
+    "trabalhos_notaveis": "Semana 5: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 22,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 5,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 22,
+    "total_indireto": 5,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 720000.0,
+    "avanco_fisico": 30.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-02T08:00:00.000000",
+    "atualizado_em": "2026-03-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "3b849d29-d5b7-418c-bd69-befbf94c4f54",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-03-16",
+    "trabalhos_notaveis": "Semana 6: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 24,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 6,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 24,
+    "total_indireto": 6,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 800000.0,
+    "avanco_fisico": 40.0,
+    "pluviometria": {
+      "segunda": "Chuva Forte",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-16T08:00:00.000000",
+    "atualizado_em": "2026-03-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "5a39b610-b3ed-43a0-8fd3-f0db58baee56",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-03-30",
+    "trabalhos_notaveis": "Semana 7: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 22,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 5,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 22,
+    "total_indireto": 5,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 850000.0,
+    "avanco_fisico": 50.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-30T08:00:00.000000",
+    "atualizado_em": "2026-03-30T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "05c08e12-f311-4ca0-aa28-23402750aad1",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-04-13",
+    "trabalhos_notaveis": "Semana 8: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 20,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 20,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 780000.0,
+    "avanco_fisico": 58.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-13T08:00:00.000000",
+    "atualizado_em": "2026-04-13T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "0024a3ae-b2a6-4f4b-8d62-b962fc99d8a1",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-04-27",
+    "trabalhos_notaveis": "Semana 9: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 18,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 720000.0,
+    "avanco_fisico": 65.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-27T08:00:00.000000",
+    "atualizado_em": "2026-04-27T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "22508f70-b834-45e3-923e-f2c93ef36f58",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Semana 10: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 16,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 16,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 680000.0,
+    "avanco_fisico": 72.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-11T08:00:00.000000",
+    "atualizado_em": "2026-05-11T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "c1c69539-469d-4a5c-8589-2b42150fe5b4",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Semana 11: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 580000.0,
+    "avanco_fisico": 80.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-25T08:00:00.000000",
+    "atualizado_em": "2026-05-25T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "98c472fd-6a81-4f04-8de3-c524ad26c4e8",
+    "contrato": "DRG-2026-001",
+    "contratada": "Dragagem Portuaria Ltda",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Semana 12: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 10,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 360000.0,
+    "avanco_fisico": 87.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-08T08:00:00.000000",
+    "atualizado_em": "2026-06-08T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "264e20f6-2e92-4680-8c8b-5201c4d77888",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-01-05",
+    "trabalhos_notaveis": "Semana 1: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 20,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 20,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 180000.0,
+    "avanco_fisico": 1.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-05T08:00:00.000000",
+    "atualizado_em": "2026-01-05T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "1124b993-9790-4e66-8729-fae9563300bb",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-01-19",
+    "trabalhos_notaveis": "Semana 2: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 28,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 5,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 28,
+    "total_indireto": 5,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 350000.0,
+    "avanco_fisico": 4.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-19T08:00:00.000000",
+    "atualizado_em": "2026-01-19T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "563a06c9-64b3-4cfd-8f1a-549661751447",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-02-02",
+    "trabalhos_notaveis": "Semana 3: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 32,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 5,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 32,
+    "total_indireto": 5,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 600000.0,
+    "avanco_fisico": 10.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-02T08:00:00.000000",
+    "atualizado_em": "2026-02-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "59e56c44-b484-4037-8faa-6645a74a8eeb",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-02-16",
+    "trabalhos_notaveis": "Semana 4: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 35,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 6,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 35,
+    "total_indireto": 6,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 900000.0,
+    "avanco_fisico": 18.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-16T08:00:00.000000",
+    "atualizado_em": "2026-02-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "24a8356f-b569-4baf-b9d9-4cbf34d7475a",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-03-02",
+    "trabalhos_notaveis": "Semana 5: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 38,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 6,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 38,
+    "total_indireto": 6,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1200000.0,
+    "avanco_fisico": 28.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-02T08:00:00.000000",
+    "atualizado_em": "2026-03-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "1e16c41c-0a75-4a37-966a-9c64b69834bf",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-03-16",
+    "trabalhos_notaveis": "Semana 6: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 40,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 7,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 40,
+    "total_indireto": 7,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1400000.0,
+    "avanco_fisico": 38.0,
+    "pluviometria": {
+      "segunda": "Chuva Forte",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-16T08:00:00.000000",
+    "atualizado_em": "2026-03-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "01e7a5c0-f3ae-437e-88c6-42c93f7c8b86",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-03-30",
+    "trabalhos_notaveis": "Semana 7: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 38,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 6,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 38,
+    "total_indireto": 6,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1600000.0,
+    "avanco_fisico": 50.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-30T08:00:00.000000",
+    "atualizado_em": "2026-03-30T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "1bd21bb9-f445-4033-929c-eebd2a5eec14",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-04-13",
+    "trabalhos_notaveis": "Semana 8: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 35,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 5,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 35,
+    "total_indireto": 5,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1500000.0,
+    "avanco_fisico": 60.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-13T08:00:00.000000",
+    "atualizado_em": "2026-04-13T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "6f3b502f-18e5-4509-8081-605c5a40f360",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-04-27",
+    "trabalhos_notaveis": "Semana 9: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 30,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 5,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 30,
+    "total_indireto": 5,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1300000.0,
+    "avanco_fisico": 68.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-27T08:00:00.000000",
+    "atualizado_em": "2026-04-27T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "72573973-0acf-40e4-b0e6-a19dfddcd5c7",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Semana 10: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 25,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 25,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1100000.0,
+    "avanco_fisico": 75.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-11T08:00:00.000000",
+    "atualizado_em": "2026-05-11T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "3c278cbc-e5f7-4108-a865-30401908dfcf",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Semana 11: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 20,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 20,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 800000.0,
+    "avanco_fisico": 82.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-25T08:00:00.000000",
+    "atualizado_em": "2026-05-25T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "1de31c17-e6db-4ac4-aa00-faa61d1a1418",
+    "contrato": "NVL-2026-002",
+    "contratada": "Naval Engenharia SA",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Semana 12: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 400000.0,
+    "avanco_fisico": 90.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-08T08:00:00.000000",
+    "atualizado_em": "2026-06-08T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "8e964842-57a9-465b-817a-078b8c5d36e7",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-01-05",
+    "trabalhos_notaveis": "Semana 1: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 8,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 8,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 70000.0,
+    "avanco_fisico": 2.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-05T08:00:00.000000",
+    "atualizado_em": "2026-01-05T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "257ec212-c21a-4a1f-8461-d89e62d405c6",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-01-19",
+    "trabalhos_notaveis": "Semana 2: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 12,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 180000.0,
+    "avanco_fisico": 6.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-19T08:00:00.000000",
+    "atualizado_em": "2026-01-19T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "8858e3ab-5b83-492a-a705-f39dae7b1c8c",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-02-02",
+    "trabalhos_notaveis": "Semana 3: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 300000.0,
+    "avanco_fisico": 14.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-02T08:00:00.000000",
+    "atualizado_em": "2026-02-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "813617a7-6b35-4b74-acae-ded49d33c807",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-02-16",
+    "trabalhos_notaveis": "Semana 4: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 16,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 16,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 420000.0,
+    "avanco_fisico": 24.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-16T08:00:00.000000",
+    "atualizado_em": "2026-02-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "33a59a68-9593-4564-a3bc-119d533ba269",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-03-02",
+    "trabalhos_notaveis": "Semana 5: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 18,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 520000.0,
+    "avanco_fisico": 36.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-02T08:00:00.000000",
+    "atualizado_em": "2026-03-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "465c1948-ed87-4e13-9bfc-6a779707c8e0",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-03-16",
+    "trabalhos_notaveis": "Semana 6: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 18,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 580000.0,
+    "avanco_fisico": 46.0,
+    "pluviometria": {
+      "segunda": "Chuva Forte",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-16T08:00:00.000000",
+    "atualizado_em": "2026-03-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "1f9ad375-8f71-4269-8337-466e3e096b39",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-03-30",
+    "trabalhos_notaveis": "Semana 7: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 16,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 16,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 600000.0,
+    "avanco_fisico": 56.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-30T08:00:00.000000",
+    "atualizado_em": "2026-03-30T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "be5a0f5a-c850-41fe-a9e2-2f1f947cb5fd",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-04-13",
+    "trabalhos_notaveis": "Semana 8: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 550000.0,
+    "avanco_fisico": 66.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-13T08:00:00.000000",
+    "atualizado_em": "2026-04-13T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "e24e9e92-db0a-415d-99f2-b61f051fa1c4",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-04-27",
+    "trabalhos_notaveis": "Semana 9: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 12,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 480000.0,
+    "avanco_fisico": 74.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-27T08:00:00.000000",
+    "atualizado_em": "2026-04-27T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "97725ca3-6879-491e-a99a-b481d46d6b1e",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Semana 10: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 10,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 400000.0,
+    "avanco_fisico": 81.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-11T08:00:00.000000",
+    "atualizado_em": "2026-05-11T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "08d06bd5-de50-45d0-8de3-7967a4e2104b",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Semana 11: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 9,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 9,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 320000.0,
+    "avanco_fisico": 88.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-25T08:00:00.000000",
+    "atualizado_em": "2026-05-25T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "7a9ac240-cd01-4f2b-b7ba-6be66908e2f6",
+    "contrato": "OFF-2026-003",
+    "contratada": "Offshore Construcoes",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Semana 12: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 7,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 7,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 200000.0,
+    "avanco_fisico": 94.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-08T08:00:00.000000",
+    "atualizado_em": "2026-06-08T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "b61c0a5e-2d0e-4ebb-a1cc-4bd5f80a4ef4",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-01-05",
+    "trabalhos_notaveis": "Semana 1: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 12,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 130000.0,
+    "avanco_fisico": 3.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-05T08:00:00.000000",
+    "atualizado_em": "2026-01-05T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "b635dd2c-c037-49e9-b5fc-c250885f9759",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-01-19",
+    "trabalhos_notaveis": "Semana 2: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 18,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 320000.0,
+    "avanco_fisico": 10.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-19T08:00:00.000000",
+    "atualizado_em": "2026-01-19T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "68e22c28-a2fb-4bee-b410-16fd67836954",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-02-02",
+    "trabalhos_notaveis": "Semana 3: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 20,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 20,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 500000.0,
+    "avanco_fisico": 22.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-02T08:00:00.000000",
+    "atualizado_em": "2026-02-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "131b3928-a7f5-42c8-be6f-78b500e7ca86",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-02-16",
+    "trabalhos_notaveis": "Semana 4: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 22,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 22,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 680000.0,
+    "avanco_fisico": 35.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-16T08:00:00.000000",
+    "atualizado_em": "2026-02-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "657a7c61-503c-4eaa-b077-ebd232f6e773",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-03-02",
+    "trabalhos_notaveis": "Semana 5: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 24,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 24,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 750000.0,
+    "avanco_fisico": 48.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-02T08:00:00.000000",
+    "atualizado_em": "2026-03-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "e0c55ad7-0b73-406f-8005-82116df154e7",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-03-16",
+    "trabalhos_notaveis": "Semana 6: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 26,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 26,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 820000.0,
+    "avanco_fisico": 60.0,
+    "pluviometria": {
+      "segunda": "Chuva Forte",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-16T08:00:00.000000",
+    "atualizado_em": "2026-03-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "354c0a5b-34ef-4ad9-9c63-7f698c154214",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-03-30",
+    "trabalhos_notaveis": "Semana 7: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 24,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 24,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 800000.0,
+    "avanco_fisico": 70.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-30T08:00:00.000000",
+    "atualizado_em": "2026-03-30T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "201a8d0d-b3e8-46c8-be1b-acd43c89a34e",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-04-13",
+    "trabalhos_notaveis": "Semana 8: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 22,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 22,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 720000.0,
+    "avanco_fisico": 78.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-13T08:00:00.000000",
+    "atualizado_em": "2026-04-13T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "b98e5cb2-532b-419c-bfb0-7b69f53cac04",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-04-27",
+    "trabalhos_notaveis": "Semana 9: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 20,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 20,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 650000.0,
+    "avanco_fisico": 85.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-27T08:00:00.000000",
+    "atualizado_em": "2026-04-27T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "d79e838a-eb8f-41c4-a714-1b7ba783dce1",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Semana 10: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 18,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 580000.0,
+    "avanco_fisico": 90.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-11T08:00:00.000000",
+    "atualizado_em": "2026-05-11T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "d7aea354-62ba-41fc-8236-13261c7e2596",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Semana 11: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 400000.0,
+    "avanco_fisico": 95.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-25T08:00:00.000000",
+    "atualizado_em": "2026-05-25T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "daac3b92-e6b2-4d99-8442-1da6c62498f7",
+    "contrato": "HID-2026-004",
+    "contratada": "Hidro Estruturas Ltda",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Semana 12: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 10,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 200000.0,
+    "avanco_fisico": 98.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-08T08:00:00.000000",
+    "atualizado_em": "2026-06-08T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "749c7571-6161-4666-8d47-a774fa1621d9",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-02-02",
+    "trabalhos_notaveis": "Semana 3: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 12,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 80000.0,
+    "avanco_fisico": 3.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-02T08:00:00.000000",
+    "atualizado_em": "2026-02-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "f87bd715-33ec-4a34-9fb4-d74222b76242",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-02-16",
+    "trabalhos_notaveis": "Semana 4: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 16,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 16,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 200000.0,
+    "avanco_fisico": 10.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-16T08:00:00.000000",
+    "atualizado_em": "2026-02-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "b035e8e0-4f4c-4b4b-8175-498c0676eb49",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-03-02",
+    "trabalhos_notaveis": "Semana 5: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 18,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 380000.0,
+    "avanco_fisico": 20.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-02T08:00:00.000000",
+    "atualizado_em": "2026-03-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "a20fce05-b33b-4335-831b-e9bd6967a213",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-03-16",
+    "trabalhos_notaveis": "Semana 6: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 20,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 20,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 560000.0,
+    "avanco_fisico": 32.0,
+    "pluviometria": {
+      "segunda": "Chuva Forte",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-16T08:00:00.000000",
+    "atualizado_em": "2026-03-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "914930d9-5a01-4c0f-91cb-1a2fb27d391e",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-03-30",
+    "trabalhos_notaveis": "Semana 7: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 22,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 4,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 22,
+    "total_indireto": 4,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 750000.0,
+    "avanco_fisico": 44.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-30T08:00:00.000000",
+    "atualizado_em": "2026-03-30T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "c1c0b666-591f-497c-abf7-b864f6516442",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-04-13",
+    "trabalhos_notaveis": "Semana 8: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 20,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 20,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 880000.0,
+    "avanco_fisico": 56.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-13T08:00:00.000000",
+    "atualizado_em": "2026-04-13T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "d064d153-cbe0-4d8d-aef4-9a220d89f2b0",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-04-27",
+    "trabalhos_notaveis": "Semana 9: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 18,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 920000.0,
+    "avanco_fisico": 64.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-27T08:00:00.000000",
+    "atualizado_em": "2026-04-27T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "9d7293cd-c07a-45e4-9b52-0d4205f14455",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Semana 10: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 16,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 16,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 880000.0,
+    "avanco_fisico": 71.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-11T08:00:00.000000",
+    "atualizado_em": "2026-05-11T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "a073fefe-10c4-4fea-a0ca-d9898d63c6a3",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Semana 11: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 800000.0,
+    "avanco_fisico": 79.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-25T08:00:00.000000",
+    "atualizado_em": "2026-05-25T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "af26b40c-84b3-488d-b33a-d7906015a26d",
+    "contrato": "MRT-2026-005",
+    "contratada": "Maritima Obras SA",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Semana 12: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 12,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 600000.0,
+    "avanco_fisico": 86.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-08T08:00:00.000000",
+    "atualizado_em": "2026-06-08T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "9809f018-883f-4f50-bbd8-507fe97b35f2",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-01-05",
+    "trabalhos_notaveis": "Semana 1: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 6,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 6,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 90000.0,
+    "avanco_fisico": 2.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-05T08:00:00.000000",
+    "atualizado_em": "2026-01-05T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "a0df842c-c8b8-4fa2-9049-f92347b67d1a",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-01-19",
+    "trabalhos_notaveis": "Semana 2: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 8,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 8,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 250000.0,
+    "avanco_fisico": 8.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-19T08:00:00.000000",
+    "atualizado_em": "2026-01-19T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "09305209-ce6e-4540-80fb-c1bd2a679e21",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-02-02",
+    "trabalhos_notaveis": "Semana 3: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 10,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 450000.0,
+    "avanco_fisico": 16.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-02T08:00:00.000000",
+    "atualizado_em": "2026-02-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "41ce3706-3cc0-4f5d-abc0-0854fcedc467",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-02-16",
+    "trabalhos_notaveis": "Semana 4: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 12,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 650000.0,
+    "avanco_fisico": 26.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-16T08:00:00.000000",
+    "atualizado_em": "2026-02-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "8dedade5-c98c-48ca-b107-a86a3bab771e",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-03-02",
+    "trabalhos_notaveis": "Semana 5: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 780000.0,
+    "avanco_fisico": 38.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-02T08:00:00.000000",
+    "atualizado_em": "2026-03-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "2fead8d9-c2fc-45cf-84dc-2ece32393bfb",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-03-16",
+    "trabalhos_notaveis": "Semana 6: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 820000.0,
+    "avanco_fisico": 50.0,
+    "pluviometria": {
+      "segunda": "Chuva Forte",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-16T08:00:00.000000",
+    "atualizado_em": "2026-03-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "0621dc4a-9897-4e03-83d3-26cfa2142931",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-03-30",
+    "trabalhos_notaveis": "Semana 7: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 12,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 800000.0,
+    "avanco_fisico": 60.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-30T08:00:00.000000",
+    "atualizado_em": "2026-03-30T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "27185dc0-a2c8-43a7-9c0c-884f3def8d59",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-04-13",
+    "trabalhos_notaveis": "Semana 8: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 10,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 750000.0,
+    "avanco_fisico": 68.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-13T08:00:00.000000",
+    "atualizado_em": "2026-04-13T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "d2e6a962-2172-4cdd-9237-2f93ead2f306",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-04-27",
+    "trabalhos_notaveis": "Semana 9: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 9,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 9,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 680000.0,
+    "avanco_fisico": 74.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-27T08:00:00.000000",
+    "atualizado_em": "2026-04-27T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "b3b6c0ac-076c-476f-ae89-9ce65508e2a4",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Semana 10: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 8,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 8,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 600000.0,
+    "avanco_fisico": 80.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-11T08:00:00.000000",
+    "atualizado_em": "2026-05-11T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "375a9593-b575-4bed-9e78-5cc702c753d4",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Semana 11: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 7,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 7,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 480000.0,
+    "avanco_fisico": 86.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-25T08:00:00.000000",
+    "atualizado_em": "2026-05-25T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "7d40b881-a0e3-47c3-92d5-4370cc87c3e0",
+    "contrato": "PRT-2026-006",
+    "contratada": "Porto Industrial Eng",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Semana 12: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 6,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 6,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 320000.0,
+    "avanco_fisico": 91.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-08T08:00:00.000000",
+    "atualizado_em": "2026-06-08T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "cf6b0095-a89b-47e9-84df-f35949558b49",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-01-05",
+    "trabalhos_notaveis": "Semana 1: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 8,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 8,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 200000.0,
+    "avanco_fisico": 2.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-05T08:00:00.000000",
+    "atualizado_em": "2026-01-05T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "db6dcb1f-b805-4cc7-9756-f3bfa7ed65e7",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-01-19",
+    "trabalhos_notaveis": "Semana 2: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 10,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 420000.0,
+    "avanco_fisico": 6.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-01-19T08:00:00.000000",
+    "atualizado_em": "2026-01-19T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "88d65d69-cc4e-4b15-9010-add6202750a1",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-02-02",
+    "trabalhos_notaveis": "Semana 3: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 12,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 750000.0,
+    "avanco_fisico": 12.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-02T08:00:00.000000",
+    "atualizado_em": "2026-02-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "4b013420-0e3b-4413-addc-827df75b2694",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-02-16",
+    "trabalhos_notaveis": "Semana 4: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1050000.0,
+    "avanco_fisico": 20.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-02-16T08:00:00.000000",
+    "atualizado_em": "2026-02-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "5a4f2559-b7a6-4714-b470-c20f0268ef64",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-03-02",
+    "trabalhos_notaveis": "Semana 5: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 16,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 16,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1300000.0,
+    "avanco_fisico": 30.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-02T08:00:00.000000",
+    "atualizado_em": "2026-03-02T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "02f81ab0-ac08-4cc7-9127-ea5fc52c4835",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-03-16",
+    "trabalhos_notaveis": "Semana 6: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 18,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 18,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1550000.0,
+    "avanco_fisico": 42.0,
+    "pluviometria": {
+      "segunda": "Chuva Forte",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Chuva Parcial",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-16T08:00:00.000000",
+    "atualizado_em": "2026-03-16T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "9144c94b-d60f-4676-b791-491278ff179f",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-03-30",
+    "trabalhos_notaveis": "Semana 7: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 16,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 3,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 16,
+    "total_indireto": 3,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1500000.0,
+    "avanco_fisico": 54.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-03-30T08:00:00.000000",
+    "atualizado_em": "2026-03-30T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "d9ea5729-e2f6-4e4c-9a88-12b9539855c1",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-04-13",
+    "trabalhos_notaveis": "Semana 8: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 14,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 14,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1400000.0,
+    "avanco_fisico": 64.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-13T08:00:00.000000",
+    "atualizado_em": "2026-04-13T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "93f0c361-eb49-4e5b-89d6-0e8ae1e62cad",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-04-27",
+    "trabalhos_notaveis": "Semana 9: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 12,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 12,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1200000.0,
+    "avanco_fisico": 72.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-04-27T08:00:00.000000",
+    "atualizado_em": "2026-04-27T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "b6af04f8-743c-40a2-b5a1-2def1825303b",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-05-11",
+    "trabalhos_notaveis": "Semana 10: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 10,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 10,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 1000000.0,
+    "avanco_fisico": 79.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-11T08:00:00.000000",
+    "atualizado_em": "2026-05-11T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "189151aa-585d-4154-9004-eec97b34a6f3",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-05-25",
+    "trabalhos_notaveis": "Semana 11: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 9,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 2,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 9,
+    "total_indireto": 2,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 800000.0,
+    "avanco_fisico": 85.0,
+    "pluviometria": {
+      "segunda": "Tempo Bom",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-05-25T08:00:00.000000",
+    "atualizado_em": "2026-05-25T08:00:00.000000",
+    "criado_por": "Administrador"
+  },
+  {
+    "id": "4df35ba5-ad47-46e1-855d-a4175bcc2e1d",
+    "contrato": "SUL-2026-007",
+    "contratada": "Sul Construtora Ltda",
+    "semana_referencia": "2026-06-08",
+    "trabalhos_notaveis": "Semana 12: Execucao normal das atividades previstas no cronograma.",
+    "efetivo": [
+      {
+        "funcao": "Operario",
+        "quantidade": 8,
+        "tipo": "direto"
+      },
+      {
+        "funcao": "Supervisor",
+        "quantidade": 1,
+        "tipo": "indireto"
+      }
+    ],
+    "total_direto": 8,
+    "total_indireto": 1,
+    "equipamentos": [
+      {
+        "descricao": "Equipamento A",
+        "quantidade": 2
+      }
+    ],
+    "pontos_atencao": "",
+    "valor_medido": 500000.0,
+    "avanco_fisico": 90.0,
+    "pluviometria": {
+      "segunda": "Chuva Parcial",
+      "terca": "Tempo Bom",
+      "quarta": "Tempo Bom",
+      "quinta": "Tempo Bom",
+      "sexta": "Tempo Bom",
+      "sabado": "Sem Expediente",
+      "domingo": "Sem Expediente"
+    },
+    "criado_em": "2026-06-08T08:00:00.000000",
+    "atualizado_em": "2026-06-08T08:00:00.000000",
+    "criado_por": "Administrador"
   }
 ]

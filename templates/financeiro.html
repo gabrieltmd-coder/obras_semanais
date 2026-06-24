@@ -3,97 +3,128 @@
 {% block title %}Dashboard Financeiro{% endblock %}
 {% block page_icon %}<i class="bi bi-currency-dollar"></i>{% endblock %}
 {% block page_title %}Dashboard Financeiro{% endblock %}
-{% block breadcrumb %}<a href="{{ url_for('index') }}" style="color:rgba(255,255,255,.65);">Início</a> › Financeiro{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('index') }}">Início</a> / Financeiro{% endblock %}
 
 {% block content %}
 <style>
-/* ── DARK THEME ── */
-body { background: #0b1828 !important; }
-.page-header { background: linear-gradient(135deg,#040c18 0%,#0b1828 100%) !important; padding:1rem 0 .85rem !important; margin-bottom:.85rem !important; }
-.app-footer  { background: #040c18 !important; margin-top:0 !important; padding:.6rem !important; }
-
-/* ── GLASS CARD ── */
-.gc {
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.09);
-    border-radius: 16px;
-    padding: .85rem 1rem;
-    backdrop-filter: blur(10px);
+/* ── PAINEL DE CONTROLE (grafite) ── */
+body {
+    background: #0E1B24 !important;
+    background-image:
+        linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px) !important;
+    background-size: 112px 112px, 112px 112px !important;
 }
+.page-header {
+    background: #0A141C !important;
+    border-bottom: 1.5px solid rgba(255,255,255,.10) !important;
+    padding: 1rem 0 .9rem !important; margin-bottom: 1rem !important;
+}
+.page-header h1 { color: #fff !important; }
+.page-header h1 i { color: #fff !important; }
+.page-header h1::before { background: #F0B34D !important; }
+.page-header .breadcrumb { color: rgba(255,255,255,.45) !important; }
+.page-header .breadcrumb a { color: #F0B34D !important; }
+.app-footer { background: #0A141C !important; margin-top: 1.2rem !important; }
+.btn-back-header { background: rgba(255,255,255,.05) !important; color: rgba(255,255,255,.85) !important; border-color: rgba(255,255,255,.18) !important; }
+.btn-back-header:hover { background: rgba(255,255,255,.14) !important; color:#fff !important; }
+
+/* ── PAINEL ── */
+.gc { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.9rem 1rem; }
 .gc-title {
-    font-size:.6rem; font-weight:800; text-transform:uppercase;
-    letter-spacing:.10em; color:rgba(255,255,255,.4);
-    margin-bottom:.6rem;
+    font-family:'IBM Plex Mono',monospace; font-size:.62rem; font-weight:500; text-transform:uppercase;
+    letter-spacing:.12em; color:rgba(255,255,255,.5);
+    margin-bottom:.7rem; padding-bottom:.55rem; border-bottom:1px solid rgba(255,255,255,.07);
     display:flex; align-items:center; justify-content:space-between;
 }
-.gc-title i { color:#f0a500; margin-right:.3rem; }
-.gc-sub { font-size:.58rem; color:rgba(255,255,255,.25); }
+.gc-title i { color:#F0B34D; margin-right:.35rem; }
+.gc-sub { font-family:'IBM Plex Mono',monospace; font-size:.58rem; color:rgba(255,255,255,.3); letter-spacing:.06em; }
 
-/* ── FILTER BAR ── */
+/* ── FILTRO ── */
 .d-filter {
-    background: linear-gradient(135deg,#231400 0%,#3d2200 50%,#4d2d00 100%);
-    border: 1px solid rgba(240,165,0,.40);
-    border-left: 4px solid #f0a500;
-    border-radius: 12px;
-    padding:.65rem 1rem;
-    margin-bottom:.7rem;
+    background:#13242F; border:1px solid rgba(255,255,255,.09); border-left:4px solid #F0B34D;
+    border-radius:4px; padding:.7rem 1rem; margin-bottom:.8rem;
     display:flex; align-items:flex-end; gap:.85rem; flex-wrap:wrap;
-    box-shadow: 0 4px 24px rgba(80,40,0,.55);
 }
-.d-filter .filter-label { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.70); margin-bottom:.18rem; }
+.d-filter .filter-label { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:500; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.5); margin-bottom:.22rem; }
 .d-filter .form-control,
 .d-filter .form-select {
-    background:rgba(255,255,255,.07) !important;
-    border:1px solid rgba(255,255,255,.12) !important;
-    color:#fff !important; border-radius:8px !important;
-    font-size:.76rem !important; padding:.28rem .65rem !important; height:30px !important;
+    background:rgba(255,255,255,.05) !important; border:1px solid rgba(255,255,255,.14) !important;
+    color:#fff !important; border-radius:4px !important;
+    font-size:.78rem !important; padding:.3rem .65rem !important; height:32px !important;
 }
-.d-filter .form-select option { background:#0b1828; }
-.d-filter .btn { height:30px; border-radius:8px; font-size:.68rem; padding:.28rem .75rem; display:inline-flex; align-items:center; gap:.3rem; }
-.d-filter .btn-f { background:rgba(240,165,0,.18); border:1px solid rgba(240,165,0,.35); color:#f0c040; }
-.d-filter .btn-x { background:rgba(220,53,69,.15); border:1px solid rgba(220,53,69,.25); color:#ff6b7a; }
+.d-filter .form-select option { background:#13242F; }
+.d-filter .btn { height:32px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; padding:.3rem .8rem; display:inline-flex; align-items:center; gap:.35rem; border:1px solid; }
+.d-filter .btn-f { background:rgba(240,179,77,.16); border-color:rgba(240,179,77,.4); color:#f3c270; }
+.d-filter .btn-f:hover { background:rgba(240,179,77,.28); }
+.d-filter .btn-x { background:rgba(200,50,75,.14); border-color:rgba(200,50,75,.32); color:#ff7a89; }
 
 /* ── KPI STRIP ── */
-.kpi-strip { display:flex; gap:.55rem; margin-bottom:.7rem; }
-.kpi-mini {
-    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09);
-    border-radius:12px; padding:.55rem .8rem; flex:1; min-width:0;
-    border-left:3px solid rgba(255,255,255,.15);
-}
-.kpi-mini.am  { border-left-color:#f0a500; }
-.kpi-mini.g   { border-left-color:#8DC63F; }
-.kpi-mini.red { border-left-color:#ff6b7a; }
-.kpi-ml { font-size:.56rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.38); margin-bottom:.18rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kpi-mv { font-family:'Montserrat',sans-serif; font-size:.95rem; font-weight:800; color:#fff; line-height:1; }
-.kpi-mv.sm { font-size:.75rem; }
+.kpi-strip { display:flex; gap:.6rem; margin-bottom:.8rem; flex-wrap:wrap; }
+.kpi-mini { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.6rem .85rem; flex:1; min-width:140px; position:relative; overflow:hidden; }
+.kpi-mini::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:rgba(255,255,255,.14); transform:skewX(-14deg) translateX(-1px); }
+.kpi-mini.am::before  { background:#F0B34D; }
+.kpi-mini.g::before   { background:#46C26A; }
+.kpi-mini.red::before { background:#ff7a89; }
+.kpi-ml { font-family:'IBM Plex Mono',monospace; font-size:.56rem; font-weight:500; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.45); margin-bottom:.22rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-left:.3rem; }
+.kpi-mv { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:600; color:#fff; line-height:1; padding-left:.3rem; font-variant-numeric:tabular-nums; }
+.kpi-mv.sm { font-size:.8rem; }
 
 /* ── TABELA DE CONTRATOS ── */
-.fin-table { width:100%; border-collapse:collapse; font-size:.78rem; }
-.fin-table thead tr { background:rgba(240,165,0,.12); }
+.fin-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+.fin-table thead tr { background:rgba(255,255,255,.04); }
 .fin-table th {
-    padding:.45rem .65rem; text-align:left;
-    font-size:.6rem; font-weight:700; text-transform:uppercase;
-    letter-spacing:.08em; color:rgba(255,255,255,.45);
-    border-bottom:1px solid rgba(255,255,255,.08);
+    padding:.5rem .65rem; text-align:left;
+    font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:500; text-transform:uppercase;
+    letter-spacing:.1em; color:rgba(255,255,255,.5); border-bottom:1px solid rgba(255,255,255,.1);
 }
 .fin-table th.r { text-align:right; }
-.fin-table td { padding:.42rem .65rem; border-bottom:1px solid rgba(255,255,255,.05); color:rgba(255,255,255,.85); vertical-align:middle; }
-.fin-table td.r { text-align:right; font-variant-numeric:tabular-nums; }
+.fin-table td { padding:.46rem .65rem; border-bottom:1px solid rgba(255,255,255,.05); color:rgba(255,255,255,.85); vertical-align:middle; }
+.fin-table td.r { text-align:right; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; }
 .fin-table tbody tr:hover { background:rgba(255,255,255,.04); }
 
-.prog-bar { height:6px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden; min-width:80px; }
-.prog-fill { height:100%; border-radius:3px; transition:width .4s; }
+.prog-bar { height:7px; background:rgba(255,255,255,.08); overflow:hidden; min-width:80px; }
+.prog-fill { height:100%; transform:skewX(-14deg); transform-origin:left; transition:width .4s; }
 
-.badge-ativo    { background:rgba(141,198,63,.2); color:#7dda24; border:1px solid rgba(141,198,63,.35); border-radius:6px; font-size:.58rem; font-weight:700; padding:.15rem .45rem; }
-.badge-encerrado{ background:rgba(255,107,122,.15); color:#ff6b7a; border:1px solid rgba(255,107,122,.3); border-radius:6px; font-size:.58rem; font-weight:700; padding:.15rem .45rem; }
+.badge-ativo,.badge-encerrado { font-family:'IBM Plex Mono',monospace; border-radius:4px; font-size:.58rem; font-weight:500; text-transform:uppercase; letter-spacing:.06em; padding:.16rem .5rem; border:1px solid; }
+.badge-ativo    { background:rgba(70,194,106,.16); color:#5bd17e; border-color:rgba(70,194,106,.4); }
+.badge-encerrado{ background:rgba(255,122,137,.14); color:#ff7a89; border-color:rgba(255,122,137,.34); }
+
+/* ── TEMA OCEÂNICO (override) ── */
+body {
+    background-color: #030e1a !important;
+    background-image:
+        radial-gradient(120% 70% at 50% -8%, #11567f 0%, transparent 52%),
+        linear-gradient(180deg, #0b3050 0%, #082338 40%, #051726 70%, #030e1a 100%) !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+}
+body::after {
+    content:''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+        radial-gradient(460px 460px at 95% 6%, rgba(232,163,61,.13), transparent 70%),
+        radial-gradient(400px 400px at 2% 94%, rgba(63,200,200,.11), transparent 70%);
+}
+.navbar-rumo { background: rgba(4,18,32,.72) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,.08) !important; }
+.page-header { background: transparent !important; border-bottom: 1px solid rgba(255,255,255,.10) !important; position: relative; z-index: 1; }
+main { position: relative; z-index: 1; }
+.app-footer { background: rgba(4,18,32,.6) !important; }
+.gc, .kpi-mini, .d-filter {
+    background: rgba(255,255,255,.055) !important;
+    border-color: rgba(255,255,255,.12) !important;
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+.gc { border-radius: 14px !important; }
+.kpi-mini, .d-filter { border-radius: 12px !important; }
 </style>
 
 <div style="color:#fff;">
 
 {% if not kpis %}
 <div class="gc text-center py-4">
-    <i class="bi bi-currency-dollar" style="font-size:2rem;color:rgba(255,255,255,.15);display:block;margin-bottom:.5rem;"></i>
-    <p style="color:rgba(255,255,255,.35);font-size:.82rem;margin:0;">Nenhum registro. <a href="{{ url_for('novo') }}" style="color:#f0a500;">Criar registro</a>.</p>
+    <i class="bi bi-currency-dollar" style="font-size:2rem;color:rgba(255,255,255,.18);display:block;margin-bottom:.5rem;"></i>
+    <p style="color:rgba(255,255,255,.4);font-size:.84rem;margin:0;">Nenhum registro ainda. <a href="{{ url_for('novo') }}" style="color:#F0B34D;">Criar o primeiro registro</a>.</p>
 </div>
 
 {% else %}
@@ -109,11 +140,11 @@ body { background: #0b1828 !important; }
     </div>
     <div>
         <div class="filter-label">De</div>
-        <input type="date" name="de" class="form-control" value="{{ filtro_de }}" style="width:130px;">
+        <input type="date" name="de" class="form-control" value="{{ filtro_de }}" style="width:140px;">
     </div>
     <div>
         <div class="filter-label">Até</div>
-        <input type="date" name="ate" class="form-control" value="{{ filtro_ate }}" style="width:130px;">
+        <input type="date" name="ate" class="form-control" value="{{ filtro_ate }}" style="width:140px;">
     </div>
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-f"><i class="bi bi-funnel"></i>Filtrar</button>
@@ -139,13 +170,13 @@ body { background: #0b1828 !important; }
     <div class="kpi-mini red">
     {% endif %}
         <div class="kpi-ml">Saldo Disponível</div>
-        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#7dda24{% else %}#ff6b7a{% endif %};">
+        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#46C26A{% else %}#ff7a89{% endif %};">
             {{ kpis.saldo|currency }}
         </div>
     </div>
     <div class="kpi-mini am">
         <div class="kpi-ml">% Executado</div>
-        <div class="kpi-mv" style="color:#f0a500;">{{ kpis.pct_global }}%</div>
+        <div class="kpi-mv" style="color:#F0B34D;">{{ kpis.pct_global }}%</div>
     </div>
     <div class="kpi-mini g">
         <div class="kpi-ml">Medição da Semana</div>
@@ -197,21 +228,21 @@ body { background: #0b1828 !important; }
         </thead>
         <tbody>
         {% for c in contratos_fin %}
-        {% set pct_color = '#7dda24' if c.pct >= 80 else ('#f0a500' if c.pct >= 40 else '#00d4ff') %}
+        {% set pct_color = '#46C26A' if c.pct >= 80 else ('#F0B34D' if c.pct >= 40 else '#2BB2EE') %}
         <tr>
             <td style="font-weight:600;">{{ c.contratada }}</td>
-            <td style="color:rgba(255,255,255,.55); font-size:.72rem;">{{ c.contrato }}</td>
-            <td class="r">{% if c.valor %}{{ c.valor|currency }}{% else %}<span style="color:rgba(255,255,255,.2);">—</span>{% endif %}</td>
-            <td class="r" style="color:#7dda24;">{{ c.medido|currency }}</td>
-            <td class="r" style="color:{% if c.saldo >= 0 %}#7dda24{% else %}#ff6b7a{% endif %};">
+            <td style="color:rgba(255,255,255,.55); font-size:.74rem;">{{ c.contrato }}</td>
+            <td class="r">{% if c.valor %}{{ c.valor|currency }}{% else %}<span style="color:rgba(255,255,255,.25);">—</span>{% endif %}</td>
+            <td class="r" style="color:#5bd17e;">{{ c.medido|currency }}</td>
+            <td class="r" style="color:{% if c.saldo >= 0 %}#5bd17e{% else %}#ff7a89{% endif %};">
                 {{ c.saldo|currency }}
             </td>
-            <td style="padding:.42rem .65rem;">
-                <div style="display:flex;align-items:center;gap:.45rem;">
+            <td style="padding:.46rem .65rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;">
                     <div class="prog-bar" style="flex:1;">
                         <div class="prog-fill" style="width:{{ [c.pct,100]|min }}%; background:{{ pct_color }};"></div>
                     </div>
-                    <span style="font-family:'Montserrat',sans-serif;font-size:.72rem;font-weight:800;color:{{ pct_color }};min-width:36px;text-align:right;">{{ c.pct }}%</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;font-weight:600;color:{{ pct_color }};min-width:38px;text-align:right;">{{ c.pct }}%</span>
                 </div>
             </td>
             <td style="text-align:center;">
@@ -227,7 +258,7 @@ body { background: #0b1828 !important; }
     </table>
     </div>
     {% else %}
-    <p style="color:rgba(255,255,255,.3);font-size:.8rem;text-align:center;padding:1rem 0;margin:0;">Nenhum contrato configurado.</p>
+    <p style="color:rgba(255,255,255,.35);font-size:.82rem;text-align:center;padding:1rem 0;margin:0;">Nenhum contrato configurado.</p>
     {% endif %}
 </div>
 
@@ -249,12 +280,14 @@ const BAR_LABELS  = {{ bar_labels|safe }};
 const BAR_VALS    = {{ bar_vals|safe }};
 const BAR_COLORS  = {{ bar_colors|safe }};
 
+const C_AMBER = '#F0B34D', C_CYAN = '#2BB2EE';
 const GRID = 'rgba(255,255,255,.06)';
-const TICK = { color:'rgba(255,255,255,.35)', font:{ size:10 } };
+const TICK = { color:'rgba(255,255,255,.45)', font:{ size:10, family:"'IBM Plex Mono',monospace" } };
 
+Chart.defaults.font.family = "'IBM Plex Sans',system-ui,sans-serif";
 Chart.defaults.set('plugins.datalabels', {
     color: '#fff',
-    font: { size: 10, weight: 700, family: "'Inter',sans-serif" },
+    font: { size: 10, weight: 600, family: "'IBM Plex Mono',monospace" },
     display: ctx => ctx.dataset.data[ctx.dataIndex] != null,
 });
 
@@ -267,26 +300,26 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
             datasets: [{
                 label: 'Realizado (R$)',
                 data: FIN_ACUM,
-                borderColor: '#f0a500',
-                backgroundColor: 'rgba(240,165,0,.08)',
+                borderColor: C_AMBER,
+                backgroundColor: 'rgba(240,179,77,.08)',
                 borderWidth: 2,
-                pointRadius: 3, pointBackgroundColor: '#f0a500',
-                fill: true, tension: 0.45,
+                pointRadius: 3, pointBackgroundColor: C_AMBER,
+                fill: true, tension: 0.4,
             },{
                 label: 'Linha de Base',
                 data: FIN_BASE,
-                borderColor: '#00d4ff',
+                borderColor: C_CYAN,
                 borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
             }]
         },
         options: {
             responsive:true, animation:{ duration:600 },
             plugins:{
-                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
+                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.5)' }},
                 tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
                 datalabels:{
                     display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
-                    align:'top', anchor:'end', color:'#f0c040',
+                    align:'top', anchor:'end', color:C_AMBER,
                     formatter: v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'
                 }
             },
@@ -304,13 +337,7 @@ if (document.getElementById('chartBarContratada') && BAR_LABELS.length) {
         type: 'bar',
         data: {
             labels: BAR_LABELS,
-            datasets:[{
-                label:'Medição (R$)',
-                data: BAR_VALS,
-                backgroundColor: BAR_COLORS,
-                borderRadius: 4,
-                borderSkipped: false
-            }]
+            datasets:[{ label:'Medição (R$)', data: BAR_VALS, backgroundColor: BAR_COLORS, borderRadius: 2, borderSkipped: false }]
         },
         options: {
             indexAxis:'y', responsive:true, animation:{ duration:600 },

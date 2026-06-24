@@ -8,11 +8,14 @@ Aplicação web Flask para registro e acompanhamento semanal de obras de constru
 - **Persistência**: JSON local (`data/registros.json`, `data/contratos_config.json`)
 - **Front-end**: Jinja2 + Bootstrap 5 + Bootstrap Icons + Chart.js 4.4 + chartjs-plugin-datalabels
 - **Export**: openpyxl (Excel)
-- **Deploy**: Railway (Procfile + gunicorn) | GitHub: `gabrieltmd/obras-semanais`
+- **Deploy**: Railway (Procfile + gunicorn) | GitHub: `gabrieltmd-coder/obras_semanais`
 
 ## Como iniciar o servidor
+A cópia **oficial** é este repositório: `c:\Users\Gabriel\Documents\GitHub\obras_semanais`
+(é o git aberto e o que faz deploy no Railway). Existe uma cópia antiga em
+`Desktop\PROJETOS\A\obras_semanais-master` — **não usar** para evitar divergência.
 ```powershell
-Start-Process py -ArgumentList "app.py" -WorkingDirectory "c:\Users\Admin\Desktop\PROJECTS\obras_semanais-master" -WindowStyle Normal
+Start-Process py -ArgumentList "app.py" -WorkingDirectory "c:\Users\Gabriel\Documents\GitHub\obras_semanais" -WindowStyle Normal
 ```
 **Iniciar automaticamente ao começar qualquer conversa sobre este projeto.**
 **Reiniciar sempre que alterar `app.py` ou qualquer template — sem pedir permissão.**
@@ -58,7 +61,7 @@ Array de objetos com estrutura:
   "valor_medido": 85000.0,
   "avanco_fisico": 43.0,
   "pluviometria": {"segunda": "Tempo Bom", ...},
-  "acoes_realizadas": {"Concretagem bloco A": 15.0},  // qtd realizada por ação na unidade da ação (m², m³, m, Unid)
+  "acoes_realizadas": {"Concretagem bloco A": 15.0},  // % realizado por ação (form)
   "equipamentos_realizados": {"Escavadeira": 2},      // qtd realizada por equipamento (form)
   "histograma_realizados": {"Pedreiro": 3},           // qtd realizada por função (form)
   "criado_em": "ISO datetime",
@@ -121,7 +124,7 @@ Chave: `"Contratada||Contrato"`:
     "linha_base_fisica": [{"semana": "2026-01", "percentual": 10.0}],
     "linha_base_histograma": [{"funcao": "Pedreiro", "tipo": "direto", "semanas": {"2026-W12": 3}}],
     "linha_base_equipamentos": [{"equipamento": "Escavadeira", "semanas": {"2026-W12": 2}}],
-    "linha_base_acoes": [{"acao": "Concretagem bloco A", "unidade": "m³", "semanas": {"2026-W12": 45.5}, "forecast_semanal": {"2026-W12": 45.5}}],
+    "linha_base_acoes": [{"acao": "Concretagem bloco A", "unidade": "m³", "semanas": {"2026-W12": 45.5}}],
     "aditivos": [
       {"tipo": "valor", "valor": 50000.0, "prazo": "", "data": "2026-06-13", "descricao": "Acréscimo de escopo"},
       {"tipo": "prazo", "valor": 0.0, "prazo": "2026-W50", "data": "2026-06-13", "descricao": "Prorrogação"}
@@ -135,14 +138,6 @@ Obs.: os KPIs financeiros globais ainda usam `valor_contrato` base (aditivos sã
 não somados automaticamente aos totais — pendente de decisão).
 No admin, equipamentos são editados na tabela do Histograma com categoria "Equipamento";
 no POST o app separa essas linhas para `linha_base_equipamentos`.
-
-Cada ação tem `semanas` (planejado/baseline) e `forecast_semanal` (previsão revisada). Ao salvar
-um registro semanal, `_recompute_forecast()` recalcula o forecast do zero a partir do baseline +
-todos os registros do contrato: a diferença entre previsto e realizado de cada semana (déficit
-**ou** superávit) é redistribuída igualmente nas semanas futuras da mesma ação. Por recalcular
-sempre do zero, é idempotente em edições e reflete exclusões. A tabela de ações no admin mostra
-3 linhas por ação — **Plan.** (baseline editável), **Fcst** (forecast: laranja se aumentou por
-déficit, verde se reduziu por superávit) e **Real.** (realizado agregado dos registros, leitura).
 
 ## Rotas Principais
 | Rota | Método | Descrição |
@@ -220,6 +215,6 @@ Segredos/config via variáveis de ambiente (com fallback p/ dev): `SECRET_KEY`,
 6. Publicar no GitHub: `git add . && git commit -m "..." && git push` dentro de `obras_semanais-master`.
 
 ## Deploy
-- **GitHub**: `https://github.com/gabrieltmd/obras-semanais`
+- **GitHub**: `https://github.com/gabrieltmd-coder/obras_semanais`
 - **Railway**: auto-deploy a cada push no branch `main`
 - **Procfile**: `web: gunicorn app:app`

@@ -242,7 +242,7 @@
           "2026-W34": 0,
           "2026-W35": 0
         },
-        "forecast_semanal": {
+        "forecast": {
           "2026-W18": 0,
           "2026-W19": 10,
           "2026-W20": 15,
@@ -250,8 +250,8 @@
           "2026-W22": 25,
           "2026-W23": 20,
           "2026-W24": 15,
-          "2026-W25": 5.0,
-          "2026-W26": 0.0,
+          "2026-W25": 10,
+          "2026-W26": 5,
           "2026-W27": 0,
           "2026-W28": 0,
           "2026-W29": 0,
@@ -261,7 +261,23 @@
           "2026-W33": 0,
           "2026-W34": 0,
           "2026-W35": 0
-        }
+        },
+        "replanejados": [
+          {
+            "2026-W24": 0,
+            "2026-W25": 15,
+            "2026-W26": 5,
+            "2026-W27": 5,
+            "2026-W28": 0,
+            "2026-W29": 0,
+            "2026-W30": 0,
+            "2026-W31": 0,
+            "2026-W32": 0,
+            "2026-W33": 0,
+            "2026-W34": 0,
+            "2026-W35": 0
+          }
+        ]
       },
       {
         "acao": "Alvenaria de Vedação",
@@ -286,7 +302,7 @@
           "2026-W34": 0,
           "2026-W35": 0
         },
-        "forecast_semanal": {
+        "forecast": {
           "2026-W18": 0,
           "2026-W19": 0,
           "2026-W20": 50,
@@ -294,10 +310,50 @@
           "2026-W22": 100,
           "2026-W23": 120,
           "2026-W24": 100,
-          "2026-W25": 92.5,
-          "2026-W26": 72.5,
-          "2026-W27": 52.5,
-          "2026-W28": 32.5,
+          "2026-W25": 50,
+          "2026-W26": 86,
+          "2026-W27": 58,
+          "2026-W28": 29,
+          "2026-W29": 16,
+          "2026-W30": 50,
+          "2026-W31": 0,
+          "2026-W32": 0,
+          "2026-W33": 0,
+          "2026-W34": 0,
+          "2026-W35": 0
+        },
+        "replanejados": [
+          {
+            "2026-W24": 0,
+            "2026-W25": 0,
+            "2026-W26": 0,
+            "2026-W27": 0,
+            "2026-W28": 0,
+            "2026-W29": 0,
+            "2026-W30": 0,
+            "2026-W31": 0,
+            "2026-W32": 0,
+            "2026-W33": 0,
+            "2026-W34": 0,
+            "2026-W35": 0
+          }
+        ]
+      },
+      {
+        "acao": "Fundação — estacas",
+        "unidade": "Unid",
+        "semanas": {
+          "2026-W18": 0,
+          "2026-W19": 0,
+          "2026-W20": 0,
+          "2026-W21": 1,
+          "2026-W22": 2,
+          "2026-W23": 3,
+          "2026-W24": 5,
+          "2026-W25": 5,
+          "2026-W26": 6,
+          "2026-W27": 6,
+          "2026-W28": 0,
           "2026-W29": 0,
           "2026-W30": 0,
           "2026-W31": 0,
@@ -305,11 +361,84 @@
           "2026-W33": 0,
           "2026-W34": 0,
           "2026-W35": 0
-        }
+        },
+        "forecast": {
+          "2026-W18": 0,
+          "2026-W19": 0,
+          "2026-W20": 0,
+          "2026-W21": 1,
+          "2026-W22": 2,
+          "2026-W23": 3,
+          "2026-W24": 5,
+          "2026-W25": 5,
+          "2026-W26": 6,
+          "2026-W27": 6,
+          "2026-W28": 0,
+          "2026-W29": 0,
+          "2026-W30": 0,
+          "2026-W31": 0,
+          "2026-W32": 0,
+          "2026-W33": 0,
+          "2026-W34": 0,
+          "2026-W35": 0
+        },
+        "replanejados": [
+          {
+            "2026-W24": 0,
+            "2026-W25": 0,
+            "2026-W26": 0,
+            "2026-W27": 0,
+            "2026-W28": 0,
+            "2026-W29": 0,
+            "2026-W30": 0,
+            "2026-W31": 0,
+            "2026-W32": 0,
+            "2026-W33": 0,
+            "2026-W34": 0,
+            "2026-W35": 0
+          }
+        ]
       }
     ],
     "status_manual": "auto",
-    "aditivos": []
+    "aditivos": [],
+    "lb_fin_planejado": {
+      "2026-04": 60000,
+      "2026-05": 180000,
+      "2026-06": 220000,
+      "2026-07": 195000,
+      "2026-08": 195000
+    },
+    "lb_fin_forecast": {
+      "2026-04": 60000,
+      "2026-05": 180000,
+      "2026-06": 220000,
+      "2026-07": 195000,
+      "2026-08": 195000
+    },
+    "lb_fin_replanejados": [],
+    "lb_fin_repl_n": 0,
+    "lb_fin_extra": [],
+    "lb_fis_planejado": {
+      "2026-04": 8,
+      "2026-05": 25,
+      "2026-06": 48,
+      "2026-07": 75,
+      "2026-08": 100
+    },
+    "lb_fis_forecast": {
+      "2026-04": 8,
+      "2026-05": 25,
+      "2026-06": 48,
+      "2026-07": 75,
+      "2026-08": 100
+    },
+    "lb_fis_replanejados": [],
+    "lb_fis_repl_n": 0,
+    "lb_fis_extra": [],
+    "area_contrato": "Obras preliminares",
+    "acoes_semanas_extra": [],
+    "acoes_replanejado_n": 1
   },
   "Infratech Obras||CT-2024-002": {
     "contratada": "Infratech Obras",
@@ -395,10 +524,11 @@
           "2026-W29": 1,
           "2026-W30": 1
         }
-      },
+      }
+    ],
+    "linha_base_equipamentos": [
       {
-        "funcao": "Gerador de Energia",
-        "tipo": "equipamento",
+        "equipamento": "Gerador de Energia",
         "semanas": {
           "2026-W16": 0,
           "2026-W17": 0,
@@ -418,8 +548,7 @@
         }
       },
       {
-        "funcao": "Pavimentadora Asfáltica",
-        "tipo": "equipamento",
+        "equipamento": "Pavimentadora Asfáltica",
         "semanas": {
           "2026-W16": 0,
           "2026-W17": 0,
@@ -437,9 +566,7 @@
           "2026-W29": 0,
           "2026-W30": 0
         }
-      }
-    ],
-    "linha_base_equipamentos": [
+      },
       {
         "equipamento": "Guindaste Telescópico",
         "semanas": {
@@ -501,10 +628,61 @@
           "2026-W28": 0,
           "2026-W29": 0,
           "2026-W30": 0
-        }
+        },
+        "forecast": {
+          "2026-W16": 0,
+          "2026-W17": 20,
+          "2026-W18": 40,
+          "2026-W19": 60,
+          "2026-W20": 80,
+          "2026-W21": 80,
+          "2026-W22": 60,
+          "2026-W23": 40,
+          "2026-W24": 30,
+          "2026-W25": 20,
+          "2026-W26": 10,
+          "2026-W27": 5,
+          "2026-W28": 0,
+          "2026-W29": 0,
+          "2026-W30": 0
+        },
+        "replanejados": []
       }
     ],
-    "status_manual": "auto"
+    "status_manual": "auto",
+    "lb_fin_planejado": {
+      "2026-04": 30000,
+      "2026-05": 120000,
+      "2026-06": 150000,
+      "2026-07": 120000
+    },
+    "lb_fin_forecast": {
+      "2026-04": 30000,
+      "2026-05": 120000,
+      "2026-06": 150000,
+      "2026-07": 120000
+    },
+    "lb_fin_replanejados": [],
+    "lb_fin_repl_n": 0,
+    "lb_fin_extra": [],
+    "lb_fis_planejado": {
+      "2026-04": 10,
+      "2026-05": 35,
+      "2026-06": 65,
+      "2026-07": 100
+    },
+    "lb_fis_forecast": {
+      "2026-04": 10,
+      "2026-05": 35,
+      "2026-06": 65,
+      "2026-07": 100
+    },
+    "lb_fis_replanejados": [],
+    "lb_fis_repl_n": 0,
+    "lb_fis_extra": [],
+    "area_contrato": "Obras eletromecânicas",
+    "acoes_semanas_extra": [],
+    "acoes_replanejado_n": 0
   },
   "Infratech Obras||CT-2024-007": {
     "contratada": "Infratech Obras",
@@ -513,6 +691,10 @@
     "data_inicio_contrato": "2026-W22",
     "data_fim_contrato": "2026-W36",
     "linha_base_financeira": [
+      {
+        "semana": "2026-05",
+        "valor": 0.0
+      },
       {
         "semana": "2026-06",
         "valor": 80000.0
@@ -527,6 +709,10 @@
       }
     ],
     "linha_base_fisica": [
+      {
+        "semana": "2026-05",
+        "percentual": 0.0
+      },
       {
         "semana": "2026-06",
         "percentual": 20.0
@@ -687,7 +873,25 @@
           "2026-W34": 50,
           "2026-W35": 0,
           "2026-W36": 0
-        }
+        },
+        "forecast": {
+          "2026-W22": 500,
+          "2026-W23": 800,
+          "2026-W24": 900,
+          "2026-W25": 1000,
+          "2026-W26": 1000,
+          "2026-W27": 900,
+          "2026-W28": 700,
+          "2026-W29": 600,
+          "2026-W30": 400,
+          "2026-W31": 300,
+          "2026-W32": 200,
+          "2026-W33": 100,
+          "2026-W34": 50,
+          "2026-W35": 0,
+          "2026-W36": 0
+        },
+        "replanejados": []
       },
       {
         "acao": "Fresagem",
@@ -708,9 +912,61 @@
           "2026-W34": 0,
           "2026-W35": 0,
           "2026-W36": 0
-        }
+        },
+        "forecast": {
+          "2026-W22": 600,
+          "2026-W23": 900,
+          "2026-W24": 900,
+          "2026-W25": 600,
+          "2026-W26": 300,
+          "2026-W27": 0,
+          "2026-W28": 0,
+          "2026-W29": 0,
+          "2026-W30": 0,
+          "2026-W31": 0,
+          "2026-W32": 0,
+          "2026-W33": 0,
+          "2026-W34": 0,
+          "2026-W35": 0,
+          "2026-W36": 0
+        },
+        "replanejados": []
       }
-    ]
+    ],
+    "lb_fin_planejado": {
+      "2026-06": 80000,
+      "2026-07": 150000,
+      "2026-08": 150000,
+      "2026-05": 0
+    },
+    "lb_fin_forecast": {
+      "2026-05": 0,
+      "2026-06": 80000,
+      "2026-07": 150000,
+      "2026-08": 150000
+    },
+    "lb_fin_replanejados": [],
+    "lb_fin_repl_n": 0,
+    "lb_fin_extra": [],
+    "lb_fis_planejado": {
+      "2026-06": 20,
+      "2026-07": 65,
+      "2026-08": 100,
+      "2026-05": 0
+    },
+    "lb_fis_forecast": {
+      "2026-05": 0,
+      "2026-06": 20,
+      "2026-07": 65,
+      "2026-08": 100
+    },
+    "lb_fis_replanejados": [],
+    "lb_fis_repl_n": 0,
+    "lb_fis_extra": [],
+    "status_manual": "auto",
+    "area_contrato": "Obras preliminares",
+    "acoes_semanas_extra": [],
+    "acoes_replanejado_n": 0
   },
   "TechBuild Engenharia||CT-2024-003": {
     "contratada": "TechBuild Engenharia",
@@ -902,23 +1158,24 @@
           "2026-W33": 0,
           "2026-W34": 0
         },
-        "forecast_semanal": {
-          "2026-W20": 50.0,
-          "2026-W21": 80.0,
-          "2026-W22": 99.09,
-          "2026-W23": 119.09,
-          "2026-W24": 119.09,
-          "2026-W25": 99.09,
-          "2026-W26": 79.09,
-          "2026-W27": 59.09,
-          "2026-W28": 39.09,
-          "2026-W29": 29.09,
-          "2026-W30": 19.09,
-          "2026-W31": 9.09,
-          "2026-W32": 4.1,
-          "2026-W33": 0.0,
-          "2026-W34": 0.0
-        }
+        "forecast": {
+          "2026-W20": 50,
+          "2026-W21": 80,
+          "2026-W22": 100,
+          "2026-W23": 120,
+          "2026-W24": 120,
+          "2026-W25": 100,
+          "2026-W26": 80,
+          "2026-W27": 60,
+          "2026-W28": 40,
+          "2026-W29": 30,
+          "2026-W30": 20,
+          "2026-W31": 10,
+          "2026-W32": 5,
+          "2026-W33": 0,
+          "2026-W34": 0
+        },
+        "replanejados": []
       },
       {
         "acao": "Escavação de Valas",
@@ -939,8 +1196,701 @@
           "2026-W32": 0,
           "2026-W33": 0,
           "2026-W34": 0
+        },
+        "forecast": {
+          "2026-W20": 30,
+          "2026-W21": 50,
+          "2026-W22": 60,
+          "2026-W23": 50,
+          "2026-W24": 40,
+          "2026-W25": 20,
+          "2026-W26": 10,
+          "2026-W27": 0,
+          "2026-W28": 0,
+          "2026-W29": 0,
+          "2026-W30": 0,
+          "2026-W31": 0,
+          "2026-W32": 0,
+          "2026-W33": 0,
+          "2026-W34": 0
+        },
+        "replanejados": []
+      }
+    ],
+    "lb_fin_planejado": {
+      "2026-05": 50000,
+      "2026-06": 160000,
+      "2026-07": 200000,
+      "2026-08": 210000
+    },
+    "lb_fin_forecast": {
+      "2026-05": 50000,
+      "2026-06": 160000,
+      "2026-07": 200000,
+      "2026-08": 210000
+    },
+    "lb_fin_replanejados": [],
+    "lb_fin_repl_n": 0,
+    "lb_fin_extra": [],
+    "lb_fis_planejado": {
+      "2026-05": 8,
+      "2026-06": 30,
+      "2026-07": 65,
+      "2026-08": 100
+    },
+    "lb_fis_forecast": {
+      "2026-05": 8,
+      "2026-06": 30,
+      "2026-07": 65,
+      "2026-08": 100
+    },
+    "lb_fis_replanejados": [],
+    "lb_fis_repl_n": 0,
+    "lb_fis_extra": [],
+    "status_manual": "auto",
+    "area_contrato": "Engenharia",
+    "acoes_semanas_extra": [],
+    "acoes_replanejado_n": 0
+  },
+  "Dragagem Portuaria Ltda||DRG-2026-001": {
+    "contratada": "Dragagem Portuaria Ltda",
+    "contrato": "DRG-2026-001",
+    "valor_contrato": 4200000.0,
+    "data_inicio_contrato": "2026-W01",
+    "data_fim_contrato": "2026-W36",
+    "linha_base_financeira": [
+      {
+        "semana": "2026-01",
+        "valor": 300000
+      },
+      {
+        "semana": "2026-02",
+        "valor": 700000
+      },
+      {
+        "semana": "2026-03",
+        "valor": 900000
+      },
+      {
+        "semana": "2026-04",
+        "valor": 1100000
+      },
+      {
+        "semana": "2026-05",
+        "valor": 800000
+      },
+      {
+        "semana": "2026-06",
+        "valor": 400000
+      }
+    ],
+    "linha_base_fisica": [
+      {
+        "semana": "2026-01",
+        "percentual": 5
+      },
+      {
+        "semana": "2026-02",
+        "percentual": 18
+      },
+      {
+        "semana": "2026-03",
+        "percentual": 38
+      },
+      {
+        "semana": "2026-04",
+        "percentual": 62
+      },
+      {
+        "semana": "2026-05",
+        "percentual": 82
+      },
+      {
+        "semana": "2026-06",
+        "percentual": 95
+      }
+    ],
+    "linha_base_histograma": [
+      {
+        "funcao": "Operador de Draga",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W01": 8,
+          "2026-W05": 12,
+          "2026-W10": 16,
+          "2026-W15": 20,
+          "2026-W20": 16,
+          "2026-W25": 10
+        }
+      },
+      {
+        "funcao": "Mergulhador",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W01": 4,
+          "2026-W05": 6,
+          "2026-W10": 8,
+          "2026-W15": 8,
+          "2026-W20": 6,
+          "2026-W25": 4
+        }
+      },
+      {
+        "funcao": "Supervisor",
+        "tipo": "indireto",
+        "semanas": {
+          "2026-W01": 2,
+          "2026-W10": 3,
+          "2026-W20": 3,
+          "2026-W25": 2
         }
       }
-    ]
+    ],
+    "linha_base_equipamentos": [],
+    "linha_base_acoes": [],
+    "aditivos": []
+  },
+  "Naval Engenharia SA||NVL-2026-002": {
+    "contratada": "Naval Engenharia SA",
+    "contrato": "NVL-2026-002",
+    "valor_contrato": 6800000.0,
+    "data_inicio_contrato": "2026-W05",
+    "data_fim_contrato": "2026-W42",
+    "linha_base_financeira": [
+      {
+        "semana": "2026-01",
+        "valor": 200000
+      },
+      {
+        "semana": "2026-02",
+        "valor": 800000
+      },
+      {
+        "semana": "2026-03",
+        "valor": 1500000
+      },
+      {
+        "semana": "2026-04",
+        "valor": 2000000
+      },
+      {
+        "semana": "2026-05",
+        "valor": 1700000
+      },
+      {
+        "semana": "2026-06",
+        "valor": 600000
+      }
+    ],
+    "linha_base_fisica": [
+      {
+        "semana": "2026-01",
+        "percentual": 2
+      },
+      {
+        "semana": "2026-02",
+        "percentual": 12
+      },
+      {
+        "semana": "2026-03",
+        "percentual": 30
+      },
+      {
+        "semana": "2026-04",
+        "percentual": 58
+      },
+      {
+        "semana": "2026-05",
+        "percentual": 80
+      },
+      {
+        "semana": "2026-06",
+        "percentual": 93
+      }
+    ],
+    "linha_base_histograma": [
+      {
+        "funcao": "Montador Estrutural",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W05": 15,
+          "2026-W10": 22,
+          "2026-W15": 30,
+          "2026-W20": 28,
+          "2026-W25": 18
+        }
+      },
+      {
+        "funcao": "Soldador",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W05": 10,
+          "2026-W10": 16,
+          "2026-W15": 22,
+          "2026-W20": 20,
+          "2026-W25": 12
+        }
+      },
+      {
+        "funcao": "Encarregado",
+        "tipo": "indireto",
+        "semanas": {
+          "2026-W05": 3,
+          "2026-W15": 4,
+          "2026-W25": 3
+        }
+      }
+    ],
+    "linha_base_equipamentos": [],
+    "linha_base_acoes": [],
+    "aditivos": []
+  },
+  "Offshore Construcoes||OFF-2026-003": {
+    "contratada": "Offshore Construcoes",
+    "contrato": "OFF-2026-003",
+    "valor_contrato": 1950000.0,
+    "data_inicio_contrato": "2026-W03",
+    "data_fim_contrato": "2026-W40",
+    "linha_base_financeira": [
+      {
+        "semana": "2026-01",
+        "valor": 80000
+      },
+      {
+        "semana": "2026-02",
+        "valor": 250000
+      },
+      {
+        "semana": "2026-03",
+        "valor": 450000
+      },
+      {
+        "semana": "2026-04",
+        "valor": 600000
+      },
+      {
+        "semana": "2026-05",
+        "valor": 420000
+      },
+      {
+        "semana": "2026-06",
+        "valor": 150000
+      }
+    ],
+    "linha_base_fisica": [
+      {
+        "semana": "2026-01",
+        "percentual": 3
+      },
+      {
+        "semana": "2026-02",
+        "percentual": 15
+      },
+      {
+        "semana": "2026-03",
+        "percentual": 32
+      },
+      {
+        "semana": "2026-04",
+        "percentual": 60
+      },
+      {
+        "semana": "2026-05",
+        "percentual": 82
+      },
+      {
+        "semana": "2026-06",
+        "percentual": 96
+      }
+    ],
+    "linha_base_histograma": [
+      {
+        "funcao": "Eletricista",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W03": 8,
+          "2026-W10": 14,
+          "2026-W15": 18,
+          "2026-W20": 16,
+          "2026-W25": 10
+        }
+      },
+      {
+        "funcao": "Auxiliar Eletrico",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W03": 4,
+          "2026-W10": 8,
+          "2026-W15": 10,
+          "2026-W20": 8,
+          "2026-W25": 5
+        }
+      }
+    ],
+    "linha_base_equipamentos": [],
+    "linha_base_acoes": [],
+    "aditivos": []
+  },
+  "Hidro Estruturas Ltda||HID-2026-004": {
+    "contratada": "Hidro Estruturas Ltda",
+    "contrato": "HID-2026-004",
+    "valor_contrato": 2800000.0,
+    "data_inicio_contrato": "2026-W02",
+    "data_fim_contrato": "2026-W38",
+    "linha_base_financeira": [
+      {
+        "semana": "2026-01",
+        "valor": 150000
+      },
+      {
+        "semana": "2026-02",
+        "valor": 450000
+      },
+      {
+        "semana": "2026-03",
+        "valor": 700000
+      },
+      {
+        "semana": "2026-04",
+        "valor": 850000
+      },
+      {
+        "semana": "2026-05",
+        "valor": 500000
+      },
+      {
+        "semana": "2026-06",
+        "valor": 150000
+      }
+    ],
+    "linha_base_fisica": [
+      {
+        "semana": "2026-01",
+        "percentual": 4
+      },
+      {
+        "semana": "2026-02",
+        "percentual": 20
+      },
+      {
+        "semana": "2026-03",
+        "percentual": 42
+      },
+      {
+        "semana": "2026-04",
+        "percentual": 68
+      },
+      {
+        "semana": "2026-05",
+        "percentual": 88
+      },
+      {
+        "semana": "2026-06",
+        "percentual": 98
+      }
+    ],
+    "linha_base_histograma": [
+      {
+        "funcao": "Operador de Pavimentadora",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W02": 6,
+          "2026-W10": 10,
+          "2026-W15": 14,
+          "2026-W20": 12,
+          "2026-W25": 8
+        }
+      },
+      {
+        "funcao": "Pedreiro",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W02": 12,
+          "2026-W10": 18,
+          "2026-W15": 22,
+          "2026-W20": 18,
+          "2026-W25": 10
+        }
+      },
+      {
+        "funcao": "Mestre de Obras",
+        "tipo": "indireto",
+        "semanas": {
+          "2026-W02": 1,
+          "2026-W10": 2,
+          "2026-W20": 2,
+          "2026-W25": 1
+        }
+      }
+    ],
+    "linha_base_equipamentos": [],
+    "linha_base_acoes": [],
+    "aditivos": []
+  },
+  "Maritima Obras SA||MRT-2026-005": {
+    "contratada": "Maritima Obras SA",
+    "contrato": "MRT-2026-005",
+    "valor_contrato": 3200000.0,
+    "data_inicio_contrato": "2026-W06",
+    "data_fim_contrato": "2026-W44",
+    "linha_base_financeira": [
+      {
+        "semana": "2026-02",
+        "valor": 120000
+      },
+      {
+        "semana": "2026-03",
+        "valor": 500000
+      },
+      {
+        "semana": "2026-04",
+        "valor": 900000
+      },
+      {
+        "semana": "2026-05",
+        "valor": 1100000
+      },
+      {
+        "semana": "2026-06",
+        "valor": 580000
+      }
+    ],
+    "linha_base_fisica": [
+      {
+        "semana": "2026-02",
+        "percentual": 3
+      },
+      {
+        "semana": "2026-03",
+        "percentual": 18
+      },
+      {
+        "semana": "2026-04",
+        "percentual": 42
+      },
+      {
+        "semana": "2026-05",
+        "percentual": 70
+      },
+      {
+        "semana": "2026-06",
+        "percentual": 88
+      }
+    ],
+    "linha_base_histograma": [
+      {
+        "funcao": "Serralheiro",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W06": 10,
+          "2026-W12": 16,
+          "2026-W18": 20,
+          "2026-W24": 16
+        }
+      },
+      {
+        "funcao": "Encanador",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W06": 8,
+          "2026-W12": 12,
+          "2026-W18": 16,
+          "2026-W24": 12
+        }
+      }
+    ],
+    "linha_base_equipamentos": [],
+    "linha_base_acoes": [],
+    "aditivos": []
+  },
+  "Porto Industrial Eng||PRT-2026-006": {
+    "contratada": "Porto Industrial Eng",
+    "contrato": "PRT-2026-006",
+    "valor_contrato": 2800000.0,
+    "data_inicio_contrato": "2026-W04",
+    "data_fim_contrato": "2026-W45",
+    "linha_base_financeira": [
+      {
+        "semana": "2026-01",
+        "valor": 100000
+      },
+      {
+        "semana": "2026-02",
+        "valor": 350000
+      },
+      {
+        "semana": "2026-03",
+        "valor": 650000
+      },
+      {
+        "semana": "2026-04",
+        "valor": 900000
+      },
+      {
+        "semana": "2026-05",
+        "valor": 600000
+      },
+      {
+        "semana": "2026-06",
+        "valor": 200000
+      }
+    ],
+    "linha_base_fisica": [
+      {
+        "semana": "2026-01",
+        "percentual": 3
+      },
+      {
+        "semana": "2026-02",
+        "percentual": 16
+      },
+      {
+        "semana": "2026-03",
+        "percentual": 35
+      },
+      {
+        "semana": "2026-04",
+        "percentual": 58
+      },
+      {
+        "semana": "2026-05",
+        "percentual": 78
+      },
+      {
+        "semana": "2026-06",
+        "percentual": 91
+      }
+    ],
+    "linha_base_histograma": [
+      {
+        "funcao": "Topografo",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W04": 4,
+          "2026-W10": 6,
+          "2026-W15": 8,
+          "2026-W20": 6,
+          "2026-W25": 4
+        }
+      },
+      {
+        "funcao": "Tecnico em Geotecnia",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W04": 3,
+          "2026-W10": 5,
+          "2026-W15": 6,
+          "2026-W20": 5,
+          "2026-W25": 3
+        }
+      },
+      {
+        "funcao": "Coordenador",
+        "tipo": "indireto",
+        "semanas": {
+          "2026-W04": 1,
+          "2026-W10": 1,
+          "2026-W20": 1
+        }
+      }
+    ],
+    "linha_base_equipamentos": [],
+    "linha_base_acoes": [],
+    "aditivos": []
+  },
+  "Sul Construtora Ltda||SUL-2026-007": {
+    "contratada": "Sul Construtora Ltda",
+    "contrato": "SUL-2026-007",
+    "valor_contrato": 5500000.0,
+    "data_inicio_contrato": "2026-W01",
+    "data_fim_contrato": "2026-W50",
+    "linha_base_financeira": [
+      {
+        "semana": "2026-01",
+        "valor": 220000
+      },
+      {
+        "semana": "2026-02",
+        "valor": 650000
+      },
+      {
+        "semana": "2026-03",
+        "valor": 1100000
+      },
+      {
+        "semana": "2026-04",
+        "valor": 1600000
+      },
+      {
+        "semana": "2026-05",
+        "valor": 1300000
+      },
+      {
+        "semana": "2026-06",
+        "valor": 630000
+      }
+    ],
+    "linha_base_fisica": [
+      {
+        "semana": "2026-01",
+        "percentual": 3
+      },
+      {
+        "semana": "2026-02",
+        "percentual": 14
+      },
+      {
+        "semana": "2026-03",
+        "percentual": 30
+      },
+      {
+        "semana": "2026-04",
+        "percentual": 52
+      },
+      {
+        "semana": "2026-05",
+        "percentual": 72
+      },
+      {
+        "semana": "2026-06",
+        "percentual": 88
+      }
+    ],
+    "linha_base_histograma": [
+      {
+        "funcao": "Laboratorista",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W01": 6,
+          "2026-W10": 10,
+          "2026-W15": 12,
+          "2026-W20": 10,
+          "2026-W25": 8
+        }
+      },
+      {
+        "funcao": "Auxiliar de Lab",
+        "tipo": "direto",
+        "semanas": {
+          "2026-W01": 4,
+          "2026-W10": 6,
+          "2026-W15": 8,
+          "2026-W20": 6,
+          "2026-W25": 5
+        }
+      },
+      {
+        "funcao": "Gerente Tecnico",
+        "tipo": "indireto",
+        "semanas": {
+          "2026-W01": 1,
+          "2026-W10": 2,
+          "2026-W20": 2
+        }
+      }
+    ],
+    "linha_base_equipamentos": [],
+    "linha_base_acoes": [],
+    "aditivos": []
   }
 }
