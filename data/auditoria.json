@@ -313,5 +313,236 @@
     "acao": "avancar_suprimento",
     "alvo": "Estruturas Metálicas dos Silos",
     "detalhe": "→ negociacao"
+  },
+  {
+    "data_hora": "2026-06-26T11:02:29.452336",
+    "usuario": "Administrador",
+    "acao": "criar_pacote",
+    "alvo": "0e155d15-af0f-45d6-908c-204473f40746",
+    "detalhe": "Obras Civis Lote 1"
+  },
+  {
+    "data_hora": "2026-06-26T11:02:29.476662",
+    "usuario": "Administrador",
+    "acao": "pacote_add_contrato",
+    "alvo": "0e155d15-af0f-45d6-908c-204473f40746",
+    "detalhe": "Maritima Obras SA||MRT-2026-005"
+  },
+  {
+    "data_hora": "2026-06-26T11:02:29.490558",
+    "usuario": "Administrador",
+    "acao": "editar_pacote",
+    "alvo": "0e155d15-af0f-45d6-908c-204473f40746",
+    "detalhe": "Civis Lote 1 (rev)"
+  },
+  {
+    "data_hora": "2026-06-26T11:02:29.505097",
+    "usuario": "Administrador",
+    "acao": "pacote_rem_contrato",
+    "alvo": "0e155d15-af0f-45d6-908c-204473f40746",
+    "detalhe": "Maritima Obras SA||MRT-2026-005"
+  },
+  {
+    "data_hora": "2026-06-26T11:02:29.514928",
+    "usuario": "Administrador",
+    "acao": "excluir_pacote",
+    "alvo": "0e155d15-af0f-45d6-908c-204473f40746",
+    "detalhe": "Civis Lote 1 (rev)"
+  },
+  {
+    "data_hora": "2026-06-26T11:11:27.958701",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "criar_pacote",
+    "alvo": "9ba470f6-b70c-46ee-ab32-09296c81ed91",
+    "detalhe": "teste um"
+  },
+  {
+    "data_hora": "2026-06-26T11:11:44.509607",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "pacote_add_contrato",
+    "alvo": "9ba470f6-b70c-46ee-ab32-09296c81ed91",
+    "detalhe": "Construtora Alpha||CT-2024-001"
+  },
+  {
+    "data_hora": "2026-06-26T11:11:52.912816",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "criar_pacote",
+    "alvo": "6e5e0973-29f2-4bac-a22b-6d7d0ba0dbe7",
+    "detalhe": "nrstsrt"
+  },
+  {
+    "data_hora": "2026-06-26T11:24:05.554467",
+    "usuario": "Administrador",
+    "acao": "criar_pacote",
+    "alvo": "baf694e8-f119-4a81-b98e-d466c1350273",
+    "detalhe": "Pacote Negociação A"
+  },
+  {
+    "data_hora": "2026-06-26T11:24:05.572478",
+    "usuario": "Administrador",
+    "acao": "pacote_add_item",
+    "alvo": "baf694e8-f119-4a81-b98e-d466c1350273",
+    "detalhe": "92396250-8b4f-4275-ae98-070e799ee5a3"
+  },
+  {
+    "data_hora": "2026-06-26T11:24:05.584671",
+    "usuario": "Administrador",
+    "acao": "pacote_rem_item",
+    "alvo": "baf694e8-f119-4a81-b98e-d466c1350273",
+    "detalhe": "92396250-8b4f-4275-ae98-070e799ee5a3"
+  },
+  {
+    "data_hora": "2026-06-26T11:24:05.601212",
+    "usuario": "Administrador",
+    "acao": "excluir_pacote",
+    "alvo": "baf694e8-f119-4a81-b98e-d466c1350273",
+    "detalhe": "Pacote Negociação A"
+  },
+  {
+    "data_hora": "2026-06-26T11:40:54.752384",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "criar_pacote",
+    "alvo": "eaeb68cb-4965-4eaf-a2e0-c981ceefe2d4",
+    "detalhe": "3456356"
+  },
+  {
+    "data_hora": "2026-06-26T11:41:04.610806",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "excluir_pacote",
+    "alvo": "eaeb68cb-4965-4eaf-a2e0-c981ceefe2d4",
+    "detalhe": "3456356"
+  },
+  {
+    "data_hora": "2026-06-26T13:11:36.866544",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "avancar_suprimento",
+    "alvo": "Monitoramento Geotécnico Instrumentado",
+    "detalhe": "→ qualificacao"
+  },
+  {
+    "data_hora": "2026-06-26T13:13:40.220320",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "criar_contrato",
+    "alvo": "UJKT||DFTYJ",
+    "detalhe": "UJKT / DFTYJ"
+  },
+  {
+    "data_hora": "2026-06-26T13:50:19.556497",
+    "usuario": "Administrador",
+    "acao": "criar_suprimento",
+    "alvo": "__TEST_SUP__",
+    "detalhe": "Contratada: __TESTCO__"
+  },
+  {
+    "data_hora": "2026-06-26T13:50:19.566847",
+    "usuario": "Administrador",
+    "acao": "criar_pacote",
+    "alvo": "__TEST_PAC__",
+    "detalhe": "Etapa: Qualificação"
+  },
+  {
+    "data_hora": "2026-06-26T13:50:19.574211",
+    "usuario": "Administrador",
+    "acao": "add_pacote",
+    "alvo": "__TEST_PAC__",
+    "detalhe": "__TEST_SUP__"
+  },
+  {
+    "data_hora": "2026-06-26T13:50:19.585184",
+    "usuario": "Administrador",
+    "acao": "mover_pacote",
+    "alvo": "__TEST_PAC__",
+    "detalhe": "→ proposta (1 processo(s))"
+  },
+  {
+    "data_hora": "2026-06-26T13:50:19.594758",
+    "usuario": "Administrador",
+    "acao": "mover_pacote",
+    "alvo": "__TEST_PAC__",
+    "detalhe": "→ qualificacao (1 processo(s))"
+  },
+  {
+    "data_hora": "2026-06-26T13:50:19.603223",
+    "usuario": "Administrador",
+    "acao": "remover_de_pacote",
+    "alvo": "__TEST_SUP__",
+    "detalhe": ""
+  },
+  {
+    "data_hora": "2026-06-26T13:50:19.615518",
+    "usuario": "Administrador",
+    "acao": "add_pacote",
+    "alvo": "__TEST_PAC__",
+    "detalhe": "__TEST_SUP__"
+  },
+  {
+    "data_hora": "2026-06-26T13:50:19.623541",
+    "usuario": "Administrador",
+    "acao": "excluir_pacote",
+    "alvo": "__TEST_PAC__",
+    "detalhe": "1 processo(s) liberado(s)"
+  },
+  {
+    "data_hora": "2026-06-26T13:54:44.415343",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "recuar_suprimento",
+    "alvo": "Pavimentação e Drenagem — Área Interna",
+    "detalhe": "→ prospeccao"
+  },
+  {
+    "data_hora": "2026-06-26T13:55:17.286147",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "criar_pacote",
+    "alvo": "TESTE",
+    "detalhe": "Etapa: Qualificação"
+  },
+  {
+    "data_hora": "2026-06-26T13:55:35.236706",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "add_pacote",
+    "alvo": "TESTE",
+    "detalhe": "Dragagem do Porto Norte — Fase 1"
+  },
+  {
+    "data_hora": "2026-06-26T13:55:42.268561",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "add_pacote",
+    "alvo": "TESTE",
+    "detalhe": "Estruturas Metálicas dos Silos"
+  },
+  {
+    "data_hora": "2026-06-26T13:56:03.502969",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "editar_pacote",
+    "alvo": "ENGENHARIA",
+    "detalhe": ""
+  },
+  {
+    "data_hora": "2026-06-26T14:26:29.073036",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "remover_de_pacote",
+    "alvo": "Estruturas Metálicas dos Silos",
+    "detalhe": ""
+  },
+  {
+    "data_hora": "2026-06-26T14:26:52.078328",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "add_pacote",
+    "alvo": "ENGENHARIA",
+    "detalhe": "Estruturas Metálicas dos Silos"
+  },
+  {
+    "data_hora": "2026-06-30T10:35:25.279719",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "remover_de_pacote",
+    "alvo": "Estruturas Metálicas dos Silos",
+    "detalhe": ""
+  },
+  {
+    "data_hora": "2026-06-30T13:32:28.029081",
+    "usuario": "gabrieltmd@gmail.com",
+    "acao": "add_pacote",
+    "alvo": "ENGENHARIA",
+    "detalhe": "Estruturas Metálicas dos Silos"
   }
 ]

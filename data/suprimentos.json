@@ -23,9 +23,23 @@
       {
         "data": "2026-06-01",
         "nota": "Rodada de negociação — preço reduzido 8%"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "qualificacao",
+        "nota": "Incluído no pacote «TESTE»",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "negociacao",
+        "nota": "Atribuído ao pacote «INFRAESTRUTURA» (distribuição aleatória)",
+        "usuario": "Administrador"
       }
     ],
-    "area_contrato": "Obras civis"
+    "area_contrato": "Obras civis",
+    "pacote_id": "77aef8a6-8b3c-4061-9d11-a111b3360e71",
+    "atualizado_em": "2026-06-26T14:02:24.755210"
   },
   {
     "id": "cb0f55d2-0e44-4902-9986-b5308852831f",
@@ -34,7 +48,7 @@
     "objeto": "Fornecimento e montagem de estruturas metálicas (480 t)",
     "valor_estimado": 6800000.0,
     "prioridade": "alta",
-    "status": "negociacao",
+    "status": "qualificacao",
     "data_inicio": "2026-05-05",
     "data_prev_contrato": "2026-08-15",
     "responsavel": "Ana Lima",
@@ -77,10 +91,35 @@
         "status": "negociacao",
         "nota": "Avançou para Negociação",
         "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "qualificacao",
+        "nota": "Incluído no pacote «TESTE»",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "qualificacao",
+        "nota": "Atribuído ao pacote «ENGENHARIA» (distribuição aleatória)",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "qualificacao",
+        "nota": "Incluído no pacote «ENGENHARIA»",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-30",
+        "status": "qualificacao",
+        "nota": "Incluído no pacote «ENGENHARIA»",
+        "usuario": "Administrador"
       }
     ],
-    "atualizado_em": "2026-06-24T14:43:48.828347",
-    "area_contrato": "Obras eletromecânicas"
+    "atualizado_em": "2026-06-30T13:32:28.023687",
+    "area_contrato": "Obras eletromecânicas",
+    "pacote_id": "425254cd-25a1-49e7-b9a5-8a6ada564d1d"
   },
   {
     "id": "db836420-6e21-4839-a1c8-4c51f3c4c677",
@@ -98,9 +137,17 @@
       {
         "data": "2026-06-01",
         "nota": "Escopo preliminar aprovado pela engenharia"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "proposta",
+        "nota": "Atribuído ao pacote «ELETROMECANICA» (distribuição aleatória)",
+        "usuario": "Administrador"
       }
     ],
-    "area_contrato": "Obras eletromecânicas"
+    "area_contrato": "Obras eletromecânicas",
+    "pacote_id": "1515a15b-7693-403e-9ab6-fef6b7768cb8",
+    "atualizado_em": "2026-06-26T14:02:24.755210"
   },
   {
     "id": "0e5a88c3-1471-4193-bc0c-ff2df37118af",
@@ -134,10 +181,23 @@
         "status": "qualificacao",
         "nota": "Recuou para Qualificação",
         "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "prospeccao",
+        "nota": "Recuou para Prospecção",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "qualificacao",
+        "nota": "Atribuído ao pacote «ENGENHARIA» (distribuição aleatória)",
+        "usuario": "Administrador"
       }
     ],
-    "atualizado_em": "2026-06-24T14:37:04.775755",
-    "area_contrato": "Obras civis"
+    "atualizado_em": "2026-06-26T14:02:24.755210",
+    "area_contrato": "Obras civis",
+    "pacote_id": "425254cd-25a1-49e7-b9a5-8a6ada564d1d"
   },
   {
     "id": "c95a2d0b-59a4-4689-a0bc-c41b574e2339",
@@ -146,7 +206,7 @@
     "objeto": "Sprinklers, hidrantes e central de alarme — área de 9.000 m²",
     "valor_estimado": 870000.0,
     "prioridade": "media",
-    "status": "qualificacao",
+    "status": "negociacao",
     "data_inicio": "2026-06-10",
     "data_prev_contrato": "2026-11-01",
     "responsavel": "Rodrigo Alves",
@@ -161,10 +221,17 @@
         "status": "qualificacao",
         "nota": "Avançou para Qualificação",
         "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "negociacao",
+        "nota": "Atribuído ao pacote «INFRAESTRUTURA» (distribuição aleatória)",
+        "usuario": "Administrador"
       }
     ],
     "area_contrato": "Meio Ambiente",
-    "atualizado_em": "2026-06-24T09:50:03.372621"
+    "atualizado_em": "2026-06-26T14:02:24.755210",
+    "pacote_id": "77aef8a6-8b3c-4061-9d11-a111b3360e71"
   },
   {
     "id": "b99696b2-be24-43b3-a583-0cc7031dd530",
@@ -173,7 +240,7 @@
     "objeto": "Instalação e leitura de inclinômetros, piezômetros e marcos de recalque",
     "valor_estimado": 520000.0,
     "prioridade": "baixa",
-    "status": "prospeccao",
+    "status": "negociacao",
     "data_inicio": "2026-06-15",
     "data_prev_contrato": "2026-12-01",
     "responsavel": "Luiz Neto",
@@ -182,9 +249,23 @@
       {
         "data": "2026-06-15",
         "nota": "Levantamento de necessidade realizado"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "qualificacao",
+        "nota": "Avançou para Qualificação",
+        "usuario": "Administrador"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "negociacao",
+        "nota": "Atribuído ao pacote «INFRAESTRUTURA» (distribuição aleatória)",
+        "usuario": "Administrador"
       }
     ],
-    "area_contrato": "Engenharia"
+    "area_contrato": "Engenharia",
+    "atualizado_em": "2026-06-26T14:02:24.755210",
+    "pacote_id": "77aef8a6-8b3c-4061-9d11-a111b3360e71"
   },
   {
     "id": "7063bbdc-c102-441a-9123-8010ab76d7d9",
@@ -193,7 +274,7 @@
     "objeto": "Laboratório de ensaios de concreto, solos e asfalto por 24 meses",
     "valor_estimado": 320000.0,
     "prioridade": "baixa",
-    "status": "contrato",
+    "status": "qualificacao",
     "data_inicio": "2026-03-01",
     "data_prev_contrato": "2026-05-01",
     "responsavel": "Beatriz Dutra",
@@ -214,8 +295,16 @@
       {
         "data": "2026-05-01",
         "nota": "Contrato assinado digitalmente"
+      },
+      {
+        "data": "2026-06-26",
+        "status": "qualificacao",
+        "nota": "Atribuído ao pacote «ENGENHARIA» (distribuição aleatória)",
+        "usuario": "Administrador"
       }
     ],
-    "area_contrato": "Engenharia"
+    "area_contrato": "Engenharia",
+    "pacote_id": "425254cd-25a1-49e7-b9a5-8a6ada564d1d",
+    "atualizado_em": "2026-06-26T14:02:24.755210"
   }
 ]

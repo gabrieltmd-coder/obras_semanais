@@ -50,6 +50,27 @@
 .btn-promover:hover { background:#38a55a; }
 .funnel-bar { display:flex; gap:2px; border-radius:6px; overflow:hidden; height:5px; margin-bottom:.9rem; }
 .funnel-seg { flex:1; }
+
+/* ── Pacotes (camada superior) ── */
+.pac-card { background:#fff; border:1.5px solid var(--tms-border); border-left-width:4px;
+    border-radius:12px; padding:.5rem .55rem .55rem; box-shadow:0 2px 12px rgba(0,0,0,.06); }
+.pac-head { display:flex; align-items:flex-start; justify-content:space-between; gap:.3rem; margin-bottom:.3rem; }
+.pac-title { font-size:.78rem; font-weight:800; color:var(--tms-dark); line-height:1.2;
+    display:flex; align-items:center; gap:.32rem; }
+.pac-count { font-size:.6rem; font-weight:800; color:#fff; border-radius:99px; padding:.04rem .42rem; }
+.pac-codigo { font-size:.6rem; font-weight:800; letter-spacing:.03em; border:1px solid; border-radius:5px;
+    padding:.02rem .3rem; background:#fff; text-transform:uppercase; }
+.pac-meta { font-size:.64rem; color:var(--tms-muted); margin-bottom:.4rem; }
+.pac-body { display:flex; flex-direction:column; gap:.32rem; min-height:26px;
+    padding:.32rem; border-radius:8px; background:rgba(0,31,77,.04); }
+.sup-mini { background:var(--tms-surface); border:1px solid var(--tms-border); border-radius:8px; padding:.34rem .45rem; }
+.sup-mini-title { font-size:.71rem; font-weight:700; color:var(--tms-dark); line-height:1.2; }
+.sup-mini-sub { font-size:.63rem; color:var(--tms-muted); margin-top:.1rem; }
+.sup-mini-actions { display:flex; gap:.22rem; justify-content:flex-end; margin-top:.26rem; }
+.sup-mini-actions .btn { font-size:.6rem; padding:.1rem .34rem; line-height:1.25; }
+.pac-empty { font-size:.63rem; color:var(--tms-muted); text-align:center; padding:.4rem; font-style:italic; }
+.pac-actions { display:flex; align-items:center; gap:.28rem; margin-top:.45rem; }
+.pac-actions .btn { font-size:.63rem; padding:.18rem .46rem; }
 </style>
 
 <!-- Cabeçalho com botões contextuais -->
@@ -66,7 +87,12 @@
                 data-bs-toggle="modal" data-bs-target="#modalNovoContrato">
             <i class="bi bi-plus-circle me-1"></i>Novo Contrato
         </button>
-        <!-- Botão contextual da aba Suprimento -->
+        <!-- Botões contextuais da aba Suprimento -->
+        <button id="btn-novo-pacote" type="button" class="btn btn-sm"
+                style="display:none; background:#001f4d; color:#fff; font-weight:700;"
+                data-bs-toggle="modal" data-bs-target="#modalNovoPacote">
+            <i class="bi bi-box-seam me-1"></i>Novo Pacote
+        </button>
         <button id="btn-novo-suprimento" type="button" class="btn btn-primary-rumo btn-sm"
                 style="display:none;"
                 data-bs-toggle="modal" data-bs-target="#modalNovoSuprimento">
@@ -222,6 +248,7 @@
     {% if suprimentos %}
     <span style="font-size:.68rem; color:var(--tms-muted); margin-left:auto;">
         {{ suprimentos|length }} processo(s)
+        {% if pacotes %} · <i class="bi bi-box-seam"></i> {{ pacotes|length }} pacote(s){% endif %}
         {% set total_val = suprimentos|sum(attribute='valor_estimado') %}
         {% if total_val %} · R$ {{ "{:,.0f}".format(total_val).replace(',','.') }}{% endif %}
     </span>
@@ -232,14 +259,82 @@
 <div class="pipeline-wrap">
     {% for st in stages %}
     {% set cor   = stage_colors[st] %}
-    {% set cards = por_status[st] %}
+    {% set cards = standalone_por_status[st] %}
+    {% set pacs  = pacotes_por_status[st] %}
     {% set is_last = loop.last %}
 
     <div class="pipeline-col">
         <div class="pipeline-header" style="background:{{ cor }}1a; border-left:3px solid {{ cor }};">
             <span style="color:{{ cor }};">{{ stage_labels[st] }}</span>
-            <span class="pip-count" style="background:{{ cor }};">{{ cards|length }}</span>
+            <span class="pip-count" style="background:{{ cor }};">{{ por_status[st]|length }}</span>
         </div>
+
+        {# ── Pacotes nesta etapa (movem todos os membros juntos) ── #}
+        {% for pac in pacs %}
+        <div class="pac-card" style="border-left-color:{{ cor }};">
+            <div class="pac-head">
+                <div class="pac-title">
+                    <i class="bi bi-box-seam" style="color:{{ cor }};"></i>
+                    {% if pac.get('codigo') %}<span class="pac-codigo" style="border-color:{{ cor }}55; color:{{ cor }};">{{ pac.codigo }}</span>{% endif %}
+                    {{ pac.nome }}
+                    <span class="pac-count" style="background:{{ cor }};">{{ pac.membros|length }}</span>
+                </div>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-outline-primary btn-sm" style="font-size:.6rem; padding:.1rem .32rem;"
+                            title="Editar pacote" data-pid="{{ pac.id }}" data-nome="{{ pac.nome }}" data-codigo="{{ pac.get('codigo','') }}"
+                            onclick="abrirEditPac(this)"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-outline-danger btn-sm" style="font-size:.6rem; padding:.1rem .32rem;"
+                            title="Excluir pacote" data-pid="{{ pac.id }}" data-nome="{{ pac.nome }}"
+                            onclick="abrirDelPac(this)"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+            {% if pac.valor_total %}
+            <div class="pac-meta"><i class="bi bi-currency-dollar" style="color:{{ cor }};"></i> R$ {{ "{:,.0f}".format(pac.valor_total).replace(',','.') }}</div>
+            {% endif %}
+            <div class="pac-body">
+                {% for sup in pac.membros %}
+                {% set sidjs = sup.id|replace('-','') %}
+                <div class="sup-mini">
+                    <div class="d-flex justify-content-between align-items-start gap-1">
+                        <div class="sup-mini-title">{{ sup.descricao }}</div>
+                        <span class="prio-badge prio-{{ sup.get('prioridade','media') }}">{{ {'alta':'Alta','media':'Méd','baixa':'Baixa'}.get(sup.get('prioridade','media'),'Méd') }}</span>
+                    </div>
+                    <div class="sup-mini-sub"><i class="bi bi-building me-1" style="color:var(--tms-cyan);"></i>{{ sup.contratada or '—' }}{% if sup.get('valor_estimado') %} · R$ {{ "{:,.0f}".format(sup.valor_estimado).replace(',','.') }}{% endif %}</div>
+                    <div class="sup-mini-actions">
+                        <button class="btn btn-outline-primary btn-sm" title="Editar" onclick="abrirEditarSup('{{ sidjs }}')"><i class="bi bi-pencil"></i></button>
+                        {% if is_last %}
+                        <button class="btn btn-sm" style="background:#46C26A1a; border:1px solid #46C26A55; color:#2a7a47;" title="Promover a contrato" onclick="abrirPromover('{{ sidjs }}')"><i class="bi bi-star-fill"></i></button>
+                        {% endif %}
+                        <form method="post" action="{{ url_for('admin_suprimento_sair_pacote', sid=sup.id) }}" style="display:inline;">
+                            <button class="btn btn-outline-secondary btn-sm" title="Tirar do pacote"><i class="bi bi-box-arrow-up"></i></button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="pac-empty">Sem processos. Use “+ Incluir”.</div>
+                {% endfor %}
+            </div>
+            <div class="pac-actions">
+                <button class="btn btn-outline-primary btn-sm" title="Incluir processo no pacote"
+                        data-pid="{{ pac.id }}" data-nome="{{ pac.nome }}" onclick="abrirAddPac(this)">
+                    <i class="bi bi-plus-lg"></i> Incluir
+                </button>
+                <div class="ms-auto d-flex gap-1">
+                    {% set pidx = stages.index(st) %}
+                    {% if pidx > 0 %}
+                    <form method="post" action="{{ url_for('admin_pacote_recuar', pid=pac.id) }}" style="display:inline;">
+                        <button class="btn btn-outline-secondary btn-sm" title="Recuar pacote (move todos)"><i class="bi bi-arrow-left"></i></button>
+                    </form>
+                    {% endif %}
+                    {% if not is_last %}
+                    <form method="post" action="{{ url_for('admin_pacote_avancar', pid=pac.id) }}" style="display:inline;">
+                        <button class="btn btn-sm" style="background:{{ cor }}; color:#fff; font-weight:700;" title="Avançar pacote (move todos)">Todos <i class="bi bi-arrow-right"></i></button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>{# /pac-card #}
+        {% endfor %}
 
         {% for sup in cards %}
         {% set sid = sup.id %}
@@ -303,7 +398,7 @@
         </div>{# /sup-card #}
         {% endfor %}
 
-        {% if cards|length == 0 %}
+        {% if cards|length == 0 and pacs|length == 0 %}
         <div style="border:2px dashed {{ cor }}33; border-radius:10px; padding:1.1rem .65rem;
                     text-align:center; color:{{ cor }}55; font-size:.71rem;">
             <i class="bi bi-inbox" style="font-size:1.3rem; display:block; margin-bottom:.35rem;"></i>Nenhum processo
@@ -516,6 +611,105 @@
     </div>
 </div>
 
+<!-- Modal: Novo Pacote -->
+<div class="modal fade" id="modalNovoPacote" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ url_for('admin_pacote_novo') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>Novo Pacote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label fw-bold">Código do Pacote</label>
+                    <input type="text" name="codigo" class="form-control" placeholder="Ex: PCT-001">
+                    <label class="form-label fw-bold mt-3">Nome do Pacote *</label>
+                    <input type="text" name="nome" class="form-control" required placeholder="Ex: Terraplanagem — Lote 2">
+                    <label class="form-label fw-bold mt-3">Etapa inicial</label>
+                    <select name="status" class="form-select">
+                        {% for st in stages %}<option value="{{ st }}">{{ stage_labels[st] }}</option>{% endfor %}
+                    </select>
+                    <small class="text-muted d-block mt-2"><i class="bi bi-info-circle me-1"></i>Inclua processos e mova o pacote inteiro entre as etapas — todos avançam juntos.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-rumo"><i class="bi bi-box-seam me-1"></i>Criar Pacote</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Incluir processo no pacote -->
+<div class="modal fade" id="modalAddPac" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="formAddPac">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Incluir no pacote <span id="addPacNome" style="color:var(--tms-cyan);"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted" style="font-size:.82rem;">Selecione um processo solto (fora de pacotes). Ele será movido para a etapa do pacote.</p>
+                    <label class="form-label fw-bold">Processo</label>
+                    <select name="sup_id" class="form-select" required>
+                        {% for s in suprimentos_soltos %}
+                        <option value="{{ s.id }}">{{ s.descricao }} — {{ s.contratada }} ({{ stage_labels[s.get('status','prospeccao')] }})</option>
+                        {% else %}
+                        <option value="" disabled selected>Nenhum processo solto disponível</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-rumo"><i class="bi bi-plus-lg me-1"></i>Incluir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Renomear pacote -->
+<div class="modal fade" id="modalEditPac" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="formEditPac">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Renomear Pacote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label fw-bold">Código do Pacote</label>
+                    <input type="text" name="codigo" id="editPacCodigo" class="form-control" placeholder="Ex: PCT-001">
+                    <label class="form-label fw-bold mt-3">Nome do Pacote *</label>
+                    <input type="text" name="nome" id="editPacNome" class="form-control" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary-rumo">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Excluir pacote -->
+<div class="modal fade" id="modalDelPac" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Excluir Pacote</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">Excluir o pacote <strong id="delPacNome"></strong>? Os processos serão mantidos (soltos) na etapa atual.</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" id="formDelPac"><button type="submit" class="btn btn-danger">Excluir Pacote</button></form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% if current_user and current_user.role == 'master' %}
 <!-- Modal: Excluir Contrato -->
 <div class="modal fade" id="modalExcluirContrato" tabindex="-1">
@@ -562,6 +756,8 @@ function switchTab(tab) {
     document.getElementById('tab-desc-suprimento').style.display = isSup ? '' : 'none';
     document.getElementById('btn-novo-contrato').style.display   = isSup ? 'none' : '';
     document.getElementById('btn-novo-suprimento').style.display = isSup ? '' : 'none';
+    const _bp = document.getElementById('btn-novo-pacote');
+    if (_bp) _bp.style.display = isSup ? '' : 'none';
     const url = new URL(window.location);
     if (isSup) url.searchParams.set('tab', 'suprimento');
     else url.searchParams.delete('tab');
@@ -583,5 +779,23 @@ function abrirExcluirContrato(btn) {
 function abrirEditarSup(sidjs)  { new bootstrap.Modal(document.getElementById('modalEditSup'  + sidjs)).show(); }
 function abrirDelSup(sidjs)     { new bootstrap.Modal(document.getElementById('modalDelSup'   + sidjs)).show(); }
 function abrirPromover(sidjs)   { new bootstrap.Modal(document.getElementById('modalPromSup'  + sidjs)).show(); }
+
+// ── Pacotes (modais compartilhados; ação definida via data-* do botão) ──────
+function abrirAddPac(btn) {
+    document.getElementById('formAddPac').action = '/admin/pacote/' + btn.dataset.pid + '/add';
+    document.getElementById('addPacNome').textContent = btn.dataset.nome || '';
+    new bootstrap.Modal(document.getElementById('modalAddPac')).show();
+}
+function abrirEditPac(btn) {
+    document.getElementById('formEditPac').action = '/admin/pacote/' + btn.dataset.pid + '/editar';
+    document.getElementById('editPacNome').value = btn.dataset.nome || '';
+    document.getElementById('editPacCodigo').value = btn.dataset.codigo || '';
+    new bootstrap.Modal(document.getElementById('modalEditPac')).show();
+}
+function abrirDelPac(btn) {
+    document.getElementById('formDelPac').action = '/admin/pacote/' + btn.dataset.pid + '/excluir';
+    document.getElementById('delPacNome').textContent = btn.dataset.nome || '';
+    new bootstrap.Modal(document.getElementById('modalDelPac')).show();
+}
 </script>
 {% endblock %}

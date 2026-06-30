@@ -1,0 +1,70 @@
+[
+  {
+    "id": "425254cd-25a1-49e7-b9a5-8a6ada564d1d",
+    "nome": "ENGENHARIA",
+    "status": "qualificacao",
+    "historico": [
+      {
+        "data": "2026-06-26",
+        "status": "qualificacao",
+        "nota": "Pacote criado",
+        "usuario": "Administrador"
+      }
+    ],
+    "criado_em": "2026-06-26T13:55:17.284580",
+    "criado_por": "Administrador",
+    "atualizado_em": "2026-06-26T13:56:03.501073",
+    "codigo": "PCT-001"
+  },
+  {
+    "id": "f06e1b9c-31bc-479f-9a35-c5957a8ff2c6",
+    "nome": "OBRAS CIVIS",
+    "codigo": "PCT-002",
+    "status": "prospeccao",
+    "historico": [
+      {
+        "data": "2026-06-26",
+        "status": "prospeccao",
+        "nota": "Pacote criado (seed)",
+        "usuario": "Administrador"
+      }
+    ],
+    "criado_em": "2026-06-26T14:02:24.755210",
+    "criado_por": "Administrador",
+    "atualizado_em": "2026-06-26T14:02:24.755210"
+  },
+  {
+    "id": "1515a15b-7693-403e-9ab6-fef6b7768cb8",
+    "nome": "ELETROMECANICA",
+    "codigo": "PCT-003",
+    "status": "proposta",
+    "historico": [
+      {
+        "data": "2026-06-26",
+        "status": "proposta",
+        "nota": "Pacote criado (seed)",
+        "usuario": "Administrador"
+      }
+    ],
+    "criado_em": "2026-06-26T14:02:24.755210",
+    "criado_por": "Administrador",
+    "atualizado_em": "2026-06-26T14:02:24.755210"
+  },
+  {
+    "id": "77aef8a6-8b3c-4061-9d11-a111b3360e71",
+    "nome": "INFRAESTRUTURA",
+    "codigo": "PCT-004",
+    "status": "negociacao",
+    "historico": [
+      {
+        "data": "2026-06-26",
+        "status": "negociacao",
+        "nota": "Pacote criado (seed)",
+        "usuario": "Administrador"
+      }
+    ],
+    "criado_em": "2026-06-26T14:02:24.755210",
+    "criado_por": "Administrador",
+    "atualizado_em": "2026-06-26T14:02:24.755210"
+  }
+]

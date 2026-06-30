@@ -553,22 +553,35 @@
 
     {% set auth_page = request.endpoint in ['login', 'esqueci_senha', 'redefinir_senha'] %}
     <div class="d-flex align-items-center gap-1">
-        {% if request.endpoint != 'financeiro' and not auth_page %}
-        <a href="{{ url_for('dashboard') }}"
-           class="nav-link-rumo {% if request.endpoint == 'dashboard' %}active{% endif %}">
-            <i class="bi bi-speedometer2"></i>Dashboard
+        {% if current_user and not auth_page %}
+        <!-- Páginas do portal — sempre visíveis em todas as páginas -->
+        {% if current_user.role in ['admin', 'master', 'rumo'] %}
+        <a href="{{ url_for('consolidado') }}"
+           class="nav-link-rumo {% if request.endpoint == 'consolidado' %}active{% endif %}">
+            <i class="bi bi-grid-1x2"></i>Consolidado
         </a>
         {% endif %}
-        {% if request.endpoint != 'financeiro' and not auth_page %}
+        <a href="{{ url_for('dashboard') }}"
+           class="nav-link-rumo {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i>Contratadas
+        </a>
+        <a href="{{ url_for('financeiro') }}"
+           class="nav-link-rumo {% if request.endpoint == 'financeiro' %}active{% endif %}">
+            <i class="bi bi-currency-dollar"></i>Financeiro
+        </a>
         <a href="{{ url_for('index') }}"
            class="nav-link-rumo {% if request.endpoint == 'index' %}active{% endif %}">
             <i class="bi bi-grid-3x3-gap"></i>Registros
+        </a>
+        <a href="{{ url_for('construcao') }}"
+           class="nav-link-rumo {% if request.endpoint == 'construcao' %}active{% endif %}">
+            <i class="bi bi-file-earmark-text"></i>RDO's
         </a>
         {% endif %}
         {% if current_user and current_user.role in ['admin', 'master', 'rumo'] %}
         <a href="{{ url_for('admin') }}"
            class="nav-link-rumo {% if request.endpoint and (request.endpoint in ['admin', 'admin_contrato', 'admin_novo_contrato'] or request.endpoint.startswith('admin_suprimento')) %}active{% endif %}">
-            <i class="bi bi-file-earmark-text" style="color:var(--green);"></i>Contratos
+            <i class="bi bi-folder2-open" style="color:var(--green);"></i>Contratos
         </a>
         <a href="{{ url_for('admin_usuarios') }}"
            class="nav-link-rumo {% if request.endpoint and request.endpoint.startswith('admin_usuarios') %}active{% endif %}">

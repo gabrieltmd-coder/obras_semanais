@@ -115,6 +115,44 @@ main { position: relative; z-index: 1; }
 .ms-marker-label { font-family:'IBM Plex Mono',monospace; font-size:.52rem; font-weight:600; line-height:1; }
 .ms-legend { display:flex; gap:1.1rem; align-items:center; flex-wrap:wrap; }
 .ms-legend span { font-family:'IBM Plex Mono',monospace; font-size:.65rem; display:flex; align-items:center; gap:.3rem; }
+
+/* ── Card de detalhe do Pipeline de Suprimento ── */
+.card-info-contrato { margin-top:.85rem; background:#1a2a3a; border:1px solid rgba(0,180,216,.35);
+    border-radius:10px; overflow:hidden; animation:fadeSlideIn .2s ease; }
+.card-info-contrato .cic-header { display:flex; align-items:center; justify-content:space-between;
+    gap:.5rem; background:#0d1b2a; padding:.55rem .9rem; border-bottom:1px solid rgba(0,180,216,.25); }
+.card-info-contrato .cic-header > span { font-family:'IBM Plex Mono',monospace; font-size:.74rem;
+    font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#00b4d8; }
+.cic-nav { display:flex; align-items:center; gap:.35rem; }
+.cic-nav button { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+    color:#fff; width:24px; height:24px; border-radius:5px; cursor:pointer; font-size:.85rem;
+    line-height:1; display:inline-flex; align-items:center; justify-content:center; transition:background .15s; }
+.cic-nav button:hover { background:rgba(0,180,216,.25); }
+.cic-nav .cic-close { color:#ff7a89; }
+#cic-counter { font-family:'IBM Plex Mono',monospace; font-size:.66rem; color:rgba(255,255,255,.5); margin-right:.15rem; }
+.cic-table { width:100%; border-collapse:collapse; }
+.cic-table td { padding:.5rem .9rem; font-size:.82rem; color:#fff; border-bottom:1px solid rgba(255,255,255,.06); vertical-align:top; }
+.cic-table tr:last-child td { border-bottom:none; }
+.cic-table td.cic-k { width:160px; color:rgba(255,255,255,.5); font-family:'IBM Plex Mono',monospace;
+    font-size:.64rem; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+.cic-badge { display:inline-block; padding:.15rem .55rem; border-radius:20px; font-size:.68rem;
+    font-weight:700; font-family:'IBM Plex Mono',monospace; }
+#cic-counter { font-family:'IBM Plex Mono',monospace; font-size:.66rem; color:rgba(255,255,255,.5); }
+/* Grid de mini-cards (todos os processos da etapa, lado a lado) */
+.proc-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(228px, 1fr)); gap:.7rem; padding:.85rem; }
+.proc-mini { background:#0d1b2a; border:1px solid rgba(255,255,255,.1); border-top-width:3px;
+    border-radius:9px; padding:.65rem .7rem; display:flex; flex-direction:column; gap:.32rem; }
+.proc-mini h4 { margin:0; font-size:.8rem; font-weight:800; color:#fff; line-height:1.25; }
+.proc-mini .pm-obj { font-size:.67rem; color:rgba(255,255,255,.5); font-style:italic; line-height:1.3; }
+.proc-mini .pm-val { font-size:.98rem; font-weight:800; color:#46C26A; font-family:'IBM Plex Mono',monospace; margin:.1rem 0 .15rem; }
+.proc-mini .pm-row { display:flex; justify-content:space-between; gap:.5rem; align-items:baseline;
+    border-top:1px solid rgba(255,255,255,.06); padding-top:.26rem; }
+.proc-mini .pm-k { color:rgba(255,255,255,.42); font-family:'IBM Plex Mono',monospace; font-size:.58rem;
+    text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; }
+.proc-mini .pm-v { color:#fff; font-size:.7rem; text-align:right; }
+.proc-mini .pm-dias { font-family:'IBM Plex Mono',monospace; font-size:.66rem; font-weight:800;
+    padding:.08rem .5rem; border-radius:20px; white-space:nowrap; }
+.proc-empty-msg { padding:1rem .9rem; color:rgba(255,255,255,.5); font-size:.8rem; }
 </style>
 
 <div style="color:#fff;">
@@ -155,10 +193,6 @@ main { position: relative; z-index: 1; }
     <div class="kpi-mini cy">
         <div class="kpi-ml">Contratadas</div>
         <div class="kpi-mv">{{ kpis.n_contratadas }}</div>
-    </div>
-    <div class="kpi-mini cy">
-        <div class="kpi-ml">Contratos</div>
-        <div class="kpi-mv">{{ kpis.n_contratos }}</div>
     </div>
 </div>
 
@@ -322,6 +356,27 @@ main { position: relative; z-index: 1; }
             <canvas id="chartSupArea"></canvas>
         </div>
     </div>
+
+    <p style="margin:.7rem 0 0; display:flex; flex-wrap:wrap; align-items:center; gap:.35rem .9rem; font-size:.66rem; color:rgba(255,255,255,.3); font-family:'IBM Plex Mono',monospace;">
+        <span><i class="bi bi-hand-index"></i> Clique em uma etapa do funil para ver os processos.</span>
+        <span style="margin-left:auto; color:rgba(255,255,255,.4);">Dias na etapa:</span>
+        <span style="color:#46C26A;">● ≤15</span>
+        <span style="color:#F0B34D;">● 16–30</span>
+        <span style="color:#e07b00;">● 31–60</span>
+        <span style="color:#ff5d6c;">● +60</span>
+    </p>
+
+    <!-- Cards dos processos da etapa (ocultos até clicar no funil) -->
+    <div id="card-contrato-pipeline" style="display:none;" class="card-info-contrato">
+        <div class="cic-header">
+            <span id="card-etapa-titulo">Etapa: —</span>
+            <div class="cic-nav">
+                <span id="cic-counter"></span>
+                <button type="button" class="cic-close" onclick="fecharCardContrato()" title="Fechar">✕</button>
+            </div>
+        </div>
+        <div id="grid-processos-pipeline" class="proc-grid"><!-- preenchido via JS --></div>
+    </div>
 </div>
 {% endif %}
 
@@ -371,11 +426,11 @@ function _contractCard(c, icon, areaName) {
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;font-weight:600;color:${saldoColor};">${fmtBRL(c.saldo)}</div>
             </div>
             <div>
-                <div style="font-size:.48rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.08rem;">% Executado</div>
-                <div style="font-family:'IBM Plex Mono',monospace;font-size:.88rem;font-weight:800;color:${color};">${c.pct}%</div>
+                <div style="font-size:.48rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.08rem;">Avanço Físico</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:.88rem;font-weight:800;color:${pctColor(c.avanco_fisico ?? 0)};">${c.avanco_fisico ?? 0}%</div>
             </div>
         </div>
-        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color};"></div></div>
+        <div title="Execução financeira: ${c.pct}%" class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color};"></div></div>
     </div>`;
 }
 
@@ -657,6 +712,13 @@ const CORES      = {{ cores|safe }};
 const GRID = 'rgba(255,255,255,.06)';
 const TICK = { color:'rgba(255,255,255,.35)', font:{ size:10 } };
 const rs = v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k';
+// Rótulos esparsos: evita encavalamento mostrando ~maxN pontos + sempre o último real
+const _lastReal = arr => { for (let i=arr.length-1;i>=0;i--) if (arr[i]!=null) return i; return -1; };
+function _sparse(data, maxN=6){
+    const last = _lastReal(data);
+    const step = Math.max(1, Math.ceil((last+1)/maxN));
+    return idx => idx===last || idx % step === 0;
+}
 
 Chart.defaults.set('plugins.datalabels', {
     color:'#fff', font:{ size:10, weight:700, family:"'IBM Plex Mono',monospace" },
@@ -665,6 +727,7 @@ Chart.defaults.set('plugins.datalabels', {
 
 // Curva S consolidada
 if (document.getElementById('chartCurva') && LABELS.length) {
+    const _finShow = _sparse(CURVA_ACUM);
     const dsFin = [
         { label:'Realizado (R$)', data:CURVA_ACUM, borderColor:'#2BB2EE', backgroundColor:'rgba(0,212,255,.08)',
           borderWidth:2, pointRadius:3, pointBackgroundColor:'#2BB2EE', fill:true, tension:.45 },
@@ -682,7 +745,9 @@ if (document.getElementById('chartCurva') && LABELS.length) {
             plugins:{
                 legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
                 tooltip:{ callbacks:{ label: ctx => ctx.dataset.label==='Linha de Base'?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
-                datalabels:{ display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null, align:'top', anchor:'end', color:'#7fd4f5', formatter: rs }
+                datalabels:{ display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null && _finShow(ctx.dataIndex),
+                    align:'top', anchor:'end', offset:4, color:'#7fd4f5', clamp:true,
+                    font:{ size:8.5, weight:700, family:"'IBM Plex Mono',monospace" }, formatter: rs }
             },
             scales:{ x:{ grid:{color:GRID}, ticks:TICK }, y:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>rs(v) }} }
         }
@@ -691,6 +756,7 @@ if (document.getElementById('chartCurva') && LABELS.length) {
 
 // Curva S Física consolidada
 if (document.getElementById('chartCurvaFis') && LABELS.length) {
+    const _fisShow = _sparse(CURVA_FIS_ACUM);
     const dsFis = [
         { label:'Realizado (%)', data:CURVA_FIS_ACUM, borderColor:'#F0B34D', backgroundColor:'rgba(240,179,77,.08)',
           borderWidth:2, pointRadius:3, pointBackgroundColor:'#F0B34D', fill:true, tension:.45 },
@@ -708,7 +774,9 @@ if (document.getElementById('chartCurvaFis') && LABELS.length) {
             plugins:{
                 legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.45)' }},
                 tooltip:{ callbacks:{ label: ctx => ctx.dataset.label==='Linha de Base'?'':' '+ctx.parsed.y+'%' }},
-                datalabels:{ display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null, align:'top', anchor:'end', color:'#f7cc7a', formatter: v => v+'%' }
+                datalabels:{ display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null && _fisShow(ctx.dataIndex),
+                    align:'top', anchor:'end', offset:4, color:'#f7cc7a', clamp:true,
+                    font:{ size:8.5, weight:700, family:"'IBM Plex Mono',monospace" }, formatter: v => v+'%' }
             },
             scales:{ x:{ grid:{color:GRID}, ticks:TICK }, y:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>v+'%' }, min:0, max:100 } }
         }
@@ -755,9 +823,15 @@ const SUP_ETAPA_VALS   = {{ sup_por_etapa_vals|safe }};
 const SUP_ETAPA_CORES  = {{ sup_por_etapa_cores|safe }};
 const SUP_AREA_LABELS  = {{ sup_por_area_labels|safe }};
 const SUP_AREA_VALS    = {{ sup_por_area_vals|safe }};
+const SUP_ETAPA_KEYS   = {{ sup_etapa_keys|safe }};
+const SUP_POR_ETAPA    = {{ sup_por_etapa_data|safe }};
+const SUP_STAGE_LABELS = {{ sup_stage_labels|safe }};
+const SUP_STAGE_CORES  = {{ sup_stage_cores|safe }};
+
+let _supEtapaChart = null;
 
 if (document.getElementById('chartSupEtapa') && SUP_ETAPA_VALS.reduce((a,b)=>a+b,0) > 0) {
-    new Chart(document.getElementById('chartSupEtapa'), {
+    _supEtapaChart = new Chart(document.getElementById('chartSupEtapa'), {
         type: 'bar',
         data: {
             labels: SUP_ETAPA_LABELS,
@@ -766,7 +840,7 @@ if (document.getElementById('chartSupEtapa') && SUP_ETAPA_VALS.reduce((a,b)=>a+b
                 data: SUP_ETAPA_VALS,
                 backgroundColor: SUP_ETAPA_CORES.map(c => c + 'aa'),
                 borderColor:     SUP_ETAPA_CORES,
-                borderWidth: 1.5,
+                borderWidth: SUP_ETAPA_VALS.map(() => 1.5),
                 borderRadius: 6,
                 barThickness: 18,
             }]
@@ -775,9 +849,11 @@ if (document.getElementById('chartSupEtapa') && SUP_ETAPA_VALS.reduce((a,b)=>a+b
             indexAxis: 'y', responsive: true, maintainAspectRatio: false,
             animation: { duration: 500 },
             layout: { padding: { right: 30, top: 4, bottom: 4 } },
+            onClick: (evt, els) => { if (els.length) mostrarCardEtapa(els[0].index); },
+            onHover: (evt, els) => { if (evt.native) evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
             plugins: {
                 legend: { display: false },
-                tooltip: { callbacks: { label: ctx => '  ' + ctx.parsed.x + ' processo(s)' } },
+                tooltip: { callbacks: { label: ctx => '  ' + ctx.parsed.x + ' processo(s) — clique p/ detalhes' } },
                 datalabels: {
                     anchor: 'end', align: 'end', clip: false,
                     color: '#fff', font: { size: 11, weight: 700, family: "'IBM Plex Mono',monospace" },
@@ -791,6 +867,78 @@ if (document.getElementById('chartSupEtapa') && SUP_ETAPA_VALS.reduce((a,b)=>a+b
             }
         }
     });
+}
+
+// ── Card de detalhe do processo ao clicar numa etapa do funil ────────────────
+const _SUP_BADGE_TXT = { prospeccao:'#fff', qualificacao:'#062b3a', proposta:'#3a2a06',
+                         negociacao:'#fff', contrato:'#062b1a' };
+const _fmtBRLsup = v => 'R$ ' + (parseFloat(v)||0).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+function _fmtDataBR(d) {
+    if (!d) return '—';
+    const p = String(d).slice(0,10).split('-');
+    return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
+}
+function _esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Cor por tempo parado na etapa: quanto mais dias, mais "quente" (atrasado)
+function _corDias(d){
+    if (d == null)  return '#6b7c93';   // desconhecido — cinza
+    if (d <= 15)    return '#46C26A';   // ok — verde
+    if (d <= 30)    return '#F0B34D';   // atenção — amarelo
+    if (d <= 60)    return '#e07b00';   // atrasado — laranja
+    return '#ff5d6c';                   // crítico — vermelho
+}
+
+function mostrarCardEtapa(idx) {
+    const key = SUP_ETAPA_KEYS[idx];
+    const procs = (SUP_POR_ETAPA[key] || []).slice();
+    const stLabel = SUP_STAGE_LABELS[key] || key;
+    const cor = SUP_STAGE_CORES[key] || '#2BB2EE';
+
+    // Destaca a barra selecionada no funil
+    if (_supEtapaChart) {
+        const ds = _supEtapaChart.data.datasets[0];
+        ds.borderWidth = SUP_ETAPA_KEYS.map((_, i) => i === idx ? 3.5 : 1.5);
+        ds.backgroundColor = SUP_ETAPA_CORES.map((c, i) => c + (i === idx ? 'ff' : '55'));
+        _supEtapaChart.update('none');
+    }
+
+    document.getElementById('card-etapa-titulo').textContent = 'Etapa: ' + stLabel;
+    document.getElementById('cic-counter').textContent =
+        procs.length + ' processo' + (procs.length === 1 ? '' : 's');
+
+    const grid = document.getElementById('grid-processos-pipeline');
+    if (!procs.length) {
+        grid.innerHTML = '<div class="proc-empty-msg">Nenhum processo nesta etapa.</div>';
+    } else {
+        // Todos os processos da etapa, lado a lado (sem paginação)
+        grid.innerHTML = procs.map(p => {
+            const vig = `${_fmtDataBR(p.data_inicio)} → ${_fmtDataBR(p.data_prev_contrato)}`;
+            const dias = p.dias_etapa;
+            const cd = _corDias(dias);
+            const diasTxt = (dias == null) ? '—' : (dias + (dias === 1 ? ' dia' : ' dias'));
+            return `<div class="proc-mini" style="border-top-color:${cor}; border-left:3px solid ${cd};">
+                <h4>${_esc(p.descricao) || '—'}</h4>
+                ${p.objeto ? `<div class="pm-obj">${_esc(p.objeto)}</div>` : ''}
+                <div class="pm-val">${_fmtBRLsup(p.valor_estimado)}</div>
+                <div class="pm-row"><span class="pm-k">Dias nessa etapa</span>
+                    <span class="pm-dias" style="background:${cd}22; color:${cd}; border:1px solid ${cd}66;">${diasTxt}</span></div>
+                <div class="pm-row"><span class="pm-k">Contratada</span><span class="pm-v">${_esc(p.contratada) || '—'}</span></div>
+                <div class="pm-row"><span class="pm-k">Vigência</span><span class="pm-v">${vig}</span></div>
+                <div class="pm-row"><span class="pm-k">Responsável</span><span class="pm-v">${_esc(p.responsavel) || '—'}</span></div>
+            </div>`;
+        }).join('');
+    }
+    document.getElementById('card-contrato-pipeline').style.display = '';
+}
+
+function fecharCardContrato() {
+    document.getElementById('card-contrato-pipeline').style.display = 'none';
+    if (_supEtapaChart) {  // remove o destaque
+        const ds = _supEtapaChart.data.datasets[0];
+        ds.borderWidth = SUP_ETAPA_VALS.map(() => 1.5);
+        ds.backgroundColor = SUP_ETAPA_CORES.map(c => c + 'aa');
+        _supEtapaChart.update('none');
+    }
 }
 
 if (document.getElementById('chartSupArea') && SUP_AREA_VALS.reduce((a,b)=>a+b,0) > 0) {

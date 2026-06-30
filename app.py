@@ -1104,12 +1104,12 @@ def consolidado():
         s = r.get('semana_referencia', '')
         semanas[s] = semanas.get(s, 0) + r.get('valor_medido', 0)
     semanas_sorted = sorted(semanas)
-    chart_labels = [format_date_br(s) for s in semanas_sorted]
     curva_acum, acum = [], 0
     for s in semanas_sorted:
         acum += semanas[s]
         curva_acum.append(round(acum, 2))
-    curva_base = fin_base_curve(cfg, '', semanas_sorted)
+    # chart_labels / curva_base / curva_fis_base são montados adiante sobre a
+    # linha do tempo ESTENDIDA (semanas + meses futuros) — ver bloco Forecast.
 
     # ── Curva S Física consolidada (média ponderada por valor contratado) ──
     _af_hist = {}  # (contratada, contrato) → {semana: avanco_fisico}
@@ -1147,10 +1147,7 @@ def consolidado():
         _peso = sum(p for _, p in _fis_m[_m])
         _fis_cumul[_m] = round(_soma / _peso, 1) if _peso else 0
     _fis_months = sorted(_fis_cumul)
-    curva_fis_base = [
-        next(((_fis_cumul[bm]) for bm in reversed(_fis_months) if bm <= _month_of_week(s)), None)
-        for s in semanas_sorted
-    ]
+    # curva_fis_base é amostrada adiante sobre a linha do tempo estendida.
 
     # ── Forecast das Curvas S ────────────────────────────────────────────────
     # Estende o eixo do tempo até o fim do baseline/contrato e projeta a curva
@@ -1258,7 +1255,8 @@ def consolidado():
             'valor':      valor,
             'medido':     round(medido_c, 2),
             'saldo':      round(valor - medido_c, 2),
-            'pct':        round(medido_c / valor * 100, 1) if valor else 0,
+            'pct':        round(medido_c / valor * 100, 1) if valor else 0,   # % financeiro (medido/contratado)
+            'avanco_fisico': round(ultimo_af.get((ct_name, contrato), 0) or 0, 1),  # último avanço físico do contrato
         })
     for a in area_map.values():
         a['saldo'] = a['valor'] - a['medido']
@@ -1320,6 +1318,46 @@ def consolidado():
     sup_valor_total = sum(x.get('valor_estimado') or 0 for x in _sups)
     sup_etapa_rows  = list(zip(_sup_etapa_labels, _sup_etapa_vals, _sup_etapa_cores))
 
+    # Dias que o processo está na etapa atual (desde a entrada nela, via histórico)
+    _hoje = datetime.now().date()
+
+    def _dias_na_etapa(x):
+        st = x.get('status')
+        arrival = ''
+        for h in (x.get('historico') or []):
+            if h.get('status') == st and h.get('data'):
+                arrival = h['data']   # mantém a entrada mais recente nessa etapa
+        if not arrival:
+            arrival = x.get('criado_em') or x.get('data_inicio') or ''
+        arrival = (arrival or '')[:10]
+        if not arrival:
+            return None
+        try:
+            d0 = datetime.strptime(arrival, '%Y-%m-%d').date()
+            return max((_hoje - d0).days, 0)
+        except Exception:
+            return None
+
+    # Processos agrupados por etapa — usado no card de detalhe ao clicar no funil
+    _sup_por_etapa = {s: [] for s in SUPRIMENTO_STAGES}
+    for x in _sups:
+        st = x.get('status')
+        if st in _sup_por_etapa:
+            _sup_por_etapa[st].append({
+                'descricao':          x.get('descricao', ''),
+                'objeto':             x.get('objeto', ''),
+                'contratada':         x.get('contratada', ''),
+                'valor_estimado':     x.get('valor_estimado') or 0,
+                'data_inicio':        x.get('data_inicio', ''),
+                'data_prev_contrato': x.get('data_prev_contrato', ''),
+                'status':             st,
+                'prioridade':         x.get('prioridade', ''),
+                'responsavel':        x.get('responsavel', ''),
+                'dias_etapa':         _dias_na_etapa(x),
+            })
+    _sup_stage_labels = SUPRIMENTO_STAGE_LABELS
+    _sup_stage_cores  = SUPRIMENTO_STAGE_COLORS
+
     return render_template('consolidado.html',
                            kpis=kpis,
                            por_contratada=por_contratada,
@@ -1347,6 +1385,10 @@ def consolidado():
                            sup_por_etapa_labels=json.dumps(_sup_etapa_labels),
                            sup_por_etapa_vals=json.dumps(_sup_etapa_vals),
                            sup_por_etapa_cores=json.dumps(_sup_etapa_cores),
+                           sup_etapa_keys=json.dumps(SUPRIMENTO_STAGES),
+                           sup_por_etapa_data=json.dumps(_sup_por_etapa),
+                           sup_stage_labels=json.dumps(_sup_stage_labels),
+                           sup_stage_cores=json.dumps(_sup_stage_cores),
                            sup_por_area_labels=json.dumps(list(_sup_area_map.keys())),
                            sup_por_area_vals=json.dumps(list(_sup_area_map.values())))
 
@@ -2475,6 +2517,205 @@ def admin_suprimento_promover(sid):
     return redirect(url_for('admin_contrato', key=key))
 
 
+# ── Pacotes de Suprimento ──────────────────────────────────────────────────────
+# Camada de organização ACIMA dos cards de suprimento. Um pacote vive numa etapa
+# do pipeline e agrupa vários processos; ao avançar/recuar, move todos os membros
+# de uma vez. Cada suprimento referencia o pacote via campo 'pacote_id' e tem seu
+# 'status' mantido em sincronia com a etapa do pacote.
+
+PACOTE_FILE = os.path.join('data', 'pacotes.json')
+
+
+def load_pacotes():
+    if not os.path.exists(PACOTE_FILE):
+        return []
+    try:
+        with open(PACOTE_FILE, encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def save_pacotes(data):
+    with open(PACOTE_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+@app.route('/admin/pacote/novo', methods=['POST'])
+def admin_pacote_novo():
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    nome = request.form.get('nome', '').strip()
+    if not nome:
+        flash('Informe um nome para o pacote.', 'danger')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    codigo = request.form.get('codigo', '').strip()
+    etapa = request.form.get('status', 'prospeccao')
+    if etapa not in SUPRIMENTO_STAGES:
+        etapa = 'prospeccao'
+    now = datetime.now().isoformat()
+    usuario = session.get('usuario_email') or 'Administrador'
+    pac = {
+        'id': str(uuid.uuid4()),
+        'nome': nome,
+        'codigo': codigo,
+        'status': etapa,
+        'historico': [{'data': now[:10], 'status': etapa,
+                       'nota': 'Pacote criado', 'usuario': usuario}],
+        'criado_em': now, 'criado_por': usuario, 'atualizado_em': now,
+    }
+    data = load_pacotes()
+    data.append(pac)
+    save_pacotes(data)
+    audit_log('criar_pacote', nome, f"Etapa: {SUPRIMENTO_STAGE_LABELS[etapa]}")
+    flash(f"Pacote '{nome}' criado.", 'success')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/pacote/<pid>/editar', methods=['POST'])
+def admin_pacote_editar(pid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    data = load_pacotes()
+    pac = next((p for p in data if p['id'] == pid), None)
+    if not pac:
+        flash('Pacote não encontrado.', 'danger')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    nome = request.form.get('nome', '').strip()
+    if nome:
+        pac['nome'] = nome
+    pac['codigo'] = request.form.get('codigo', pac.get('codigo', '')).strip()
+    pac['atualizado_em'] = datetime.now().isoformat()
+    save_pacotes(data)
+    audit_log('editar_pacote', pac['nome'], '')
+    flash('Pacote atualizado.', 'success')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/pacote/<pid>/excluir', methods=['POST'])
+def admin_pacote_excluir(pid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    data = load_pacotes()
+    pac = next((p for p in data if p['id'] == pid), None)
+    if not pac:
+        flash('Pacote não encontrado.', 'danger')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    # Solta os processos do pacote — mantêm a etapa atual, viram cards avulsos.
+    sups = load_suprimentos()
+    soltos = 0
+    for s in sups:
+        if s.get('pacote_id') == pid:
+            s.pop('pacote_id', None)
+            soltos += 1
+    if soltos:
+        save_suprimentos(sups)
+    data = [p for p in data if p['id'] != pid]
+    save_pacotes(data)
+    audit_log('excluir_pacote', pac['nome'], f"{soltos} processo(s) liberado(s)")
+    flash(f"Pacote '{pac['nome']}' excluído. {soltos} processo(s) mantido(s) soltos.", 'success')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+def _mover_pacote(pid, direcao):
+    """Move o pacote e todos os seus membros uma etapa (+1 avança, -1 recua)."""
+    data = load_pacotes()
+    pac = next((p for p in data if p['id'] == pid), None)
+    if not pac:
+        flash('Pacote não encontrado.', 'danger')
+        return
+    cur = pac.get('status', 'prospeccao')
+    idx = SUPRIMENTO_STAGES.index(cur) if cur in SUPRIMENTO_STAGES else 0
+    novo_idx = idx + direcao
+    if novo_idx < 0 or novo_idx > len(SUPRIMENTO_STAGES) - 1:
+        return
+    novo = SUPRIMENTO_STAGES[novo_idx]
+    now = datetime.now().isoformat()
+    usuario = session.get('usuario_email') or 'Administrador'
+    verbo = 'Avançou' if direcao > 0 else 'Recuou'
+    pac['status'] = novo
+    pac.setdefault('historico', []).append({
+        'data': now[:10], 'status': novo,
+        'nota': f"{verbo} (pacote) para {SUPRIMENTO_STAGE_LABELS[novo]}", 'usuario': usuario})
+    pac['atualizado_em'] = now
+    save_pacotes(data)
+    sups = load_suprimentos()
+    n = 0
+    for s in sups:
+        if s.get('pacote_id') == pid:
+            s['status'] = novo
+            s.setdefault('historico', []).append({
+                'data': now[:10], 'status': novo,
+                'nota': f"{verbo} com o pacote «{pac['nome']}»", 'usuario': usuario})
+            s['atualizado_em'] = now
+            n += 1
+    if n:
+        save_suprimentos(sups)
+    audit_log('mover_pacote', pac['nome'], f"→ {novo} ({n} processo(s))")
+    flash(f"Pacote «{pac['nome']}» e {n} processo(s) movidos para «{SUPRIMENTO_STAGE_LABELS[novo]}».", 'success')
+
+
+@app.route('/admin/pacote/<pid>/avancar', methods=['POST'])
+def admin_pacote_avancar(pid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    _mover_pacote(pid, +1)
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/pacote/<pid>/recuar', methods=['POST'])
+def admin_pacote_recuar(pid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    _mover_pacote(pid, -1)
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/pacote/<pid>/add', methods=['POST'])
+def admin_pacote_add(pid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    pacs = load_pacotes()
+    pac = next((p for p in pacs if p['id'] == pid), None)
+    if not pac:
+        flash('Pacote não encontrado.', 'danger')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    sid = request.form.get('sup_id', '').strip()
+    sups = load_suprimentos()
+    item = next((s for s in sups if s['id'] == sid), None)
+    if not item:
+        flash('Selecione um processo válido.', 'danger')
+        return redirect(url_for('admin') + '?tab=suprimento')
+    now = datetime.now().isoformat()
+    usuario = session.get('usuario_email') or 'Administrador'
+    destino = pac.get('status', 'prospeccao')
+    item['pacote_id'] = pid
+    item['status'] = destino
+    item.setdefault('historico', []).append({
+        'data': now[:10], 'status': destino,
+        'nota': f"Incluído no pacote «{pac['nome']}»", 'usuario': usuario})
+    item['atualizado_em'] = now
+    save_suprimentos(sups)
+    audit_log('add_pacote', pac['nome'], item['descricao'])
+    flash(f"«{item['descricao']}» incluído no pacote «{pac['nome']}».", 'success')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
+@app.route('/admin/suprimento/<sid>/sair-pacote', methods=['POST'])
+def admin_suprimento_sair_pacote(sid):
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    sups = load_suprimentos()
+    item = next((s for s in sups if s['id'] == sid), None)
+    if item and item.get('pacote_id'):
+        item.pop('pacote_id', None)
+        item['atualizado_em'] = datetime.now().isoformat()
+        save_suprimentos(sups)
+        audit_log('remover_de_pacote', item['descricao'], '')
+        flash(f"«{item['descricao']}» removido do pacote.", 'info')
+    return redirect(url_for('admin') + '?tab=suprimento')
+
+
 @app.route('/admin/tms', methods=['GET', 'POST'])
 def admin_tms():
     if not _is_master():
@@ -2746,13 +2987,46 @@ def admin():
                 'config': c,
             }
     suprimentos = load_suprimentos()
-    por_status  = {s: [] for s in SUPRIMENTO_STAGES}
+    pacotes     = load_pacotes()
+    pac_ids     = {p['id'] for p in pacotes}
+
+    # Membros de cada pacote (suprimentos que apontam para ele)
+    membros_idx = {}
     for s in suprimentos:
-        por_status.setdefault(s.get('status', 'prospeccao'), []).append(s)
+        pidv = s.get('pacote_id')
+        if pidv:
+            membros_idx.setdefault(pidv, []).append(s)
+    for p in pacotes:
+        p['membros'] = membros_idx.get(p['id'], [])
+        p['valor_total'] = sum((m.get('valor_estimado') or 0) for m in p['membros'])
+
+    # Pacotes agrupados por etapa (para o kanban)
+    pacotes_por_status = {s: [] for s in SUPRIMENTO_STAGES}
+    for p in pacotes:
+        pacotes_por_status.setdefault(p.get('status', 'prospeccao'), []).append(p)
+
+    # por_status = TODOS os suprimentos por etapa (funil/contagens)
+    # standalone_por_status = apenas os soltos (sem pacote) — cards avulsos do kanban
+    por_status            = {s: [] for s in SUPRIMENTO_STAGES}
+    standalone_por_status = {s: [] for s in SUPRIMENTO_STAGES}
+    for s in suprimentos:
+        st = s.get('status', 'prospeccao')
+        por_status.setdefault(st, []).append(s)
+        if not s.get('pacote_id') or s.get('pacote_id') not in pac_ids:
+            standalone_por_status.setdefault(st, []).append(s)
+
+    # Processos soltos — disponíveis para incluir num pacote
+    suprimentos_soltos = [s for s in suprimentos
+                          if not s.get('pacote_id') or s.get('pacote_id') not in pac_ids]
+
     return render_template('admin.html',
                            contratos=sorted(contratos.values(), key=lambda x: x['contratada']),
                            suprimentos=suprimentos,
                            por_status=por_status,
+                           standalone_por_status=standalone_por_status,
+                           pacotes=pacotes,
+                           pacotes_por_status=pacotes_por_status,
+                           suprimentos_soltos=suprimentos_soltos,
                            stages=SUPRIMENTO_STAGES,
                            stage_labels=SUPRIMENTO_STAGE_LABELS,
                            stage_colors=SUPRIMENTO_STAGE_COLORS)
