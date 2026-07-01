@@ -153,8 +153,23 @@ def _mask_url(u):
     return str(u)
 
 
+def _list_views():
+    try:
+        with engine.connect() as c:
+            if engine.dialect.name == 'postgresql':
+                rows = c.execute(text(
+                    "SELECT table_name FROM information_schema.views "
+                    "WHERE table_name LIKE 'v\\_%' ESCAPE '\\' ORDER BY table_name"))
+            else:
+                rows = c.execute(text(
+                    "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"))
+            return [r[0] for r in rows]
+    except Exception as e:
+        return [f'erro: {e}']
+
+
 def backend_info():
-    """Diagnóstico: qual banco está em uso e contagem por tabela."""
+    """Diagnóstico: qual banco está em uso, contagem por tabela e views de BI."""
     info = {
         'dialect': engine.dialect.name,          # 'postgresql' ou 'sqlite'
         'driver': engine.driver,
@@ -162,6 +177,7 @@ def backend_info():
         'DATABASE_URL_definida': bool((os.environ.get('DATABASE_URL') or '').strip()),
         'DATA_DIR': DATA_DIR,
         'persistente': engine.dialect.name != 'sqlite' or bool((os.environ.get('DATA_DIR') or '').strip()),
+        'views_bi': _list_views(),
         'counts': {},
     }
     for name, t in [('registros', T_REG), ('contratos', T_CON), ('usuarios', T_USR),

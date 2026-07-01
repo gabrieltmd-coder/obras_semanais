@@ -105,3 +105,47 @@ SELECT
     doc->>'nome'                                AS nome,
     doc->>'status'                              AS status
 FROM pacotes;
+
+-- ═══════════════════ VIEWS DE AGREGAÇÃO (prontas para BI) ═══════════════════
+
+-- Medição por mês (soma valor_medido; mês = AAAA-MM da semana)
+CREATE OR REPLACE VIEW v_medicao_mensal AS
+SELECT
+    contratada,
+    contrato,
+    substring(semana from 1 for 7)              AS mes,
+    SUM(valor_medido)                           AS valor_medido
+FROM v_registros
+WHERE semana IS NOT NULL
+GROUP BY contratada, contrato, substring(semana from 1 for 7);
+
+-- KPIs por contratada (contratado x medido x saldo x % executado)
+CREATE OR REPLACE VIEW v_kpi_contratada AS
+WITH contr AS (
+    SELECT contratada, SUM(valor_contrato) AS valor_contratado
+    FROM v_contratos GROUP BY contratada
+), med AS (
+    SELECT contratada, SUM(valor_medido) AS total_medido
+    FROM v_registros GROUP BY contratada
+)
+SELECT
+    COALESCE(c.contratada, m.contratada)        AS contratada,
+    COALESCE(c.valor_contratado, 0)             AS valor_contratado,
+    COALESCE(m.total_medido, 0)                 AS total_medido,
+    COALESCE(c.valor_contratado, 0) - COALESCE(m.total_medido, 0) AS saldo,
+    CASE WHEN COALESCE(c.valor_contratado, 0) > 0
+         THEN ROUND(COALESCE(m.total_medido, 0)::numeric / c.valor_contratado * 100, 1)
+         ELSE 0 END                             AS pct_executado
+FROM contr c
+FULL OUTER JOIN med m ON m.contratada = c.contratada;
+
+-- Avanço físico ATUAL por contrato (último registro de cada contrato)
+CREATE OR REPLACE VIEW v_avanco_atual AS
+SELECT DISTINCT ON (contratada, contrato)
+    contratada,
+    contrato,
+    semana,
+    avanco_fisico
+FROM v_registros
+WHERE semana IS NOT NULL
+ORDER BY contratada, contrato, semana DESC;
