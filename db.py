@@ -16,14 +16,31 @@ from sqlalchemy import (create_engine, MetaData, Table, Column, String, JSON,
                         select, delete, func)
 
 
+# Diretório de dados. Se um volume persistente estiver montado no Railway, defina
+# DATA_DIR (ex.: /data) para o SQLite e os JSONs viverem no volume. Fallback: 'data'
+# (o snapshot versionado do repo).
+DATA_DIR = (os.environ.get('DATA_DIR') or 'data').strip() or 'data'
+REPO_DATA_DIR = 'data'
+
+
+def _seed_path(fname):
+    """Caminho do JSON de seed: prefere o volume (DATA_DIR, dados de produção) e cai
+    para o snapshot versionado do repo (REPO_DATA_DIR)."""
+    p = os.path.join(DATA_DIR, fname)
+    if os.path.exists(p):
+        return p
+    p2 = os.path.join(REPO_DATA_DIR, fname)
+    return p2 if os.path.exists(p2) else None
+
+
 def _database_url():
     url = (os.environ.get('DATABASE_URL') or '').strip()
     # Railway/Heroku entregam 'postgres://' — SQLAlchemy 2.x exige 'postgresql://'
     if url.startswith('postgres://'):
         url = 'postgresql://' + url[len('postgres://'):]
     if not url:
-        os.makedirs('data', exist_ok=True)
-        url = 'sqlite:///' + os.path.join('data', 'app.db')
+        os.makedirs(DATA_DIR, exist_ok=True)
+        url = 'sqlite:///' + os.path.join(DATA_DIR, 'app.db')
     return url
 
 
@@ -112,24 +129,28 @@ def save_tms(doc):           _save_single(T_TMS, doc)
 
 # ── init + seed a partir dos JSONs (idempotente) ─────────────────────────────
 _SEED = [
-    (T_REG, os.path.join('data', 'registros.json'),        'list',   save_registros),
-    (T_CON, os.path.join('data', 'contratos_config.json'), 'kv',     save_contratos),
-    (T_USR, os.path.join('data', 'usuarios.json'),         'list',   save_usuarios),
-    (T_AUD, os.path.join('data', 'auditoria.json'),        'list',   save_auditoria),
-    (T_SUP, os.path.join('data', 'suprimentos.json'),      'list',   save_suprimentos),
-    (T_PAC, os.path.join('data', 'pacotes.json'),          'list',   save_pacotes),
-    (T_TMS, os.path.join('data', 'tms_config.json'),       'single', save_tms),
+    (T_REG, 'registros.json',        'list',   save_registros),
+    (T_CON, 'contratos_config.json', 'kv',     save_contratos),
+    (T_USR, 'usuarios.json',         'list',   save_usuarios),
+    (T_AUD, 'auditoria.json',        'list',   save_auditoria),
+    (T_SUP, 'suprimentos.json',      'list',   save_suprimentos),
+    (T_PAC, 'pacotes.json',          'list',   save_pacotes),
+    (T_TMS, 'tms_config.json',       'single', save_tms),
 ]
 
 
 def init_db(seed=True):
-    """Cria as tabelas e, opcionalmente, faz seed das coleções vazias a partir dos JSONs."""
+    """Cria as tabelas e, opcionalmente, faz seed das coleções vazias a partir dos JSONs
+    (prefere o volume DATA_DIR / dados de produção; cai para o snapshot do repo)."""
     metadata.create_all(engine)
     if not seed:
         return
-    for t, path, kind, saver in _SEED:
+    for t, fname, kind, saver in _SEED:
         try:
-            if _count(t) > 0 or not os.path.exists(path):
+            if _count(t) > 0:
+                continue
+            path = _seed_path(fname)
+            if not path:
                 continue
             with open(path, encoding='utf-8') as f:
                 data = json.load(f)

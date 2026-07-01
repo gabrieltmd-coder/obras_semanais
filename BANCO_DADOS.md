@@ -34,6 +34,18 @@ depois disso, **o banco é a fonte da verdade** (os JSONs viram apenas o snapsho
 
 As dependências já estão no `requirements.txt` (`SQLAlchemy`, `psycopg2-binary`).
 
+### Compatibilidade com volume persistente (`DATA_DIR`)
+Se o serviço já usava um **volume** montado (ex.: `DATA_DIR=/data`), o código respeita isso:
+- O **SQLite** (quando não há Postgres) passa a viver em `DATA_DIR/app.db` — persistente no volume.
+- O **seed** procura os JSONs **primeiro no `DATA_DIR`** (dados de produção do volume) e, se não
+  achar, cai para o snapshot versionado em `./data/`. Assim, dados de produção que já estavam
+  no volume são importados para o banco no primeiro boot.
+
+Ordem de precedência da persistência:
+1. **`DATABASE_URL`** (Postgres) — recomendado; ignora o SQLite.
+2. **`DATA_DIR`** com volume — SQLite persistente no volume.
+3. Nada configurado — SQLite em `./data/app.db` (efêmero no Railway).
+
 ## Migração manual (opcional)
 
 O seed automático já cobre o caso comum. Se quiser forçar a importação dos JSONs para um
