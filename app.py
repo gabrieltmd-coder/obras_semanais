@@ -2282,6 +2282,31 @@ def admin_dbinfo():
     return jsonify(db.backend_info())
 
 
+@app.route('/admin/limpar-dados', methods=['GET', 'POST'])
+def admin_limpar_dados():
+    """Limpa (apaga) coleções da base. Protegido por senha; impede re-seed no próximo boot."""
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    COLS = [('registros', 'Registros semanais'), ('contratos', 'Contratos'),
+            ('suprimentos', 'Suprimentos'), ('pacotes', 'Pacotes'),
+            ('usuarios', 'Usuários'), ('auditoria', 'Auditoria'), ('tms', 'Configurações TMS')]
+    if request.method == 'POST':
+        if request.form.get('senha') != ADMIN_PASSWORD:
+            flash('Senha incorreta — nada foi apagado.', 'danger')
+            return redirect(url_for('admin_limpar_dados'))
+        sel = [c for c, _ in COLS if request.form.get('col_' + c)]
+        if not sel:
+            flash('Selecione ao menos uma coleção.', 'warning')
+            return redirect(url_for('admin_limpar_dados'))
+        removed = db.wipe(sel)
+        audit_log('limpar_dados', ', '.join(sel), f'apagados: {removed}')
+        total = sum(removed.values())
+        flash(f'Base limpa: {total} item(ns) apagado(s) — {removed}. Não será repopulada automaticamente.', 'success')
+        return redirect(url_for('admin'))
+    counts = db.backend_info().get('counts', {})
+    return render_template('admin_limpar.html', cols=COLS, counts=counts)
+
+
 # ── ADMIN: CONFIGURAÇÕES TMS ─────────────────────────────────────────────────
 
 TMS_CONFIG_FILE = os.path.join('data', 'tms_config.json')

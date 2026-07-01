@@ -12,6 +12,7 @@ em `data/`, os dados são importados automaticamente (seed idempotente).
 """
 import os
 import json
+from datetime import datetime
 from sqlalchemy import (create_engine, MetaData, Table, Column, String, JSON,
                         select, delete, func, text)
 
@@ -61,6 +62,7 @@ T_AUD = _tbl('auditoria')
 T_SUP = _tbl('suprimentos')
 T_PAC = _tbl('pacotes')
 T_TMS = _tbl('tms')
+T_META = _tbl('_meta')   # metadados internos (ex.: flag 'seeded')
 
 
 # ── genéricos ────────────────────────────────────────────────────────────────
@@ -208,12 +210,52 @@ def create_bi_views():
             pass
 
 
+def _is_seeded():
+    try:
+        with engine.connect() as c:
+            return c.execute(select(T_META.c.doc).where(T_META.c.k == 'seeded')).first() is not None
+    except Exception:
+        return False
+
+
+def _mark_seeded():
+    try:
+        with engine.begin() as c:
+            c.execute(delete(T_META).where(T_META.c.k == 'seeded'))
+            c.execute(T_META.insert().values(k='seeded', doc={'at': datetime.now().isoformat()}))
+    except Exception:
+        pass
+
+
+_DATA_TABLES = {
+    'registros': T_REG, 'contratos': T_CON, 'usuarios': T_USR, 'auditoria': T_AUD,
+    'suprimentos': T_SUP, 'pacotes': T_PAC, 'tms': T_TMS,
+}
+
+
+def wipe(collections=None):
+    """Apaga as linhas das coleções indicadas (todas por padrão) e marca 'seeded'
+    para o seed automático NÃO repopular no próximo boot. Retorna {coleção: qtd_apagada}."""
+    targets = collections if collections else list(_DATA_TABLES.keys())
+    removed = {}
+    with engine.begin() as c:
+        for name in targets:
+            t = _DATA_TABLES.get(name)
+            if t is None:
+                continue
+            removed[name] = c.execute(select(func.count()).select_from(t)).scalar() or 0
+            c.execute(delete(t))
+    _mark_seeded()
+    return removed
+
+
 def init_db(seed=True):
-    """Cria as tabelas e, opcionalmente, faz seed das coleções vazias a partir dos JSONs
-    (prefere o volume DATA_DIR / dados de produção; cai para o snapshot do repo)."""
+    """Cria as tabelas e faz seed das coleções vazias a partir dos JSONs — apenas UMA vez
+    (flag 'seeded'). Assim, após uma limpeza manual, o boot não repopula os dados."""
     metadata.create_all(engine)
-    if seed:
+    if seed and not _is_seeded():
         _seed_all()
+        _mark_seeded()
     create_bi_views()
 
 
