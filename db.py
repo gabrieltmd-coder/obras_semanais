@@ -13,7 +13,7 @@ em `data/`, os dados são importados automaticamente (seed idempotente).
 import os
 import json
 from sqlalchemy import (create_engine, MetaData, Table, Column, String, JSON,
-                        select, delete, func)
+                        select, delete, func, text)
 
 
 # Diretório de dados. Se um volume persistente estiver montado no Railway, defina
@@ -173,12 +173,35 @@ def backend_info():
     return info
 
 
+def create_bi_views():
+    """Cria/atualiza as views de BI (views_bi.sql) — somente no PostgreSQL.
+    São projeções somente-leitura do JSON em colunas; o app não depende delas."""
+    if engine.dialect.name != 'postgresql':
+        return
+    sql_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'views_bi.sql')
+    if not os.path.exists(sql_path):
+        return
+    with open(sql_path, encoding='utf-8') as f:
+        ddl = f.read()
+    # Executa cada statement separadamente (best-effort: uma view ruim não derruba as outras)
+    for stmt in [s.strip() for s in ddl.split(';') if s.strip() and not s.strip().startswith('--')]:
+        try:
+            with engine.begin() as c:
+                c.execute(text(stmt))
+        except Exception:
+            pass
+
+
 def init_db(seed=True):
     """Cria as tabelas e, opcionalmente, faz seed das coleções vazias a partir dos JSONs
     (prefere o volume DATA_DIR / dados de produção; cai para o snapshot do repo)."""
     metadata.create_all(engine)
-    if not seed:
-        return
+    if seed:
+        _seed_all()
+    create_bi_views()
+
+
+def _seed_all():
     for t, fname, kind, saver in _SEED:
         try:
             if _count(t) > 0:

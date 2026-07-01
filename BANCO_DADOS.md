@@ -59,6 +59,32 @@ py -c "import db; db.init_db()"        # cria tabelas + seed das vazias
 
 Para reimportar do zero uma tabela específica, esvazie-a antes (o seed só popula tabelas vazias).
 
+## BI (Power BI / Metabase) — views prontas
+
+O app guarda cada coleção como `(k, doc JSON)`. Para o BI enxergar **colunas de verdade**,
+o boot cria **views** (só no PostgreSQL) que projetam o JSON — ver [views_bi.sql](views_bi.sql):
+
+| View | Conteúdo |
+|---|---|
+| `v_registros` | registros semanais (contratada, contrato, semana, valor_medido, avanco_fisico, …) |
+| `v_contratos` | contratos (valor_contrato, área, status, datas) |
+| `v_efetivo` | efetivo explodido (1 linha por função/registro) |
+| `v_acoes_realizadas` | ações realizadas explodidas |
+| `v_linha_base_financeira` / `v_linha_base_fisica` | linhas de base por mês |
+| `v_suprimentos`, `v_pacotes` | pipeline de suprimento |
+
+As views são **somente-leitura**, refletem os dados ao vivo e são recriadas a cada deploy
+(`CREATE OR REPLACE`). O app não depende delas.
+
+### Conectar o BI ao Postgres do Railway
+A URL interna (`postgres.railway.internal`) só funciona dentro do Railway. Para acesso
+externo (Power BI/Metabase):
+1. No serviço **Postgres** do Railway → **Settings → Public Networking** → habilite o
+   **TCP Proxy** (gera um host público, ex.: `xxx.proxy.rlwy.net:PORTA`).
+2. Use as credenciais do Postgres (variáveis `PGUSER`, `PGPASSWORD`, `PGDATABASE` ou a
+   `DATABASE_PUBLIC_URL`) no conector PostgreSQL do BI.
+3. No BI, selecione as tabelas que começam com **`v_`**.
+
 ## Backup / export
 
 Os JSONs em `data/` continuam sendo um snapshot legível. Para exportar o estado atual do
