@@ -2274,6 +2274,14 @@ def admin_logout():
     return redirect(url_for('index'))
 
 
+@app.route('/admin/dbinfo')
+def admin_dbinfo():
+    """Diagnóstico do banco: backend em uso (Postgres vs SQLite) e contagem por tabela."""
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+    return jsonify(db.backend_info())
+
+
 # ── ADMIN: CONFIGURAÇÕES TMS ─────────────────────────────────────────────────
 
 TMS_CONFIG_FILE = os.path.join('data', 'tms_config.json')

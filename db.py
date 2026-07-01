@@ -139,6 +139,40 @@ _SEED = [
 ]
 
 
+def _mask_url(u):
+    """Oculta a senha na URL de conexão (para exibição segura)."""
+    try:
+        u = str(u)
+        if '@' in u and '://' in u:
+            scheme, rest = u.split('://', 1)
+            creds, host = rest.split('@', 1)
+            user = creds.split(':', 1)[0]
+            return f'{scheme}://{user}:***@{host}'
+    except Exception:
+        pass
+    return str(u)
+
+
+def backend_info():
+    """Diagnóstico: qual banco está em uso e contagem por tabela."""
+    info = {
+        'dialect': engine.dialect.name,          # 'postgresql' ou 'sqlite'
+        'driver': engine.driver,
+        'url': _mask_url(engine.url),
+        'DATABASE_URL_definida': bool((os.environ.get('DATABASE_URL') or '').strip()),
+        'DATA_DIR': DATA_DIR,
+        'persistente': engine.dialect.name != 'sqlite' or bool((os.environ.get('DATA_DIR') or '').strip()),
+        'counts': {},
+    }
+    for name, t in [('registros', T_REG), ('contratos', T_CON), ('usuarios', T_USR),
+                    ('auditoria', T_AUD), ('suprimentos', T_SUP), ('pacotes', T_PAC), ('tms', T_TMS)]:
+        try:
+            info['counts'][name] = _count(t)
+        except Exception as e:
+            info['counts'][name] = f'erro: {e}'
+    return info
+
+
 def init_db(seed=True):
     """Cria as tabelas e, opcionalmente, faz seed das coleções vazias a partir dos JSONs
     (prefere o volume DATA_DIR / dados de produção; cai para o snapshot do repo)."""
