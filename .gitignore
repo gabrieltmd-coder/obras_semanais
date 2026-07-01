@@ -18,6 +18,10 @@ data/auditoria.json
 exports/*.xlsx
 data/*_bak*.json
 
+# Banco SQLite local (dev) — em produção usa-se Postgres via DATABASE_URL
+data/app.db
+*.db
+
 # Scripts de debug temporários
 test_*.py
 gen_fake.py

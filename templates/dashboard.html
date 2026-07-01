@@ -118,6 +118,45 @@ main { position: relative; z-index: 1; }
 }
 .gc { border-radius: 14px !important; }
 .kpi-mini, .d-filter { border-radius: 12px !important; }
+/* Cabeçalho que aparece só no PDF/impressão */
+.pdf-only { display: none; }
+
+/* Botão Exportar PDF */
+.d-filter .btn-pdf { background:rgba(43,178,238,.12); border-color:rgba(43,178,238,.38); color:#cfeefb; }
+.d-filter .btn-pdf:hover { background:rgba(43,178,238,.24); color:#fff; }
+.d-filter .btn-pdf i { color:#ff6b81; font-size:.9rem; }
+.d-filter .btn-pdf:disabled { opacity:.6; cursor:default; }
+
+/* Durante a captura (html2canvas): torna fundo e painéis SÓLIDOS p/ o texto branco aparecer */
+body.exporting #dash-export { background:#0E1B24 !important; padding:14px !important; }
+body.exporting .gc, body.exporting .kpi-mini {
+    background:#13242F !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+    border:1px solid rgba(255,255,255,.18) !important; box-shadow:none !important;
+}
+body.exporting .pdf-only { display:flex !important; }
+
+/* ── Impressão / Exportar PDF (A4 paisagem, tema escuro) ── */
+@media print {
+    @page { size: A4 landscape; margin: 8mm; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body { background:#0E1B24 !important; background-image:none !important; }
+    /* esconde tudo que não faz parte do relatório */
+    .navbar-rumo, .page-header, .app-footer, .d-filter, #btnPdf, .btn-back-header { display:none !important; }
+    /* cabeçalho do relatório visível só aqui */
+    .pdf-only { display:flex !important; }
+    /* painel ocupa a página inteira */
+    main, .container-fluid { padding:0 !important; margin:0 !important; }
+    #dash-export { width:100% !important; background:#0E1B24 !important; padding:2mm; }
+    /* mantém as 2 colunas lado a lado (comparativo) */
+    .row > [class*="col-"] { flex:0 0 50% !important; max-width:50% !important; }
+    /* paineis sólidos, sem blur/sombra */
+    .gc, .kpi-mini {
+        background:#13242F !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+        border:1px solid rgba(255,255,255,.18) !important; box-shadow:none !important;
+        break-inside:avoid; page-break-inside:avoid;
+    }
+    .row, .kpi-strip { break-inside:avoid; page-break-inside:avoid; }
+}
 </style>
 
 <div style="color:#fff;">
@@ -153,8 +192,28 @@ main { position: relative; z-index: 1; }
         <a href="{{ url_for('dashboard') }}" class="btn btn-x"><i class="bi bi-x-lg"></i></a>
         {% endif %}
     </div>
+    <div class="ms-auto">
+        <button type="button" id="btnPdf" class="btn btn-pdf" onclick="exportarPDF()">
+            <i class="bi bi-filetype-pdf"></i><span>Exportar PDF</span>
+        </button>
+    </div>
 </form>
 
+
+<!-- Conteúdo exportável em PDF -->
+<div id="dash-export">
+
+<!-- Cabeçalho do relatório (visível apenas no PDF) -->
+<div class="pdf-only" style="padding:0 .2rem .8rem; margin-bottom:.6rem; border-bottom:1px solid rgba(255,255,255,.15); display:flex; justify-content:space-between; align-items:flex-end;">
+    <div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.45);">TMS — Painel da Contratada</div>
+        <div style="font-size:1.15rem; font-weight:800; color:#fff; line-height:1.2;">{{ filtro_contratada or 'Todas as Contratadas' }}</div>
+        {% if filtro_de or filtro_ate %}<div style="font-size:.7rem; color:rgba(255,255,255,.5);">Período: {{ filtro_de or '—' }} a {{ filtro_ate or '—' }}</div>{% endif %}
+    </div>
+    <div style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:.62rem; color:rgba(255,255,255,.45);">
+        Gerado em <span id="pdfDate"></span>
+    </div>
+</div>
 
 <!-- KPI STRIP -->
 <div class="kpi-strip">
@@ -203,25 +262,29 @@ main { position: relative; z-index: 1; }
 
     <div class="col-lg-6 d-flex">
         <div class="gc w-100 d-flex flex-column" style="min-height:220px;">
-            <div class="gc-title"><span><i class="bi bi-currency-dollar"></i>Curva S Financeira</span><span class="gc-sub">R$ Acumulado</span></div>
+            <div class="gc-title"><span><i class="bi bi-graph-up-arrow"></i>Ações Notáveis — Evolução</span></div>
+            {% if acoes_labels and acoes_labels != '[]' %}
             <div style="position:relative;flex:1;min-height:160px;">
-                <canvas id="chartFinanceiro"></canvas>
+                <canvas id="chartAcoes"></canvas>
             </div>
+            {% else %}
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;color:rgba(255,255,255,.3);font-size:.82rem;">Sem dados.</div>
+            {% endif %}
         </div>
     </div>
 
     <div class="col-lg-6 d-flex">
-        <div class="gc w-100">
+        <div class="gc w-100 d-flex flex-column" style="min-height:220px;">
             <div class="gc-title"><span><i class="bi bi-pie-chart"></i>Efetivo Previsto — Composição</span></div>
             {% if prev_direto > 0 or prev_indireto > 0 %}
+            {% set tot = prev_direto + prev_indireto %}
             <!-- Donut Direto/Indireto (previsto) -->
-            <div class="d-flex align-items-center gap-3 mb-2">
-                <canvas id="chartPrevDonut" width="90" height="90" style="max-width:90px;flex-shrink:0;"></canvas>
-                <div style="flex:1;min-width:0;">
-                    <div class="leg">
+            <div class="d-flex align-items-center justify-content-center gap-5" style="flex:1; padding:.5rem 1rem;">
+                <canvas id="chartPrevDonut" width="150" height="150" style="max-width:150px;flex-shrink:0;"></canvas>
+                <div style="min-width:170px;">
+                    <div class="leg" style="margin-bottom:1rem;">
                         <div class="leg-dot" style="background:#46C26A;"></div>
                         <span class="leg-name">Direto</span>
-                        {% set tot = prev_direto + prev_indireto %}
                         <span class="leg-val" style="color:#46C26A;">{{ (prev_direto / tot * 100)|round|int if tot else 0 }}%</span>
                     </div>
                     <div class="leg">
@@ -232,7 +295,7 @@ main { position: relative; z-index: 1; }
                 </div>
             </div>
             {% else %}
-            <div style="text-align:center;padding:1.5rem;color:rgba(255,255,255,.3);font-size:.82rem;">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:1.5rem; color:rgba(255,255,255,.3); font-size:.82rem;">
                 <i class="bi bi-people" style="font-size:1.8rem;display:block;margin-bottom:.4rem;color:rgba(255,255,255,.18);"></i>
                 Sem dados de histograma previsto.<br>Configure o histograma na área Admin.
             </div>
@@ -246,26 +309,26 @@ main { position: relative; z-index: 1; }
 <div class="row g-2 align-items-stretch">
 
     <div class="col-lg-6 d-flex">
-        <div class="gc w-100 d-flex flex-column" style="min-height:220px;">
+        <div class="gc w-100 d-flex flex-column" style="min-height:340px;">
             <div class="gc-title"><span><i class="bi bi-bar-chart-line"></i>Curva S Física</span><span class="gc-sub">% Avanço</span></div>
-            <div style="position:relative;flex:1;min-height:160px;">
+            <div style="position:relative;flex:1;min-height:290px;">
                 <canvas id="chartFisico"></canvas>
             </div>
         </div>
     </div>
 
     <div class="col-lg-6 d-flex">
-        <div class="gc w-100">
-            <div class="gc-title"><span><i class="bi bi-graph-up-arrow"></i>Ações Notáveis — Evolução</span></div>
-            {% if acoes_labels and acoes_labels != '[]' %}
-            <canvas id="chartAcoes" height="120"></canvas>
-            {% else %}
-            <div style="text-align:center;padding:1rem;color:rgba(255,255,255,.3);font-size:.82rem;">Sem dados.</div>
-            {% endif %}
+        <div class="gc w-100 d-flex flex-column" style="min-height:340px;">
+            <div class="gc-title"><span><i class="bi bi-currency-dollar"></i>Curva S Financeira</span><span class="gc-sub">R$ Acumulado</span></div>
+            <div style="position:relative;flex:1;min-height:290px;">
+                <canvas id="chartFinanceiro"></canvas>
+            </div>
         </div>
     </div>
 
 </div>
+
+</div>{# /dash-export #}
 
 {% endif %}
 </div>
@@ -274,6 +337,57 @@ main { position: relative; z-index: 1; }
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+<script>
+// ── Exportar painel da contratada em PDF (download automático, A4 paisagem) ──
+function exportarPDF() {
+    const el  = document.getElementById('dash-export');
+    const btn = document.getElementById('btnPdf');
+    const dt  = new Date();
+
+    // Cabeçalho do relatório (data/hora)
+    const dEl = document.getElementById('pdfDate');
+    if (dEl) dEl.textContent = dt.toLocaleDateString('pt-BR') + ' ' +
+        dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+    // Nome do arquivo conforme a contratada selecionada
+    const selC  = document.querySelector('select[name="contratada"]');
+    const nomeC = (selC && selC.value) ? selC.value : 'Todas as Contratadas';
+    const slug  = nomeC.normalize('NFD').replace(/[^ -~]/g, '')
+                       .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').toLowerCase() || 'contratada';
+    const nomeArq = slug + '_' + dt.toISOString().slice(0,10) + '.pdf';
+
+    // Fallback: sem a lib, usa impressão nativa
+    if (!el || typeof html2pdf === 'undefined') {
+        const pt = document.title; document.title = nomeArq.replace(/\.pdf$/,'');
+        window.addEventListener('afterprint', function r(){ document.title = pt; window.removeEventListener('afterprint', r); });
+        window.print();
+        return;
+    }
+
+    const old = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i><span>Gerando...</span>';
+    document.body.classList.add('exporting');   // fundo/painéis sólidos p/ a captura
+
+    const cleanup = () => {
+        document.body.classList.remove('exporting');
+        btn.disabled = false; btn.innerHTML = old;
+    };
+
+    // Aguarda o reflow do tema sólido antes de capturar
+    setTimeout(() => {
+        html2pdf().set({
+            margin:      [6, 6, 6, 6],
+            filename:    nomeArq,
+            image:       { type:'jpeg', quality:0.98 },
+            html2canvas: { scale:2, backgroundColor:'#0E1B24', useCORS:true, logging:false, scrollX:0, scrollY:0 },
+            jsPDF:       { unit:'mm', format:'a4', orientation:'landscape' },
+            pagebreak:   { mode:['css','avoid-all'] }
+        }).from(el).save().then(cleanup).catch(cleanup);
+    }, 120);
+}
+</script>
 <script>
 const LABELS    = {{ chart_labels|safe }};
 const FIN_ACUM  = {{ curva_fin_acum|safe }};
@@ -408,12 +522,12 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
                 borderWidth:2, borderColor:'#13242F', hoverOffset:4 }]
         },
         options:{
-            responsive:false, cutout:'65%', animation:{ duration:600 },
+            responsive:false, cutout:'62%', animation:{ duration:600 },
             plugins:{
                 legend:{display:false},
                 tooltip:{ callbacks:{ label: ctx=>` ${ctx.label}: ${ctx.parsed}` }},
                 datalabels:{
-                    color:'#fff', font:{ size:9, weight:700, family:"'IBM Plex Mono',monospace" },
+                    color:'#fff', font:{ size:13, weight:700, family:"'IBM Plex Mono',monospace" },
                     formatter: (v, ctx) => {
                         const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
                         const pct = tot ? Math.round(v/tot*100) : 0;
@@ -436,7 +550,7 @@ if (document.getElementById('chartAcoes') && ACOES_LABELS.length) {
             datasets:[{ label:'Evolução (%)', data: ACOES_PCT, backgroundColor: acoesBg, borderRadius: 2, borderSkipped: false }]
         },
         options:{
-            indexAxis:'y', responsive:true, animation:{ duration:600 },
+            indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
             layout:{ padding:{ right: 42 } },
             plugins:{
                 legend:{ display:false },

@@ -5,7 +5,9 @@ Aplicação web Flask para registro e acompanhamento semanal de obras de constru
 
 ## Stack
 - **Back-end**: Python 3.14 + Flask
-- **Persistência**: JSON local (`data/registros.json`, `data/contratos_config.json`)
+- **Persistência**: **SQL via SQLAlchemy** (`db.py`) — PostgreSQL em produção (`DATABASE_URL`) e
+  SQLite local (`data/app.db`) em dev. Os JSONs em `data/` são o snapshot/seed inicial
+  (importados automaticamente para tabelas vazias no boot). Ver [BANCO_DADOS.md](BANCO_DADOS.md).
 - **Front-end**: Jinja2 + Bootstrap 5 + Bootstrap Icons + Chart.js 4.4 + chartjs-plugin-datalabels
 - **Export**: openpyxl (Excel)
 - **Deploy**: Railway (Procfile + gunicorn) | GitHub: `gabrieltmd-coder/obras_semanais`
