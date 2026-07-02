@@ -599,6 +599,12 @@
            class="nav-link-rumo {% if request.endpoint == 'construcao' %}active{% endif %}">
             <i class="bi bi-file-earmark-text"></i>RDO's
         </a>
+        {% if current_user.role in ['admin', 'master', 'rumo'] %}
+        <a href="{{ url_for('admin') }}"
+           class="nav-link-rumo {% if request.endpoint and (request.endpoint in ['admin', 'admin_contrato', 'admin_novo_contrato'] or request.endpoint.startswith('admin_suprimento')) %}active{% endif %}">
+            <i class="bi bi-folder2-open" style="color:var(--green);"></i>Contratos
+        </a>
+        {% endif %}
         {% endif %}
         {% if current_user %}
         <!-- Menu do usuário (dropdown ao clicar no e-mail) -->
@@ -609,7 +615,6 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end user-menu">
                 {% if current_user.role in ['admin', 'master', 'rumo'] %}
-                <li><a class="dropdown-item" href="{{ url_for('admin') }}"><i class="bi bi-folder2-open"></i>Contratos</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('admin_usuarios') }}"><i class="bi bi-people"></i>Usuários</a></li>
                 {% endif %}
                 {% if current_user.role == 'master' %}
