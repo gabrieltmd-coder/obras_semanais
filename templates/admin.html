@@ -150,9 +150,6 @@
                     <th>Contrato</th>
                     <th class="text-center">Status</th>
                     <th class="text-end">Valor do Contrato</th>
-                    <th class="text-center">Base Fin.</th>
-                    <th class="text-center">Base Fís.</th>
-                    <th class="text-center">Base Hist.</th>
                     <th class="text-center">Ações</th>
                 </tr>
             </thead>
@@ -180,24 +177,6 @@
                         {% else %}
                             <span style="color:#ccc; font-weight:400; font-size:.78rem;">Não informado</span>
                         {% endif %}
-                    </td>
-                    <td class="text-center">
-                        {% set n_fin = cfg.get('linha_base_financeira', [])|length %}
-                        {% if n_fin %}
-                        <span class="badge" style="background:rgba(0,174,239,.12); color:var(--tms-cyan); font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">{{ n_fin }} semanas</span>
-                        {% else %}<span style="color:#ccc; font-size:.75rem;">—</span>{% endif %}
-                    </td>
-                    <td class="text-center">
-                        {% set n_fis = cfg.get('linha_base_fisica', [])|length %}
-                        {% if n_fis %}
-                        <span class="badge" style="background:rgba(141,198,63,.12); color:var(--tms-green-dark); font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">{{ n_fis }} semanas</span>
-                        {% else %}<span style="color:#ccc; font-size:.75rem;">—</span>{% endif %}
-                    </td>
-                    <td class="text-center">
-                        {% set n_hist = cfg.get('linha_base_histograma', [])|length %}
-                        {% if n_hist %}
-                        <span class="badge" style="background:rgba(240,165,0,.12); color:#b37d00; font-size:.7rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">{{ n_hist }} funções</span>
-                        {% else %}<span style="color:#ccc; font-size:.75rem;">—</span>{% endif %}
                     </td>
                     <td class="text-center">
                         <div class="d-flex gap-1 justify-content-center">

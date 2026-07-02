@@ -88,6 +88,25 @@ main { position: relative; z-index: 1; }
 .gc { border-radius: 14px !important; }
 .kpi-mini { border-radius: 12px !important; }
 
+/* Botão exportar */
+.btn-export-cons { background:rgba(43,178,238,.12); border:1px solid rgba(43,178,238,.38); color:#cfeefb;
+    height:32px; border-radius:8px; font-family:'IBM Plex Mono',monospace; font-size:.66rem;
+    text-transform:uppercase; letter-spacing:.06em; padding:.3rem .9rem;
+    display:inline-flex; align-items:center; gap:.4rem; cursor:pointer; }
+.btn-export-cons:hover { background:rgba(43,178,238,.24); color:#fff; }
+.btn-export-cons:disabled { opacity:.6; cursor:default; }
+.export-menu-cons { background:#0a1e2e !important; border:1px solid rgba(255,255,255,.14) !important;
+    border-radius:8px !important; min-width:200px; padding:.4rem 0; }
+.export-menu-cons .dropdown-item { color:#cfeefb; font-size:.78rem; padding:.5rem 1rem;
+    display:flex; align-items:center; gap:.5rem; }
+.export-menu-cons .dropdown-item:hover { background:rgba(255,255,255,.07); color:#fff; }
+.pdf-only-cons { display:none; }
+body.exporting-cons #cons-export { background:#0E1B24 !important; padding:14px !important; }
+body.exporting-cons .gc, body.exporting-cons .kpi-mini {
+    background:#13242F !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+    border:1px solid rgba(255,255,255,.18) !important; box-shadow:none !important; }
+body.exporting-cons .pdf-only-cons { display:flex !important; }
+
 /* ── TABELA DE MILESTONES ── */
 .ms-grid { width:100%; border-collapse:collapse; font-size:.78rem; min-width:560px; }
 .ms-grid thead tr:first-child th {
@@ -163,6 +182,36 @@ main { position: relative; z-index: 1; }
     <p style="color:rgba(255,255,255,.35);font-size:.82rem;margin:0;">Sem dados consolidados ainda.</p>
 </div>
 {% else %}
+
+<!-- BOTÃO EXPORTAR -->
+<div class="d-flex justify-content-end mb-2">
+    <div class="dropdown">
+        <button type="button" id="btnExportCons" class="btn-export-cons dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-filetype-pdf" style="color:#ff6b81;font-size:.9rem;"></i>Exportar
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end export-menu-cons">
+            <li><a class="dropdown-item" href="#" onclick="exportarPDFCons();return false;">
+                <i class="bi bi-display" style="color:#2BB2EE;"></i>PDF da Tela
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="exportarOCCCons();return false;">
+                <i class="bi bi-file-earmark-text" style="color:#46C26A;"></i>Doc OCC
+            </a></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Cabeçalho visível apenas no PDF da tela -->
+<div class="pdf-only-cons" style="padding:0 .2rem .8rem;margin-bottom:.6rem;border-bottom:1px solid rgba(255,255,255,.15);justify-content:space-between;align-items:flex-end;">
+    <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45);">TMS — Painel Consolidado</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#fff;line-height:1.2;">Todas as Contratadas</div>
+    </div>
+    <div style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:.62rem;color:rgba(255,255,255,.45);">
+        Gerado em <span id="pdfDateCons"></span>
+    </div>
+</div>
+
+<div id="cons-export">
 
 <!-- KPI STRIP -->
 <div class="kpi-strip">
@@ -333,6 +382,7 @@ main { position: relative; z-index: 1; }
 </div>
 
 </div><!-- fim flex row -->
+</div><!-- /cons-export -->
 <style>
 @keyframes fadeSlideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
 .area-row:hover { background:rgba(255,255,255,.06) !important; }
@@ -386,7 +436,228 @@ main { position: relative; z-index: 1; }
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
 <script>
+// ── KPIs para OCC ──
+const CONS_KPIS = {
+    total_valor_contrato: {{ kpis.total_valor_contrato or 0 }},
+    total_medido:         {{ kpis.total_medido or 0 }},
+    saldo:                {{ kpis.saldo or 0 }},
+    pct_global:           {{ kpis.pct_global or 0 }},
+    medido_semana:        {{ kpis.medido_semana or 0 }},
+    af_medio:             {{ kpis.af_medio or 0 }},
+    n_contratadas:        {{ kpis.n_contratadas or 0 }},
+    n_contratos:          {{ kpis.n_contratos or 0 }},
+};
+
+function exportarPDFCons() {
+    const el  = document.getElementById('cons-export');
+    const btn = document.getElementById('btnExportCons');
+    const dt  = new Date();
+    const dEl = document.getElementById('pdfDateCons');
+    if (dEl) dEl.textContent = dt.toLocaleDateString('pt-BR') + ' ' +
+        dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    const nomeArq = 'consolidado_' + dt.toISOString().slice(0,10) + '.pdf';
+    if (!el || typeof html2pdf === 'undefined') { window.print(); return; }
+    const old = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Gerando...';
+    document.body.classList.add('exporting-cons');
+    setTimeout(() => {
+        html2pdf().set({
+            margin: [6,6,6,6], filename: nomeArq,
+            image: { type:'jpeg', quality:0.98 },
+            html2canvas: { scale:2, backgroundColor:'#0E1B24', useCORS:true, logging:false, scrollX:0, scrollY:0 },
+            jsPDF: { unit:'mm', format:'a4', orientation:'landscape' },
+            pagebreak: { mode:['css','avoid-all'] }
+        }).from(el).save()
+          .then(() => { document.body.classList.remove('exporting-cons'); btn.disabled=false; btn.innerHTML=old; })
+          .catch(()=> { document.body.classList.remove('exporting-cons'); btn.disabled=false; btn.innerHTML=old; });
+    }, 120);
+}
+
+function exportarOCCCons() {
+    const btn = document.getElementById('btnExportCons');
+    const dt  = new Date();
+    const dateStr = dt.toLocaleDateString('pt-BR');
+    const fmtR = v => 'R$ ' + (v||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const fmtP = v => (v||0).toLocaleString('pt-BR', {minimumFractionDigits:1}) + '%';
+
+    // Tabela Curva S Financeira
+    let finRows = '';
+    for (let i = 0; i < LABELS.length; i++) {
+        const prev = CURVA_BASE[i] ?? null, real = CURVA_ACUM[i] ?? null;
+        const dev  = (prev != null && real != null && prev !== 0) ? ((real - prev) / prev * 100) : null;
+        const dC   = dev == null ? '#555' : (dev >= 0 ? '#145a32' : '#922b21');
+        const bg   = i % 2 === 0 ? '#f8fafc' : '#fff';
+        finRows += `<tr style="background:${bg};">
+            <td style="padding:3px 6px;">${LABELS[i]}</td>
+            <td style="padding:3px 6px;text-align:right;">${prev != null ? fmtR(prev) : '—'}</td>
+            <td style="padding:3px 6px;text-align:right;">${real != null ? fmtR(real) : '—'}</td>
+            <td style="padding:3px 6px;text-align:right;font-weight:700;color:${dC};">${dev != null ? (dev >= 0 ? '+' : '') + dev.toFixed(1) + '%' : '—'}</td>
+        </tr>`;
+    }
+
+    // Tabela Curva S Física
+    let fisRows = '';
+    for (let i = 0; i < LABELS.length; i++) {
+        const prev = CURVA_FIS_BASE[i] ?? null, real = CURVA_FIS_ACUM[i] ?? null;
+        const dev  = (prev != null && real != null) ? (real - prev) : null;
+        const dC   = dev == null ? '#555' : (dev >= 0 ? '#145a32' : '#922b21');
+        const bg   = i % 2 === 0 ? '#f8fafc' : '#fff';
+        fisRows += `<tr style="background:${bg};">
+            <td style="padding:3px 6px;">${LABELS[i]}</td>
+            <td style="padding:3px 6px;text-align:right;">${prev != null ? prev + '%' : '—'}</td>
+            <td style="padding:3px 6px;text-align:right;">${real != null ? real + '%' : '—'}</td>
+            <td style="padding:3px 6px;text-align:right;font-weight:700;color:${dC};">${dev != null ? (dev >= 0 ? '+' : '') + dev.toFixed(1) + 'pp' : '—'}</td>
+        </tr>`;
+    }
+
+    // Totais por área (consolidado)
+    let areaRows = '';
+    POR_AREA.forEach((a, i) => {
+        const cts   = CONTRATOS_POR_AREA[a.area] || [];
+        const tVal  = cts.reduce((s, c) => s + (c.valor  || 0), 0);
+        const tMed  = cts.reduce((s, c) => s + (c.medido || 0), 0);
+        const tSal  = tVal - tMed;
+        const tPct  = tVal > 0 ? (tMed / tVal * 100).toFixed(1) : '—';
+        const tAF   = cts.length ? (cts.reduce((s, c) => s + (c.avanco_fisico || 0), 0) / cts.length).toFixed(1) : '—';
+        const bg    = i % 2 === 0 ? '#f8fafc' : '#fff';
+        const salC  = tSal >= 0 ? '#145a32' : '#922b21';
+        const pctC  = tPct === '—' ? '#555' : (parseFloat(tPct) >= 80 ? '#145a32' : parseFloat(tPct) >= 40 ? '#7c4a00' : '#922b21');
+        areaRows += `<tr style="background:${bg};">
+            <td style="padding:4px 8px;font-weight:600;">${a.area}</td>
+            <td style="padding:4px 8px;text-align:center;">${cts.length}</td>
+            <td style="padding:4px 8px;text-align:right;">${fmtR(tVal)}</td>
+            <td style="padding:4px 8px;text-align:right;color:#145a32;font-weight:600;">${fmtR(tMed)}</td>
+            <td style="padding:4px 8px;text-align:right;font-weight:700;color:${salC};">${fmtR(tSal)}</td>
+            <td style="padding:4px 8px;text-align:right;font-weight:700;color:${pctC};">${tPct}%</td>
+            <td style="padding:4px 8px;text-align:right;font-weight:700;color:#145a32;">${tAF}%</td>
+        </tr>`;
+    });
+
+    // Totais por contratada
+    const porContratada = {};
+    POR_AREA.forEach(a => {
+        (CONTRATOS_POR_AREA[a.area] || []).forEach(c => {
+            if (!porContratada[c.contratada]) porContratada[c.contratada] = {valor:0, medido:0, saldo:0, n:0, af:[]};
+            porContratada[c.contratada].valor  += c.valor  || 0;
+            porContratada[c.contratada].medido += c.medido || 0;
+            porContratada[c.contratada].saldo  += c.saldo  || 0;
+            porContratada[c.contratada].n      += 1;
+            if (c.avanco_fisico != null) porContratada[c.contratada].af.push(c.avanco_fisico);
+        });
+    });
+    let empRows = '';
+    Object.entries(porContratada).forEach(([nome, v], i) => {
+        const bg   = i % 2 === 0 ? '#f8fafc' : '#fff';
+        const pct  = v.valor > 0 ? (v.medido / v.valor * 100).toFixed(1) : '—';
+        const af   = v.af.length ? (v.af.reduce((a,b) => a+b,0) / v.af.length).toFixed(1) : '—';
+        const salC = v.saldo >= 0 ? '#145a32' : '#922b21';
+        const pctC = pct === '—' ? '#555' : (parseFloat(pct) >= 80 ? '#145a32' : parseFloat(pct) >= 40 ? '#7c4a00' : '#922b21');
+        empRows += `<tr style="background:${bg};">
+            <td style="padding:4px 8px;font-weight:600;">${nome}</td>
+            <td style="padding:4px 8px;text-align:center;">${v.n}</td>
+            <td style="padding:4px 8px;text-align:right;">${fmtR(v.valor)}</td>
+            <td style="padding:4px 8px;text-align:right;color:#145a32;font-weight:600;">${fmtR(v.medido)}</td>
+            <td style="padding:4px 8px;text-align:right;font-weight:700;color:${salC};">${fmtR(v.saldo)}</td>
+            <td style="padding:4px 8px;text-align:right;font-weight:700;color:${pctC};">${pct}%</td>
+            <td style="padding:4px 8px;text-align:right;font-weight:700;color:#145a32;">${af}%</td>
+        </tr>`;
+    });
+
+    const th  = (txt, r, c) => `<th style="padding:5px 7px;text-align:${r?'right':c?'center':'left'};font-weight:700;font-size:9px;background:#003366;color:#fff;">${txt}</th>`;
+    const thG = (txt, r, c) => `<th style="padding:5px 7px;text-align:${r?'right':c?'center':'left'};font-weight:700;font-size:9px;background:#145a32;color:#fff;">${txt}</th>`;
+    const thA = (txt, r, c) => `<th style="padding:5px 7px;text-align:${r?'right':c?'center':'left'};font-weight:700;font-size:9px;background:#7c4a00;color:#fff;">${txt}</th>`;
+    const sec = (lbl, cor) => `<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#1a2332;border-left:4px solid ${cor};padding-left:8px;margin:14px 0 7px;">${lbl}</div>`;
+    const kpi = (lbl, val, bg, cor) => `<td style="padding:0 5px 0 0;"><div style="background:${bg};border-radius:8px;padding:8px 10px;">
+        <div style="font-size:7px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">${lbl}</div>
+        <div style="font-size:11px;font-weight:800;color:${cor};font-variant-numeric:tabular-nums;">${val}</div></div></td>`;
+
+    const saldoBg = CONS_KPIS.saldo >= 0 ? '#eafaf1' : '#fdf2f2';
+    const saldoC  = CONS_KPIS.saldo >= 0 ? '#145a32' : '#922b21';
+
+    const html = `<div style="font-family:'Segoe UI',Arial,sans-serif;color:#1a2332;background:#fff;padding:24px 28px;font-size:11px;max-width:794px;margin:0 auto;">
+
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #003366;padding-bottom:12px;margin-bottom:14px;">
+            <div>
+                <div style="font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6b7280;margin-bottom:4px;">RUMO LOGÍSTICA · GESTÃO DE CONTRATOS</div>
+                <div style="font-size:18px;font-weight:900;color:#003366;line-height:1.1;">Relatório Consolidado OCC</div>
+                <div style="font-size:10px;color:#4a5568;margin-top:4px;font-weight:600;">${CONS_KPIS.n_contratadas} contratadas · ${CONS_KPIS.n_contratos} contratos ativos</div>
+            </div>
+            <div style="text-align:right;font-size:9px;color:#6b7280;margin-top:4px;">
+                <div>Emitido em: <strong style="color:#1a2332;">${dateStr}</strong></div>
+                <div style="margin-top:3px;padding:3px 8px;background:#f0f4f8;border-radius:4px;font-size:8px;color:#003366;font-weight:700;">DOCUMENTO OFICIAL</div>
+            </div>
+        </div>
+
+        ${sec('Indicadores Consolidados', '#003366')}
+        <table style="width:100%;border-collapse:separate;border-spacing:0;"><tr>
+            ${kpi('Valor Contratado',  fmtR(CONS_KPIS.total_valor_contrato), '#eef2f7', '#003366')}
+            ${kpi('Total Medido',      fmtR(CONS_KPIS.total_medido),         '#eafaf1', '#145a32')}
+            ${kpi('Saldo a Medir',     fmtR(CONS_KPIS.saldo),                saldoBg,   saldoC)}
+            ${kpi('% Executado',       fmtP(CONS_KPIS.pct_global),           '#eef2f7', '#003366')}
+            ${kpi('Medição da Semana', fmtR(CONS_KPIS.medido_semana),        '#eef2f7', '#003366')}
+            ${kpi('AF Médio',          fmtP(CONS_KPIS.af_medio),             '#eafaf1', '#145a32')}
+        </tr></table>
+
+        ${sec('Curvas S Consolidadas — Previsto × Realizado', '#0d6efd')}
+        <table style="width:100%;border-collapse:collapse;"><tr style="vertical-align:top;">
+            <td style="width:50%;padding-right:10px;">
+                <div style="font-size:8px;font-weight:700;color:#003366;margin-bottom:5px;">Financeira (R$ Acumulado)</div>
+                <table style="width:100%;border-collapse:collapse;font-size:9px;">
+                    <thead><tr>${th('Período')}${th('Previsto',1)}${th('Realizado',1)}${th('Desvio',1)}</tr></thead>
+                    <tbody>${finRows || '<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:8px;">Sem dados</td></tr>'}</tbody>
+                </table>
+            </td>
+            <td style="width:50%;padding-left:10px;border-left:1px solid #e5e7eb;">
+                <div style="font-size:8px;font-weight:700;color:#145a32;margin-bottom:5px;">Física (% Acumulado)</div>
+                <table style="width:100%;border-collapse:collapse;font-size:9px;">
+                    <thead><tr>${thG('Período')}${thG('Previsto',1)}${thG('Realizado',1)}${thG('Desvio',1)}</tr></thead>
+                    <tbody>${fisRows || '<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:8px;">Sem dados</td></tr>'}</tbody>
+                </table>
+            </td>
+        </tr></table>
+
+        ${empRows ? `${sec('Resumo por Contratada', '#2BB2EE')}
+        <table style="width:100%;border-collapse:collapse;font-size:9px;">
+            <thead><tr>${th('Contratada')}${th('Cts',0,1)}${th('Contratado',1)}${th('Medido',1)}${th('Saldo',1)}${th('% Fin.',1)}${th('AF Médio',1)}</tr></thead>
+            <tbody>${empRows}</tbody>
+        </table>` : ''}
+
+        ${areaRows ? `${sec('Totais por Área', '#f0b34d')}
+        <table style="width:100%;border-collapse:collapse;font-size:9px;">
+            <thead><tr>${thA('Área')}${thA('Cts',0,1)}${thA('Contratado',1)}${thA('Medido',1)}${thA('Saldo',1)}${thA('% Fin.',1)}${thA('AF Médio',1)}</tr></thead>
+            <tbody>${areaRows}</tbody>
+        </table>` : ''}
+
+        <div style="border-top:1px solid #e5e7eb;padding-top:8px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:8px;color:#9ca3af;">Documento gerado automaticamente pelo Sistema de Gestão de Obras · Rumo Logística</div>
+            <div style="font-size:8px;color:#003366;font-weight:700;">OCC Consolidado · ${dateStr}</div>
+        </div>
+    </div>`;
+
+    const nomeArq = `OCC_Consolidado_${dt.toISOString().slice(0,10)}.pdf`;
+    const old = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Gerando OCC...';
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:fixed;top:-9999px;left:-9999px;z-index:-1;width:794px;';
+    wrapper.innerHTML = html;
+    document.body.appendChild(wrapper);
+
+    html2pdf().set({
+        margin: [8,8,8,8], filename: nomeArq,
+        image: { type:'jpeg', quality:0.98 },
+        html2canvas: { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false },
+        jsPDF: { unit:'mm', format:'a4', orientation:'portrait' },
+        pagebreak: { mode:['css','avoid-all'] }
+    }).from(wrapper.querySelector('div') || wrapper).save()
+      .then(() => { document.body.removeChild(wrapper); btn.disabled=false; btn.innerHTML=old; })
+      .catch(() => { document.body.removeChild(wrapper); btn.disabled=false; btn.innerHTML=old; });
+}
+
 Chart.register(ChartDataLabels);
 
 // ── Painel de detalhe por área — cards por contrato ──
