@@ -126,10 +126,32 @@
             color: rgba(255,255,255,.78); font-family: var(--mono);
             font-size: .66rem; font-weight: 500; letter-spacing: .03em;
             padding: .3rem .6rem; margin-left: .4rem;
+            background: transparent; border: 0;
             border-left: 1px solid rgba(255,255,255,.16);
-            max-width: 230px;
+            max-width: 230px; cursor: pointer; transition: color .15s;
         }
+        .nav-user-chip:hover, .nav-user-chip[aria-expanded="true"] { color: #fff; }
         .nav-user-chip i { color: var(--cyan); font-size: .9rem; }
+        .nav-user-chip .chev { color: rgba(255,255,255,.5); font-size: .58rem; margin-left: .1rem; }
+
+        /* Menu do usuário (dropdown dark) */
+        .user-menu.dropdown-menu {
+            background: #0a2342; border: 1px solid rgba(255,255,255,.12);
+            border-radius: 10px; padding: .35rem; min-width: 212px;
+            box-shadow: 0 12px 34px rgba(0,0,0,.45);
+        }
+        .user-menu .dropdown-item {
+            color: rgba(255,255,255,.85); font-size: .8rem; border-radius: 7px;
+            padding: .5rem .7rem; display: flex; align-items: center; gap: .1rem;
+        }
+        .user-menu .dropdown-item:hover, .user-menu .dropdown-item:focus {
+            background: rgba(255,255,255,.08); color: #fff;
+        }
+        .user-menu .dropdown-item i { color: var(--cyan); font-size: .88rem; margin-right: .55rem; }
+        .user-menu .dropdown-item.item-danger { color: #ff8a98; }
+        .user-menu .dropdown-item.item-danger:hover { background: rgba(220,53,69,.18); color: #ff8a98; }
+        .user-menu .dropdown-item.item-danger i { color: #ff6b81; }
+        .user-menu .dropdown-divider { border-color: rgba(255,255,255,.12); margin: .3rem .2rem; }
 
         .btn-export {
             background: transparent;
@@ -578,30 +600,26 @@
             <i class="bi bi-file-earmark-text"></i>RDO's
         </a>
         {% endif %}
-        {% if current_user and current_user.role in ['admin', 'master', 'rumo'] %}
-        <a href="{{ url_for('admin') }}"
-           class="nav-link-rumo {% if request.endpoint and (request.endpoint in ['admin', 'admin_contrato', 'admin_novo_contrato'] or request.endpoint.startswith('admin_suprimento')) %}active{% endif %}">
-            <i class="bi bi-folder2-open" style="color:var(--green);"></i>Contratos
-        </a>
-        <a href="{{ url_for('admin_usuarios') }}"
-           class="nav-link-rumo {% if request.endpoint and request.endpoint.startswith('admin_usuarios') %}active{% endif %}">
-            <i class="bi bi-people" style="color:var(--green);"></i>Usuários
-        </a>
-        {% if current_user.role == 'master' %}
-        <a href="{{ url_for('admin_tms') }}"
-           class="nav-link-rumo {% if request.endpoint == 'admin_tms' %}active{% endif %}">
-            <i class="bi bi-gear-wide-connected" style="color:var(--green);"></i>Config. TMS
-        </a>
-        {% endif %}
-        {% endif %}
-
         {% if current_user %}
-        <span class="nav-user-chip" title="{{ current_user.email }}">
-            <i class="bi bi-person-circle"></i>{{ current_user.nome or current_user.email }}
-        </span>
-        <a href="{{ url_for('logout') }}" class="nav-link-rumo">
-            <i class="bi bi-box-arrow-right" style="color:#ff7a89;"></i>Sair
-        </a>
+        <!-- Menu do usuário (dropdown ao clicar no e-mail) -->
+        <div class="dropdown">
+            <button class="nav-user-chip" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ current_user.email }}">
+                <i class="bi bi-person-circle"></i>{{ current_user.nome or current_user.email }}
+                <i class="bi bi-chevron-down chev"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end user-menu">
+                {% if current_user.role in ['admin', 'master', 'rumo'] %}
+                <li><a class="dropdown-item" href="{{ url_for('admin') }}"><i class="bi bi-folder2-open"></i>Contratos</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('admin_usuarios') }}"><i class="bi bi-people"></i>Usuários</a></li>
+                {% endif %}
+                {% if current_user.role == 'master' %}
+                <li><a class="dropdown-item" href="{{ url_for('admin_tms') }}"><i class="bi bi-gear-wide-connected"></i>Config. TMS</a></li>
+                <li><a class="dropdown-item item-danger" href="{{ url_for('admin_limpar_dados') }}"><i class="bi bi-trash3"></i>Limpar Dados</a></li>
+                {% endif %}
+                {% if current_user.role in ['admin', 'master', 'rumo'] %}<li><hr class="dropdown-divider"></li>{% endif %}
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right" style="color:#ff7a89;"></i>Sair</a></li>
+            </ul>
+        </div>
         {% elif not auth_page %}
         <a href="{{ url_for('login') }}"
            class="nav-link-rumo {% if request.endpoint == 'login' %}active{% endif %}">
