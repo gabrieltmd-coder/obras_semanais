@@ -80,6 +80,52 @@ def save_contratos_config(cfg):
     db.save_contratos(cfg)
 
 
+# ── Financeiro: centros de custo, lançamentos e orçamento ────────────────────
+def load_centros_custo():
+    return db.load_centros_custo()
+
+
+def save_centros_custo(items):
+    db.save_centros_custo(items)
+
+
+def load_lancamentos():
+    return db.load_lancamentos()
+
+
+def save_lancamentos(items):
+    db.save_lancamentos(items)
+
+
+def load_orcamentos():
+    return db.load_orcamentos()
+
+
+def save_orcamentos(items):
+    db.save_orcamentos(items)
+
+
+def parse_brl(raw):
+    """'1.234.567,89' → 1234567.89 (aceita vazio)."""
+    raw = (raw or '').strip().replace('.', '').replace(',', '.')
+    try:
+        return float(raw) if raw else 0.0
+    except ValueError:
+        return 0.0
+
+
+def lancamento_status(l):
+    """Status derivado das datas realizadas: pago > faturado > medido."""
+    if l.get('data_pgto_real'):
+        return 'pago'
+    if l.get('data_fat_real'):
+        return 'faturado'
+    return 'medido'
+
+
+app.jinja_env.globals['lancamento_status'] = lancamento_status
+
+
 # ── Usuários ─────────────────────────────────────────────────────────────────
 def load_usuarios():
     return db.load_usuarios()
@@ -181,6 +227,16 @@ SCOPED_ROLES = ('contratada', 'contratada_rw')
 # Papéis com acesso total (admin): master e rumo. 'rumo' = master, exceto que não pode
 # alterar usuários master (ver can_manage_user).
 ADMIN_ROLES = ('master', 'rumo')
+
+# Coleções apagáveis na tela "Limpar Dados" (rótulo exibido na UI). Fonte única —
+# usada tanto em /admin/dados quanto em /admin/limpar-dados.
+WIPE_COLS = [
+    ('registros', 'Registros semanais'), ('contratos', 'Contratos'),
+    ('suprimentos', 'Suprimentos'), ('pacotes', 'Pacotes'),
+    ('centros_custo', 'Centros de custo'), ('lancamentos', 'Lançamentos financeiros'),
+    ('orcamentos', 'Orçamentos'),
+    ('usuarios', 'Usuários'), ('auditoria', 'Auditoria'), ('tms', 'Configurações TMS'),
+]
 
 
 def can_write():
@@ -553,6 +609,22 @@ def contract_status(data):
         return 'ativo'
 
 app.jinja_env.globals['contract_status'] = contract_status
+
+
+def valor_aditivos(cdata):
+    """Soma dos aditivos de VALOR do contrato."""
+    return sum(float(a.get('valor', 0) or 0)
+               for a in (cdata.get('aditivos') or []) if a.get('tipo') == 'valor')
+
+
+def valor_efetivo(cdata):
+    """Valor contratado efetivo = valor base + aditivos de valor.
+    Usado em todos os KPIs financeiros (Financeiro, Dashboard, Consolidado)."""
+    return float(cdata.get('valor_contrato', 0) or 0) + valor_aditivos(cdata)
+
+
+app.jinja_env.globals['valor_efetivo'] = valor_efetivo
+app.jinja_env.globals['valor_aditivos'] = valor_aditivos
 
 
 @app.context_processor
@@ -935,11 +1007,24 @@ def financeiro():
 
     cfg = load_contratos_config()
 
+    # ── Dados financeiros complementares (lançamentos, centros de custo, orçamento) ──
+    centros  = load_centros_custo()
+    cc_by_id = {c.get('id'): c for c in centros}
+    orcs     = load_orcamentos()
+    lanc_scope = [l for l in load_lancamentos()
+                  if (not filtro_contratada or l.get('contratada') == filtro_contratada)
+                  and (not vk or l.get('contrato') == vk)]
+
     _vazio = dict(kpis=None, contratadas=todas_contratadas,
                   filtro_contratada=filtro_contratada,
                   filtro_de=filtro_de, filtro_ate=filtro_ate,
                   chart_labels='[]', curva_fin_acum='[]', curva_fin_base='[]',
-                  contratos_fin=[], bar_labels='[]', bar_vals='[]', bar_colors='[]')
+                  contratos_fin=[], bar_labels='[]', bar_vals='[]', bar_colors='[]',
+                  evm=None, funil='[]', funil_labels='[]',
+                  cf_labels='[]', cf_pago='[]', cf_prev='[]', cf_proj='[]', cf_acum='[]',
+                  class_data='{}', cc_labels='[]', cc_orcado='[]',
+                  cc_comprometido='[]', cc_medido='[]',
+                  n_lancamentos=len(lanc_scope), tem_centros=bool(centros))
 
     if not reg:
         return render_template('financeiro.html', **_vazio)
@@ -948,7 +1033,7 @@ def financeiro():
 
     # ── KPIs globais (valor total considera todos os contratos configurados) ──
     total_valor_contrato = sum(
-        float(cdata.get('valor_contrato', 0) or 0)
+        valor_efetivo(cdata)
         for cdata in cfg.values()
         if (not filtro_contratada or cdata.get('contratada') == filtro_contratada)
         and (not vk or cdata.get('contrato') == vk)
@@ -977,8 +1062,21 @@ def financeiro():
 
     curva_fin_base = fin_base_curve(cfg, filtro_contratada, semanas_sorted, vk)
 
-    # ── Tabela por contrato ──
+    # ── Pagamentos/faturamentos por contrato (dos lançamentos) ──
+    pago_por_par, fat_por_par = {}, {}
+    for l in lanc_scope:
+        par = (l.get('contratada', ''), l.get('contrato', ''))
+        vl  = float(l.get('valor_liquido') or 0)
+        if l.get('data_pgto_real'):
+            pago_por_par[par] = pago_por_par.get(par, 0) + vl
+        if l.get('data_fat_real'):
+            fat_por_par[par] = fat_por_par.get(par, 0) + vl
+
+    # ── Tabela por contrato + agregações CAPEX/OPEX e centro de custo ──
     contratos_fin = []
+    class_data = {'CAPEX': {'comprometido': 0, 'medido': 0, 'pago': 0},
+                  'OPEX':  {'comprometido': 0, 'medido': 0, 'pago': 0}}
+    cc_data = {}   # nome do centro → {orcado, comprometido, medido}
     for _, cdata in sorted(cfg.items()):
         contratada = cdata.get('contratada', '')
         contrato   = cdata.get('contrato', '')
@@ -986,20 +1084,130 @@ def financeiro():
             continue
         if vk and contrato != vk:
             continue
-        valor  = float(cdata.get('valor_contrato', 0) or 0)
+        valor  = valor_efetivo(cdata)
         reg_c  = [r for r in reg if r.get('contratada') == contratada and r.get('contrato') == contrato]
         medido = sum(r.get('valor_medido', 0) for r in reg_c)
         saldo  = valor - medido
         pct    = round(medido / valor * 100, 1) if valor else 0
+        classe = 'OPEX' if (cdata.get('classificacao') or 'CAPEX').upper() == 'OPEX' else 'CAPEX'
+        cc     = cc_by_id.get(cdata.get('centro_custo') or '', {})
+        pago_c = pago_por_par.get((contratada, contrato), 0)
         contratos_fin.append({
             'contratada': contratada,
             'contrato':   contrato,
             'valor':      valor,
+            'valor_base': float(cdata.get('valor_contrato', 0) or 0),
+            'aditivos':   valor_aditivos(cdata),
             'medido':     medido,
             'saldo':      saldo,
             'pct':        pct,
+            'pago':       pago_c,
+            'classificacao': classe,
+            'centro_custo':  cc.get('nome', ''),
             'status':     contract_status(cdata),
         })
+        class_data[classe]['comprometido'] += valor
+        class_data[classe]['medido']       += medido
+        class_data[classe]['pago']         += pago_c
+        cc_nome = cc.get('nome') or 'Sem centro de custo'
+        cc_data.setdefault(cc_nome, {'orcado': 0, 'comprometido': 0, 'medido': 0})
+        cc_data[cc_nome]['comprometido'] += valor
+        cc_data[cc_nome]['medido']       += medido
+
+    # Orçamento por centro de custo (grade mensal somada)
+    orcado_total = 0
+    for o in orcs:
+        cc_nome = cc_by_id.get(o.get('centro_custo') or '', {}).get('nome') or 'Sem centro de custo'
+        v = float(o.get('valor') or 0)
+        if not filtro_contratada or cc_nome in cc_data:
+            orcado_total += v
+        if cc_nome in cc_data:
+            cc_data[cc_nome]['orcado'] += v
+        elif not filtro_contratada:
+            cc_data.setdefault(cc_nome, {'orcado': 0, 'comprometido': 0, 'medido': 0})
+            cc_data[cc_nome]['orcado'] += v
+
+    # ── EVM (PV / EV / AC → CPI, SPI, EAC) ──
+    hoje_m = date.today().strftime('%Y-%m')
+    pv = 0
+    for cdata in cfg.values():
+        if filtro_contratada and cdata.get('contratada') != filtro_contratada:
+            continue
+        if vk and cdata.get('contrato') != vk:
+            continue
+        for e in cdata.get('linha_base_financeira', []):
+            if e.get('semana') and e['semana'] <= hoje_m:
+                pv += float(e.get('valor', 0) or 0)
+    ev = 0
+    _af_ultimo = {}   # (contratada, contrato) → último avanço físico
+    for r in reg_ord:
+        if r.get('avanco_fisico') is not None:
+            _af_ultimo[(r.get('contratada', ''), r.get('contrato', ''))] = float(r.get('avanco_fisico') or 0)
+    for cdata in cfg.values():
+        par = (cdata.get('contratada', ''), cdata.get('contrato', ''))
+        if filtro_contratada and par[0] != filtro_contratada:
+            continue
+        if vk and par[1] != vk:
+            continue
+        ev += (_af_ultimo.get(par, 0) / 100.0) * valor_efetivo(cdata)
+    ac  = total_medido
+    cpi = round(ev / ac, 2) if ac else None
+    spi = round(ev / pv, 2) if pv else None
+    eac = round(total_valor_contrato / cpi, 2) if cpi else None
+    evm = dict(pv=pv, ev=ev, ac=ac, cpi=cpi, spi=spi, eac=eac,
+               var_custo=ev - ac, var_prazo=ev - pv)
+
+    # ── Fluxo de caixa mensal ──
+    def _shift_month(ym, n):
+        y, m = int(ym[:4]), int(ym[5:7])
+        t = y * 12 + (m - 1) + n
+        return f'{t // 12:04d}-{t % 12 + 1:02d}'
+
+    cf_pago_m, cf_prev_m, cf_proj_m = {}, {}, {}
+    for l in lanc_scope:
+        vl = float(l.get('valor_liquido') or 0)
+        if l.get('data_pgto_real'):
+            m = l['data_pgto_real'][:7]
+            cf_pago_m[m] = cf_pago_m.get(m, 0) + vl
+        elif l.get('data_pgto_prev'):
+            m = l['data_pgto_prev'][:7]
+            cf_prev_m[m] = cf_prev_m.get(m, 0) + vl
+    # Projeção: baseline financeira mensal deslocada pelo prazo de pagamento do contrato
+    for cdata in cfg.values():
+        if filtro_contratada and cdata.get('contratada') != filtro_contratada:
+            continue
+        if vk and cdata.get('contrato') != vk:
+            continue
+        shift = round((cdata.get('prazo_pagamento_dias') or 30) / 30)
+        fator = 1 - (float(cdata.get('retencao_pct') or 0) + float(cdata.get('impostos_pct') or 0)) / 100.0
+        for e in cdata.get('linha_base_financeira', []):
+            if not e.get('semana'):
+                continue
+            m2 = _shift_month(e['semana'], shift)
+            if m2 > hoje_m and m2 not in cf_prev_m:
+                cf_proj_m[m2] = cf_proj_m.get(m2, 0) + float(e.get('valor', 0) or 0) * fator
+    cf_months = sorted(set(cf_pago_m) | set(cf_prev_m) | set(cf_proj_m))
+    cf_labels, cf_pago_l, cf_prev_l, cf_proj_l, cf_acum_l = [], [], [], [], []
+    _ac = 0
+    for m in cf_months:
+        cf_labels.append(f'{m[5:7]}/{m[:4]}')
+        p, pr, pj = cf_pago_m.get(m, 0), cf_prev_m.get(m, 0), cf_proj_m.get(m, 0)
+        cf_pago_l.append(round(p, 2))
+        cf_prev_l.append(round(pr, 2))
+        cf_proj_l.append(round(pj, 2))
+        _ac += p + pr + pj
+        cf_acum_l.append(round(_ac, 2))
+
+    # ── Funil orçado → comprometido → medido → faturado → pago ──
+    faturado_total = sum(fat_por_par.values())
+    pago_total     = sum(pago_por_par.values())
+    retido_acum    = sum(float(l.get('valor_bruto') or 0) * float(l.get('retencao_pct') or 0) / 100.0
+                         for l in lanc_scope)
+    funil_labels = ['Orçado', 'Comprometido', 'Medido', 'Faturado', 'Pago']
+    funil_vals   = [round(orcado_total, 2), round(total_valor_contrato, 2),
+                    round(total_medido, 2), round(faturado_total, 2), round(pago_total, 2)]
+
+    cc_sorted = sorted(cc_data.items(), key=lambda x: -x[1]['comprometido'])
 
     # ── Barra: medição por contratada ──
     med_por_c = {}
@@ -1014,13 +1222,20 @@ def financeiro():
                    'rgba(255,107,122,.85)', 'rgba(155,89,182,.85)']
     bar_colors  = json.dumps([_PALETTE[i % len(_PALETTE)] for i in range(len(med_sorted))])
 
+    total_base_soma = sum(c['valor_base'] for c in contratos_fin)
     kpis = dict(
         total_valor_contrato=total_valor_contrato,
+        total_base=total_base_soma,
+        total_aditivos=total_valor_contrato - total_base_soma,
         total_medido=total_medido,
         saldo=saldo_global,
         pct_global=pct_global,
         valor_semana=valor_semana,
         ultima_semana=ultima_semana,
+        faturado=faturado_total,
+        pago=pago_total,
+        retido=retido_acum,
+        orcado=orcado_total,
     )
 
     return render_template('financeiro.html',
@@ -1035,7 +1250,233 @@ def financeiro():
                            contratos_fin=contratos_fin,
                            bar_labels=bar_labels,
                            bar_vals=bar_vals,
-                           bar_colors=bar_colors)
+                           bar_colors=bar_colors,
+                           evm=evm,
+                           funil=json.dumps(funil_vals),
+                           funil_labels=json.dumps(funil_labels),
+                           cf_labels=json.dumps(cf_labels),
+                           cf_pago=json.dumps(cf_pago_l),
+                           cf_prev=json.dumps(cf_prev_l),
+                           cf_proj=json.dumps(cf_proj_l),
+                           cf_acum=json.dumps(cf_acum_l),
+                           class_data=json.dumps(class_data),
+                           cc_labels=json.dumps([x[0] for x in cc_sorted]),
+                           cc_orcado=json.dumps([round(x[1]['orcado'], 2) for x in cc_sorted]),
+                           cc_comprometido=json.dumps([round(x[1]['comprometido'], 2) for x in cc_sorted]),
+                           cc_medido=json.dumps([round(x[1]['medido'], 2) for x in cc_sorted]),
+                           n_lancamentos=len(lanc_scope),
+                           tem_centros=bool(centros))
+
+
+# ── Lançamentos financeiros (medição → fatura → pagamento) ───────────────────
+@app.route('/financeiro/lancamentos')
+def financeiro_lancamentos():
+    cfg  = load_contratos_config()
+    lanc = load_lancamentos()
+
+    vc, vk = viewer_contratada(), viewer_contrato()
+    f_contratada = vc or request.args.get('contratada', '')
+    f_contrato   = vk or request.args.get('contrato', '')
+    f_status     = request.args.get('status', '')
+
+    itens = [l for l in lanc
+             if (not f_contratada or l.get('contratada') == f_contratada)
+             and (not f_contrato or l.get('contrato') == f_contrato)]
+    if f_status:
+        itens = [l for l in itens if lancamento_status(l) == f_status]
+    itens.sort(key=lambda l: (l.get('competencia', ''), l.get('criado_em', '')), reverse=True)
+
+    # Contratos disponíveis para o form (escopo do usuário)
+    contratos_opts = []
+    for k, c in sorted(cfg.items()):
+        if vc and c.get('contratada') != vc:
+            continue
+        if vk and c.get('contrato') != vk:
+            continue
+        contratos_opts.append({
+            'key': k, 'contratada': c.get('contratada', ''), 'contrato': c.get('contrato', ''),
+            'retencao_pct': float(c.get('retencao_pct') or 0),
+            'impostos_pct': float(c.get('impostos_pct') or 0),
+            'prazo': int(c.get('prazo_pagamento_dias') or 30),
+        })
+    tot_bruto   = sum(float(l.get('valor_bruto') or 0) for l in itens)
+    tot_liquido = sum(float(l.get('valor_liquido') or 0) for l in itens)
+    contratadas_list = sorted({c.get('contratada', '') for c in cfg.values() if c.get('contratada')})
+    if vc:
+        contratadas_list = [vc]
+    return render_template('financeiro_lancamentos.html',
+                           lancamentos=itens, contratos_opts=contratos_opts,
+                           contratadas_list=contratadas_list,
+                           f_contratada=f_contratada, f_contrato=f_contrato, f_status=f_status,
+                           tot_bruto=tot_bruto, tot_liquido=tot_liquido)
+
+
+def _lancamento_from_form(form):
+    bruto = parse_brl(form.get('valor_bruto', ''))
+    ret   = parse_brl(form.get('retencao_pct', ''))
+    imp   = parse_brl(form.get('impostos_pct', ''))
+    key   = form.get('contrato_key', '')
+    parts = key.split('||', 1)
+    return {
+        'contratada':    parts[0] if parts else '',
+        'contrato':      parts[1] if len(parts) > 1 else '',
+        'competencia':   form.get('competencia', ''),
+        'descricao':     form.get('descricao', '').strip(),
+        'valor_bruto':   bruto,
+        'retencao_pct':  ret,
+        'impostos_pct':  imp,
+        'valor_liquido': round(bruto * (1 - (ret + imp) / 100.0), 2),
+        'data_medicao':  form.get('data_medicao', ''),
+        'data_fat_prev': form.get('data_fat_prev', ''),
+        'data_fat_real': form.get('data_fat_real', ''),
+        'data_pgto_prev': form.get('data_pgto_prev', ''),
+        'data_pgto_real': form.get('data_pgto_real', ''),
+    }
+
+
+@app.route('/financeiro/lancamentos/novo', methods=['POST'])
+def financeiro_lancamento_novo():
+    if not can_write():
+        flash('Sem permissão para criar lançamentos.', 'danger')
+        return redirect(url_for('financeiro_lancamentos'))
+    novo = _lancamento_from_form(request.form)
+    if not novo['contratada'] or not novo['competencia'] or not novo['valor_bruto']:
+        flash('Preencha contrato, competência e valor bruto.', 'warning')
+        return redirect(url_for('financeiro_lancamentos'))
+    novo['id'] = str(uuid.uuid4())
+    novo['criado_em'] = datetime.now().isoformat()
+    novo['criado_por'] = current_user_label()
+    lanc = load_lancamentos()
+    lanc.append(novo)
+    save_lancamentos(lanc)
+    audit_log('criar_lancamento', novo['id'],
+              f"{novo['contratada']} / {novo['contrato']} — {novo['competencia']} — R$ {novo['valor_bruto']:.2f}")
+    flash('Lançamento criado.', 'success')
+    return redirect(url_for('financeiro_lancamentos'))
+
+
+@app.route('/financeiro/lancamentos/<lid>/editar', methods=['POST'])
+def financeiro_lancamento_editar(lid):
+    if not can_write():
+        flash('Sem permissão para editar lançamentos.', 'danger')
+        return redirect(url_for('financeiro_lancamentos'))
+    lanc = load_lancamentos()
+    item = next((l for l in lanc if l.get('id') == lid), None)
+    if not item:
+        flash('Lançamento não encontrado.', 'danger')
+        return redirect(url_for('financeiro_lancamentos'))
+    item.update(_lancamento_from_form(request.form))
+    item['atualizado_em'] = datetime.now().isoformat()
+    item['alterado_por'] = current_user_label()
+    save_lancamentos(lanc)
+    audit_log('editar_lancamento', lid, f"{item['contratada']} / {item['contrato']} — {item['competencia']}")
+    flash('Lançamento atualizado.', 'success')
+    return redirect(url_for('financeiro_lancamentos'))
+
+
+@app.route('/financeiro/lancamentos/<lid>/excluir', methods=['POST'])
+def financeiro_lancamento_excluir(lid):
+    if not can_write():
+        flash('Sem permissão para excluir lançamentos.', 'danger')
+        return redirect(url_for('financeiro_lancamentos'))
+    lanc = load_lancamentos()
+    item = next((l for l in lanc if l.get('id') == lid), None)
+    if item:
+        lanc.remove(item)
+        save_lancamentos(lanc)
+        audit_log('excluir_lancamento', lid, f"{item.get('contratada','')} / {item.get('contrato','')}")
+        flash('Lançamento excluído.', 'success')
+    return redirect(url_for('financeiro_lancamentos'))
+
+
+# ── Config financeira: centros de custo + orçamento mensal ───────────────────
+def _fin_config_required():
+    u = current_user()
+    return session.get('admin_ok') or (u and u.get('role') in ADMIN_ROLES)
+
+
+@app.route('/financeiro/config')
+def financeiro_config():
+    if not _fin_config_required():
+        flash('Acesso restrito à configuração financeira.', 'danger')
+        return redirect(url_for('financeiro'))
+    centros = load_centros_custo()
+    orcs    = load_orcamentos()
+    try:
+        ano = int(request.args.get('ano', date.today().year))
+    except (TypeError, ValueError):
+        ano = date.today().year
+    meses = [f'{ano:04d}-{m:02d}' for m in range(1, 13)]
+    # matriz {centro_id: {mes: valor}} do ano selecionado
+    orc_map = {}
+    for o in orcs:
+        if (o.get('mes') or '')[:4] == str(ano):
+            orc_map.setdefault(o.get('centro_custo'), {})[o['mes']] = float(o.get('valor') or 0)
+    # anos com orçamento (para navegação)
+    anos = sorted({int(o['mes'][:4]) for o in orcs if o.get('mes')} | {date.today().year, ano})
+    return render_template('financeiro_config.html',
+                           centros=centros, meses=meses, ano=ano, anos=anos, orc_map=orc_map)
+
+
+@app.route('/financeiro/config/centro', methods=['POST'])
+def financeiro_config_centro():
+    if not _fin_config_required():
+        return redirect(url_for('financeiro'))
+    centros = load_centros_custo()
+    cid    = request.form.get('id', '')
+    codigo = request.form.get('codigo', '').strip()
+    nome   = request.form.get('nome', '').strip()
+    tipo   = 'OPEX' if request.form.get('tipo') == 'OPEX' else 'CAPEX'
+    if not nome:
+        flash('Informe o nome do centro de custo.', 'warning')
+        return redirect(url_for('financeiro_config'))
+    if cid:
+        item = next((c for c in centros if c.get('id') == cid), None)
+        if item:
+            item.update({'codigo': codigo, 'nome': nome, 'tipo': tipo})
+            audit_log('editar_centro_custo', cid, f'{codigo} {nome}')
+    else:
+        centros.append({'id': str(uuid.uuid4()), 'codigo': codigo, 'nome': nome,
+                        'tipo': tipo, 'ativo': True})
+        audit_log('criar_centro_custo', nome, codigo)
+    save_centros_custo(centros)
+    flash('Centro de custo salvo.', 'success')
+    return redirect(url_for('financeiro_config'))
+
+
+@app.route('/financeiro/config/centro/<cid>/excluir', methods=['POST'])
+def financeiro_config_centro_excluir(cid):
+    if not _fin_config_required():
+        return redirect(url_for('financeiro'))
+    centros = [c for c in load_centros_custo() if c.get('id') != cid]
+    save_centros_custo(centros)
+    save_orcamentos([o for o in load_orcamentos() if o.get('centro_custo') != cid])
+    audit_log('excluir_centro_custo', cid)
+    flash('Centro de custo excluído (orçamentos vinculados removidos).', 'success')
+    return redirect(url_for('financeiro_config'))
+
+
+@app.route('/financeiro/config/orcamento', methods=['POST'])
+def financeiro_config_orcamento():
+    if not _fin_config_required():
+        return redirect(url_for('financeiro'))
+    try:
+        ano = int(request.form.get('ano', date.today().year))
+    except (TypeError, ValueError):
+        ano = date.today().year
+    # substitui o orçamento do ano pelos valores enviados (campos "orc|<cid>|<mes>")
+    orcs = [o for o in load_orcamentos() if (o.get('mes') or '')[:4] != str(ano)]
+    for name, raw in request.form.items():
+        if not name.startswith('orc|'):
+            continue
+        _, cid, mes = name.split('|', 2)
+        v = parse_brl(raw)
+        if v:
+            orcs.append({'id': f'{cid}|{mes}', 'centro_custo': cid, 'mes': mes, 'valor': v})
+    save_orcamentos(orcs)
+    audit_log('salvar_orcamento', str(ano))
+    flash(f'Orçamento de {ano} salvo.', 'success')
+    return redirect(url_for('financeiro_config', ano=ano))
 
 
 @app.route('/consolidado')
@@ -1057,7 +1498,7 @@ def consolidado():
     )
 
     # ── KPIs consolidados ──
-    total_valor_contrato = sum(float(c.get('valor_contrato', 0) or 0) for c in cfg.values())
+    total_valor_contrato = sum(valor_efetivo(c) for c in cfg.values())
     total_medido = sum(r.get('valor_medido', 0) for r in registros)
     saldo        = total_valor_contrato - total_medido
     pct_global   = round(total_medido / total_valor_contrato * 100, 1) if total_valor_contrato else 0
@@ -1107,7 +1548,7 @@ def consolidado():
         _s = r.get('semana_referencia', '')
         if _s:
             _af_hist.setdefault(_k, {})[_s] = r.get('avanco_fisico') or 0
-    _ct_val = {(c.get('contratada'), c.get('contrato')): float(c.get('valor_contrato') or 0)
+    _ct_val = {(c.get('contratada'), c.get('contrato')): valor_efetivo(c)
                for c in cfg.values()}
     curva_fis_acum = []
     for s in semanas_sorted:
@@ -1126,7 +1567,7 @@ def consolidado():
     _fis_m = {}
     for c in cfg.values():
         _k  = (c.get('contratada'), c.get('contrato'))
-        _p  = float(c.get('valor_contrato') or 0)
+        _p  = valor_efetivo(c)
         _lb = c.get('lb_fis_planejado') or {it['semana']: it['percentual'] for it in c.get('linha_base_fisica', [])}
         for _m, _v in _lb.items():
             _fis_m.setdefault(_m, []).append((float(_v or 0), _p))
@@ -1187,7 +1628,7 @@ def consolidado():
     # Física replanejada (média ponderada por valor de contrato)
     _fis_repl_m, _has_repl_fis = {}, False
     for c in cfg.values():
-        _p = float(c.get('valor_contrato') or 0)
+        _p = valor_efetivo(c)
         _base = c.get('lb_fis_planejado') or {it['semana']: it['percentual'] for it in c.get('linha_base_fisica', [])}
         _rev, _ch = _mesclar_replan(_base, c.get('lb_fis_replanejados'))
         _has_repl_fis = _has_repl_fis or _ch
@@ -1209,7 +1650,7 @@ def consolidado():
     # ── Por contratada ──
     por_contratada = []
     for ct in contratadas:
-        valor  = sum(float(c.get('valor_contrato', 0) or 0) for c in cfg.values() if c.get('contratada') == ct)
+        valor  = sum(valor_efetivo(c) for c in cfg.values() if c.get('contratada') == ct)
         medido = medido_por_contratada.get(ct, 0)
         por_contratada.append({
             'contratada': ct,
@@ -1232,7 +1673,7 @@ def consolidado():
         area     = (c.get('area_contrato') or '').strip() or 'Não classificado'
         ct_name  = c.get('contratada', '')
         contrato = c.get('contrato', '')
-        valor    = float(c.get('valor_contrato', 0) or 0)
+        valor    = valor_efetivo(c)
         medido_c = medido_por_par.get((ct_name, contrato), 0)
         a = area_map.setdefault(area, {'area': area, 'valor': 0.0, 'medido': 0.0, 'n_contratos': 0})
         a['valor']       += valor
@@ -1385,6 +1826,11 @@ def consolidado():
 @app.route('/construcao')
 def construcao():
     return render_template('construcao.html')
+
+
+@app.route('/mas-dashboard')
+def mas_dashboard():
+    return render_template('MAS_TMS_Dashboard_18Jun (1).html')
 
 
 @app.route('/registros')
@@ -1828,7 +2274,7 @@ def dashboard():
         for r in reg if r.get('contratada') and r.get('contrato')
     )
     total_valor_contrato = sum(
-        float(cfg.get(k, {}).get('valor_contrato', 0) or 0)
+        valor_efetivo(cfg.get(k, {}))
         for k in pares_unicos
     )
     saldo = total_valor_contrato - total_medido
@@ -2109,15 +2555,19 @@ def export_contratos():
             data.get('contratada', ''),
             data.get('contrato', ''),
             'Ativo' if status == 'ativo' else 'Encerrado',
-            data.get('valor_contrato', 0) or 0,
+            float(data.get('valor_contrato', 0) or 0),
+            valor_aditivos(data),
+            valor_efetivo(data),
             _week_to_last_day(data.get('data_inicio_contrato', '')),
             _week_to_last_day(data.get('data_fim_contrato', '')),
         ])
 
     _excel_write_sheet(ws,
-                       ['Contratada', 'Contrato', 'Status', 'Valor do Contrato (R$)',
+                       ['Contratada', 'Contrato', 'Status', 'Valor Base (R$)',
+                        'Aditivos (R$)', 'Valor Efetivo (R$)',
                         'Início do Contrato', 'Término do Contrato'],
-                       rows, col_widths=[30, 18, 12, 24, 20, 20], currency_cols={4})
+                       rows, col_widths=[30, 18, 12, 20, 18, 20, 20, 20],
+                       currency_cols={4, 5, 6})
 
     filepath = os.path.join(EXPORT_DIR, 'contratos.xlsx')
     wb.save(filepath)
@@ -2282,29 +2732,132 @@ def admin_dbinfo():
     return jsonify(db.backend_info())
 
 
+@app.route('/admin/dados')
+def admin_dados():
+    """Tabela completa de registros com filtros e exportação CSV."""
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+
+    registros  = load_data()
+    contratos  = db.load_contratos()
+
+    # Listas para os selects
+    contratadas_list = sorted({r.get('contratada','') for r in registros if r.get('contratada')})
+    contratos_list   = sorted({r.get('contrato','')   for r in registros if r.get('contrato')})
+
+    # Filtros
+    f_contratada = request.args.get('contratada', '').strip()
+    f_contrato   = request.args.get('contrato', '').strip()
+    f_de         = request.args.get('de', '').strip()
+    f_ate        = request.args.get('ate', '').strip()
+    f_criado_por = request.args.get('criado_por', '').strip()
+
+    def _passes(r):
+        if f_contratada and r.get('contratada') != f_contratada: return False
+        if f_contrato   and r.get('contrato')   != f_contrato:   return False
+        semana = r.get('semana_referencia', '')
+        if f_de  and semana < f_de:  return False
+        if f_ate and semana > f_ate: return False
+        if f_criado_por and f_criado_por.lower() not in (r.get('criado_por') or '').lower(): return False
+        return True
+
+    filtrados = [r for r in registros if _passes(r)]
+    filtrados.sort(key=lambda r: r.get('semana_referencia',''), reverse=True)
+
+    # Contagens para seção Limpar Dados
+    counts = db.backend_info().get('counts', {})
+
+    return render_template('admin_dados.html',
+        registros=filtrados, total=len(registros),
+        contratadas_list=contratadas_list, contratos_list=contratos_list,
+        f_contratada=f_contratada, f_contrato=f_contrato,
+        f_de=f_de, f_ate=f_ate, f_criado_por=f_criado_por,
+        cols=WIPE_COLS, counts=counts)
+
+
+@app.route('/admin/dados/export-csv')
+def admin_dados_export_csv():
+    """Exporta registros filtrados como CSV."""
+    if not _admin_required():
+        return redirect(url_for('admin_login'))
+
+    import csv, io
+    registros = load_data()
+
+    f_contratada = request.args.get('contratada', '').strip()
+    f_contrato   = request.args.get('contrato', '').strip()
+    f_de         = request.args.get('de', '').strip()
+    f_ate        = request.args.get('ate', '').strip()
+    f_criado_por = request.args.get('criado_por', '').strip()
+
+    def _passes(r):
+        if f_contratada and r.get('contratada') != f_contratada: return False
+        if f_contrato   and r.get('contrato')   != f_contrato:   return False
+        semana = r.get('semana_referencia', '')
+        if f_de  and semana < f_de:  return False
+        if f_ate and semana > f_ate: return False
+        if f_criado_por and f_criado_por.lower() not in (r.get('criado_por') or '').lower(): return False
+        return True
+
+    filtrados = [r for r in registros if _passes(r)]
+    filtrados.sort(key=lambda r: r.get('semana_referencia',''), reverse=True)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['semana_referencia','contratada','contrato','valor_medido',
+                     'avanco_fisico','total_direto','total_indireto',
+                     'efetivo_direto','efetivo_indireto',
+                     'pluviometria_seg','pluviometria_ter','pluviometria_qua',
+                     'pluviometria_qui','pluviometria_sex','pluviometria_sab','pluviometria_dom',
+                     'trabalhos_notaveis','pontos_atencao',
+                     'criado_em','criado_por','atualizado_em','alterado_por','id'])
+    for r in filtrados:
+        ef = r.get('efetivo') or []
+        ef_dir = sum(e.get('quantidade',0) or 0 for e in ef if e.get('tipo')=='direto')
+        ef_ind = sum(e.get('quantidade',0) or 0 for e in ef if e.get('tipo')!='direto')
+        pluv   = r.get('pluviometria') or {}
+        writer.writerow([
+            r.get('semana_referencia',''), r.get('contratada',''), r.get('contrato',''),
+            r.get('valor_medido',''), r.get('avanco_fisico',''),
+            r.get('total_direto',''), r.get('total_indireto',''),
+            ef_dir, ef_ind,
+            pluv.get('segunda',''), pluv.get('terca',''), pluv.get('quarta',''),
+            pluv.get('quinta',''), pluv.get('sexta',''), pluv.get('sabado',''), pluv.get('domingo',''),
+            r.get('trabalhos_notaveis',''), r.get('pontos_atencao',''),
+            r.get('criado_em',''), r.get('criado_por',''),
+            r.get('atualizado_em',''), r.get('alterado_por',''), r.get('id',''),
+        ])
+
+    output.seek(0)
+    from flask import Response
+    nome = f"dados_{f_contratada or 'todos'}_{datetime.now().strftime('%Y%m%d')}.csv"
+    return Response(
+        '﻿' + output.getvalue(),   # BOM para Excel abrir UTF-8 corretamente
+        mimetype='text/csv; charset=utf-8',
+        headers={'Content-Disposition': f'attachment; filename="{nome}"'}
+    )
+
+
 @app.route('/admin/limpar-dados', methods=['GET', 'POST'])
 def admin_limpar_dados():
     """Limpa (apaga) coleções da base. Protegido por senha; impede re-seed no próximo boot."""
     if not _admin_required():
         return redirect(url_for('admin_login'))
-    COLS = [('registros', 'Registros semanais'), ('contratos', 'Contratos'),
-            ('suprimentos', 'Suprimentos'), ('pacotes', 'Pacotes'),
-            ('usuarios', 'Usuários'), ('auditoria', 'Auditoria'), ('tms', 'Configurações TMS')]
     if request.method == 'POST':
         if request.form.get('senha') != ADMIN_PASSWORD:
             flash('Senha incorreta — nada foi apagado.', 'danger')
-            return redirect(url_for('admin_limpar_dados'))
-        sel = [c for c, _ in COLS if request.form.get('col_' + c)]
+            return redirect(url_for('admin_dados'))
+        sel = [c for c, _ in WIPE_COLS if request.form.get('col_' + c)]
         if not sel:
             flash('Selecione ao menos uma coleção.', 'warning')
-            return redirect(url_for('admin_limpar_dados'))
+            return redirect(url_for('admin_dados'))
         removed = db.wipe(sel)
         audit_log('limpar_dados', ', '.join(sel), f'apagados: {removed}')
         total = sum(removed.values())
         flash(f'Base limpa: {total} item(ns) apagado(s) — {removed}. Não será repopulada automaticamente.', 'success')
         return redirect(url_for('admin'))
-    counts = db.backend_info().get('counts', {})
-    return render_template('admin_limpar.html', cols=COLS, counts=counts)
+    # A UI de limpeza vive dentro de /admin/dados; o GET direto só redireciona pra lá.
+    return redirect(url_for('admin_dados'))
 
 
 # ── ADMIN: CONFIGURAÇÕES TMS ─────────────────────────────────────────────────
@@ -3113,6 +3666,16 @@ def admin_contrato(key):
         data['status_manual']        = request.form.get('status_manual', 'auto')
         data['area_contrato']        = request.form.get('area_contrato', '')
 
+        # ── Classificação financeira (CAPEX/OPEX, centro de custo, prazos) ────
+        data['classificacao'] = request.form.get('classificacao', 'CAPEX')
+        data['centro_custo']  = request.form.get('centro_custo', '')
+        try:
+            data['prazo_pagamento_dias'] = max(0, int(request.form.get('prazo_pagamento_dias', '30') or 30))
+        except (TypeError, ValueError):
+            data['prazo_pagamento_dias'] = 30
+        data['retencao_pct'] = parse_brl(request.form.get('retencao_pct', '0'))
+        data['impostos_pct'] = parse_brl(request.form.get('impostos_pct', '0'))
+
         # ── Aditivos (valor / prazo) ── bloco removido da UI; só atualiza se enviado,
         # preservando aditivos já existentes no contrato.
         if 'adit_tipo[]' in request.form:
@@ -3222,7 +3785,8 @@ def admin_contrato(key):
                            funcoes_mao_obra=get_funcoes_list(),
                            acoes_real=acoes_real,
                            fin_real=fin_real,
-                           fis_real=fis_real)
+                           fis_real=fis_real,
+                           centros_custo=[c for c in load_centros_custo() if c.get('ativo', True)])
 
 
 # ── Helpers: gera listas de semanas/meses a partir de YYYY-Wnn ──────────────

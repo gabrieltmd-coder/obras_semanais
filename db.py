@@ -62,6 +62,9 @@ T_AUD = _tbl('auditoria')
 T_SUP = _tbl('suprimentos')
 T_PAC = _tbl('pacotes')
 T_TMS = _tbl('tms')
+T_CC  = _tbl('centros_custo')   # centros de custo (financeiro)
+T_LAN = _tbl('lancamentos')     # lançamentos financeiros (medição → fatura → pagamento)
+T_ORC = _tbl('orcamentos')      # orçamento mensal por centro de custo
 T_META = _tbl('_meta')   # metadados internos (ex.: flag 'seeded')
 
 
@@ -127,6 +130,12 @@ def load_contratos():        return _load_kv(T_CON)
 def save_contratos(d):       _save_kv(T_CON, d)
 def load_tms():              return _load_single(T_TMS, {})
 def save_tms(doc):           _save_single(T_TMS, doc)
+def load_centros_custo():        return _load_list(T_CC)
+def save_centros_custo(items):   _save_list(T_CC, items, _id)
+def load_lancamentos():          return _load_list(T_LAN)
+def save_lancamentos(items):     _save_list(T_LAN, items, _id)
+def load_orcamentos():           return _load_list(T_ORC)
+def save_orcamentos(items):      _save_list(T_ORC, items, _id)
 
 
 # ── init + seed a partir dos JSONs (idempotente) ─────────────────────────────
@@ -183,7 +192,8 @@ def backend_info():
         'counts': {},
     }
     for name, t in [('registros', T_REG), ('contratos', T_CON), ('usuarios', T_USR),
-                    ('auditoria', T_AUD), ('suprimentos', T_SUP), ('pacotes', T_PAC), ('tms', T_TMS)]:
+                    ('auditoria', T_AUD), ('suprimentos', T_SUP), ('pacotes', T_PAC), ('tms', T_TMS),
+                    ('centros_custo', T_CC), ('lancamentos', T_LAN), ('orcamentos', T_ORC)]:
         try:
             info['counts'][name] = _count(t)
         except Exception as e:
@@ -230,6 +240,7 @@ def _mark_seeded():
 _DATA_TABLES = {
     'registros': T_REG, 'contratos': T_CON, 'usuarios': T_USR, 'auditoria': T_AUD,
     'suprimentos': T_SUP, 'pacotes': T_PAC, 'tms': T_TMS,
+    'centros_custo': T_CC, 'lancamentos': T_LAN, 'orcamentos': T_ORC,
 }
 
 

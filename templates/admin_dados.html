@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Dados{% endblock %}
+{% block page_icon %}<i class="bi bi-database"></i>{% endblock %}
+{% block page_title %}Dados{% endblock %}
+{% block breadcrumb %}Base de Registros{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('admin_dados_export_csv', contratada=request.args.get('contratada',''), contrato=request.args.get('contrato',''), de=request.args.get('de',''), ate=request.args.get('ate',''), criado_por=request.args.get('criado_por','')) }}"
+   class="btn-back-header" style="background:var(--green-l);border-color:var(--green);color:var(--green-d);" title="Exportar CSV">
+  <i class="bi bi-filetype-csv"></i><span>Exportar CSV</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<style>
+.dados-table { font-size:.78rem; }
+.dados-table th { font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.07em; color:var(--tms-muted);
+    background:var(--tms-bg); border-bottom:2px solid var(--tms-border);
+    padding:.5rem .65rem; white-space:nowrap; position:sticky; top:0; z-index:1; }
+.dados-table td { padding:.38rem .65rem; border-bottom:1px solid var(--tms-border);
+    vertical-align:middle; white-space:nowrap; }
+.dados-table tbody tr:hover { background:var(--tms-bg); }
+.filter-bar { background:#fff; border:1px solid var(--tms-border); border-radius:10px;
+    padding:.75rem 1rem; margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:.5rem; align-items:flex-end; }
+.filter-bar .fb-label { font-family:'IBM Plex Mono',monospace; font-size:.58rem;
+    font-weight:600; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--tms-muted); margin-bottom:.2rem; display:block; }
+.filter-bar .form-control, .filter-bar .form-select {
+    font-size:.78rem; padding:.3rem .6rem; height:32px; border-color:var(--tms-border); border-radius:6px; }
+.filter-bar .btn { height:32px; font-size:.75rem; padding:.3rem .85rem; border-radius:6px; }
+.stat-pill { display:inline-flex; align-items:center; gap:.3rem; background:var(--tms-bg);
+    border:1px solid var(--tms-border); border-radius:20px;
+    font-family:'IBM Plex Mono',monospace; font-size:.68rem; font-weight:600;
+    color:var(--tms-muted); padding:.2rem .7rem; }
+.table-wrap { overflow-x:auto; border:1px solid var(--tms-border); border-radius:10px; background:#fff; }
+</style>
+
+<div class="container-fluid px-3" style="max-width:1400px;">
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="alert alert-{{ 'danger' if cat=='danger' else 'success' if cat=='success' else 'warning' }} alert-dismissible fade show py-2 mb-2" role="alert" style="font-size:.82rem;">
+    {{ msg }}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+{% endwith %}
+
+<!-- FILTROS -->
+<form method="get" class="filter-bar">
+  <div>
+    <span class="fb-label">Contratada</span>
+    <select name="contratada" class="form-select" style="min-width:160px;">
+      <option value="">Todas</option>
+      {% for c in contratadas_list %}<option value="{{ c }}" {% if f_contratada==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <span class="fb-label">Contrato</span>
+    <select name="contrato" class="form-select" style="min-width:130px;">
+      <option value="">Todos</option>
+      {% for c in contratos_list %}<option value="{{ c }}" {% if f_contrato==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <span class="fb-label">Semana de</span>
+    <input type="date" name="de" class="form-control" value="{{ f_de }}" style="width:140px;">
+  </div>
+  <div>
+    <span class="fb-label">Até</span>
+    <input type="date" name="ate" class="form-control" value="{{ f_ate }}" style="width:140px;">
+  </div>
+  <div>
+    <span class="fb-label">Criado por</span>
+    <input type="text" name="criado_por" class="form-control" value="{{ f_criado_por }}" placeholder="e-mail ou nome" style="width:160px;">
+  </div>
+  <div class="d-flex gap-2 align-items-end">
+    <button type="submit" class="btn btn-primary-rumo"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+    {% if f_contratada or f_contrato or f_de or f_ate or f_criado_por %}
+    <a href="{{ url_for('admin_dados') }}" class="btn btn-secondary-rumo"><i class="bi bi-x-lg"></i></a>
+    {% endif %}
+  </div>
+  <div class="ms-auto d-flex align-items-end">
+    <span class="stat-pill"><i class="bi bi-table"></i>{{ registros|length }} de {{ total }}</span>
+  </div>
+</form>
+
+<!-- TABELA -->
+<div class="table-wrap mb-4">
+  <table class="table table-sm dados-table mb-0">
+    <thead>
+      <tr>
+        <th>Semana</th>
+        <th>Contratada</th>
+        <th>Contrato</th>
+        <th class="text-end">Valor Medido</th>
+        <th class="text-end">Avanço Fís.</th>
+        <th class="text-end">Direto</th>
+        <th class="text-end">Indireto</th>
+        <th>Criado em</th>
+        <th>Criado por</th>
+        <th>Alterado em</th>
+        <th>Alterado por</th>
+        <th>ID</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% if registros %}
+      {% for r in registros %}
+      <tr>
+        <td><span style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;">{{ r.semana_referencia }}</span></td>
+        <td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;">{{ r.contratada }}</td>
+        <td style="color:var(--tms-muted);">{{ r.contrato }}</td>
+        <td class="text-end" style="font-family:'IBM Plex Mono',monospace;">
+          {% if r.valor_medido %}{{ r.valor_medido|currency }}{% else %}<span style="color:#ccc;">—</span>{% endif %}
+        </td>
+        <td class="text-end" style="font-family:'IBM Plex Mono',monospace;">
+          {% if r.avanco_fisico is not none %}
+            <span style="color:{% if r.avanco_fisico >= 80 %}var(--green){% elif r.avanco_fisico >= 40 %}var(--amber){% else %}var(--danger){% endif %};font-weight:700;">{{ r.avanco_fisico }}%</span>
+          {% else %}<span style="color:#ccc;">—</span>{% endif %}
+        </td>
+        <td class="text-end">{{ r.total_direto or '—' }}</td>
+        <td class="text-end">{{ r.total_indireto or '—' }}</td>
+        <td style="font-size:.7rem;color:var(--tms-muted);">{{ (r.criado_em or '')[:16] }}</td>
+        <td style="font-size:.72rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;">{{ r.criado_por or '—' }}</td>
+        <td style="font-size:.7rem;color:var(--tms-muted);">{{ (r.atualizado_em or '')[:16] }}</td>
+        <td style="font-size:.72rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;">{{ r.alterado_por or '—' }}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:.62rem;color:#bbb;">{{ (r.id or '')[:8] }}…</td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="12" class="text-center py-4" style="color:var(--tms-muted);font-size:.82rem;">
+        <i class="bi bi-inbox" style="font-size:1.5rem;display:block;margin-bottom:.4rem;opacity:.4;"></i>
+        Nenhum registro encontrado com esses filtros.
+      </td></tr>
+    {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- LIMPAR DADOS (somente master) -->
+{% if current_user and current_user.role == 'master' %}
+<div class="card-rumo mb-4" style="border:1px solid rgba(220,53,69,.3); border-radius:12px; overflow:hidden; max-width:720px;">
+  <div style="background:rgba(220,53,69,.08); padding:.85rem 1.25rem; border-bottom:1px solid rgba(220,53,69,.2);">
+    <h6 style="margin:0; color:#b02a37; font-weight:800; font-size:.88rem;">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>Limpar Dados da Aplicação
+    </h6>
+    <div style="font-size:.75rem; color:#8a1c27; margin-top:.3rem;">
+      Ação <strong>irreversível</strong>. A base não será repopulada após a limpeza.
+    </div>
+  </div>
+  <form method="post" action="{{ url_for('admin_limpar_dados') }}" style="padding:1rem 1.25rem;">
+    <div class="row g-2 mb-3">
+      {% for key, label in cols %}
+      <div class="col-md-6">
+        <div class="form-check" style="background:var(--tms-bg); border:1px solid var(--tms-border); border-radius:8px; padding:.5rem .8rem .5rem 2.2rem;">
+          <input class="form-check-input" type="checkbox" name="col_{{ key }}" id="dcol_{{ key }}" checked>
+          <label class="form-check-label" for="dcol_{{ key }}" style="font-size:.82rem;">
+            {{ label }}
+            <span style="color:var(--tms-muted); font-size:.7rem;">— {{ counts.get(key, 0) }}</span>
+          </label>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="mb-3">
+      <input type="password" name="senha" class="form-control" required autocomplete="off"
+             placeholder="Senha mestra para confirmar" style="max-width:300px; font-size:.82rem;">
+    </div>
+    <button type="submit" class="btn btn-sm"
+            style="background:#dc3545; color:#fff; border:none; border-radius:6px; padding:.35rem .9rem; font-size:.78rem;"
+            onclick="return confirm('ATENÇÃO: esta ação é irreversível. Continuar?');">
+      <i class="bi bi-trash3 me-1"></i>Apagar definitivamente
+    </button>
+  </form>
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+
+{% block title %}MAS — Suprimentos{% endblock %}
+{% block page_icon %}<i class="bi bi-kanban"></i>{% endblock %}
+{% block page_title %}MAS — Suprimentos{% endblock %}
+{% block breadcrumb %}Matriz de Acompanhamento · Rev.01 · 18 Jun 2026{% endblock %}
+
+{% block content %}
+<style>
+/* ── TEMA DARK TMS ── */
+body {
+    background: #0E1B24 !important;
+    background-image:
+        linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px) !important;
+    background-size: 112px 112px, 112px 112px !important;
+}
+.page-header {
+    background: #0A141C !important;
+    border-bottom: 1.5px solid rgba(255,255,255,.10) !important;
+    padding: 1rem 0 .9rem !important; margin-bottom: 1rem !important;
+}
+.page-header h1 { color: #fff !important; }
+.page-header h1 i { color: #fff !important; }
+.page-header .breadcrumb { color: rgba(255,255,255,.45) !important; }
+.app-footer { background: #0A141C !important; margin-top: 1.2rem !important; }
+.btn-back-header { background: rgba(255,255,255,.05) !important; color: rgba(255,255,255,.85) !important; border-color: rgba(255,255,255,.18) !important; }
+.btn-back-header:hover { background: rgba(255,255,255,.14) !important; color:#fff !important; }
+
+:root {
+    --m-blue:   #2BB2EE;
+    --m-green:  #46C26A;
+    --m-navy:   #4f7cff;
+    --m-amber:  #E8A33D;
+    --m-orange: #F78346;
+    --m-purple: #9b8cff;
+    --m-teal:   #20C9B0;
+    --m-gray:   rgba(255,255,255,.35);
+    --m-surface:#13242F;
+    --m-border: rgba(255,255,255,.09);
+    --m-text:   #e8f3fb;
+    --m-muted:  rgba(255,255,255,.45);
+    --m-radius: 6px;
+    --m-shadow: 0 1px 6px rgba(0,0,0,.35);
+}
+
+/* ── FILTROS ── */
+.mas-filter {
+    background: #13242F;
+    border: 1px solid rgba(255,255,255,.09);
+    border-left: 4px solid #2BB2EE;
+    border-radius: 6px;
+    padding: .7rem 1rem; margin-bottom: .9rem;
+    display: flex; align-items: flex-end; gap: .75rem; flex-wrap: wrap;
+}
+.mas-filter .fl { font-family:'IBM Plex Mono',monospace; font-size:.56rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.1em; color:var(--m-muted); margin-bottom:.2rem; display:block; }
+.mas-filter select {
+    background: rgba(255,255,255,.06) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    color: #e8f3fb !important; border-radius: 4px !important;
+    font-size: .76rem; padding: .28rem .6rem; height: 32px; cursor:pointer;
+}
+.mas-filter select option { background:#13242F; color:#e8f3fb; }
+.mas-filter select:focus { outline:2px solid var(--m-blue); outline-offset:1px; }
+.chk-label {
+    display:flex; align-items:center; gap:6px; font-size:.7rem; font-weight:600;
+    color:var(--m-muted); cursor:pointer;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.13);
+    border-radius:4px; padding:4px 10px; height:32px;
+    user-select:none; transition:border-color .15s, color .15s;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.04em;
+}
+.chk-label:hover { border-color:var(--m-orange); color:var(--m-orange); }
+.chk-label.active { border-color:var(--m-orange); color:var(--m-orange); background:rgba(247,131,70,.08); }
+.chk-label input[type=checkbox] { width:13px; height:13px; accent-color:var(--m-orange); cursor:pointer; }
+
+/* ── KPIs ── */
+.mas-kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:.9rem; }
+.mas-kpi {
+    background:var(--m-surface); border:1px solid var(--m-border);
+    border-radius:var(--m-radius); padding:14px 16px; box-shadow:var(--m-shadow);
+    position:relative; overflow:hidden;
+}
+.mas-kpi::after { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:var(--m-radius) 0 0 var(--m-radius); }
+.mas-kpi.k-total::after   { background:var(--m-navy); }
+.mas-kpi.k-andamento::after { background:var(--m-blue); }
+.mas-kpi.k-concluido::after { background:var(--m-green); }
+.mas-kpi.k-critico::after { background:var(--m-orange); }
+.mas-kpi.k-iniciar::after { background:var(--m-purple); }
+.mas-kpi-label { font-family:'IBM Plex Mono',monospace; font-size:.58rem; color:var(--m-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.08em; font-weight:600; }
+.mas-kpi-value { font-size:30px; font-weight:700; color:var(--m-text); line-height:1; }
+.mas-kpi-sub { font-size:.68rem; color:var(--m-muted); margin-top:5px; }
+
+/* ── CARDS ── */
+.mas-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px; }
+.mas-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.mas-card {
+    background:var(--m-surface); border:1px solid var(--m-border);
+    border-radius:var(--m-radius); padding:16px; box-shadow:var(--m-shadow);
+}
+.mas-card h3 {
+    font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:700;
+    color:var(--m-muted); margin-bottom:14px; text-transform:uppercase; letter-spacing:.09em;
+    padding-bottom:.55rem; border-bottom:1px solid rgba(255,255,255,.07);
+    display:flex; align-items:center; gap:.4rem;
+}
+.mas-card h3 i { color:#2BB2EE; }
+.chart-wrap { position:relative; }
+
+/* ── LEGEND ── */
+.mas-legend { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.mas-legend span { font-size:.7rem; color:var(--m-muted); display:flex; align-items:center; gap:4px; }
+.lsq { width:10px; height:10px; border-radius:2px; display:inline-block; flex-shrink:0; }
+
+/* ── PILLS ── */
+.pill { display:inline-block; font-size:.65rem; font-weight:600; padding:2px 7px; border-radius:20px; white-space:nowrap; }
+.p-concluido { background:rgba(70,194,106,.18); color:#46C26A; }
+.p-andamento { background:rgba(43,178,238,.18); color:#2BB2EE; }
+.p-iniciar   { background:rgba(155,140,255,.18); color:#9b8cff; }
+.p-onhold    { background:rgba(255,255,255,.1);  color:var(--m-muted); }
+.p-cancelado { background:rgba(247,131,70,.18);  color:var(--m-orange); }
+.p-critico   { background:rgba(247,131,70,.15);  color:#ffb07c; border:1px solid rgba(247,131,70,.35); }
+.p-normal    { background:rgba(43,178,238,.1);   color:#6fd6ff; }
+
+/* ── MINI KPIS (card prazo) ── */
+.mini-kpis { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+.mini-kpi  { background:rgba(255,255,255,.04); border-radius:4px; padding:10px 12px; }
+.mini-label { font-family:'IBM Plex Mono',monospace; font-size:.58rem; color:var(--m-muted); font-weight:600; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+.mini-value { font-size:22px; font-weight:700; color:var(--m-text); line-height:1; }
+.mini-sub   { font-size:.65rem; color:var(--m-muted); margin-top:3px; }
+
+/* ── TABELA ── */
+.tbl-wrap { overflow-x:auto; overflow-y:auto; max-height:380px; margin-top:8px; }
+.tbl-wrap::-webkit-scrollbar { width:6px; height:6px; }
+.tbl-wrap::-webkit-scrollbar-track { background:rgba(255,255,255,.04); border-radius:3px; }
+.tbl-wrap::-webkit-scrollbar-thumb { background:rgba(43,178,238,.4); border-radius:3px; }
+.tbl-wrap::-webkit-scrollbar-thumb:hover { background:rgba(43,178,238,.7); }
+.mas-tbl { width:100%; border-collapse:collapse; font-size:.73rem; }
+.mas-tbl th {
+    text-align:left; color:var(--m-muted); font-weight:700; font-size:.58rem;
+    padding:8px 10px; border-bottom:2px solid rgba(255,255,255,.1);
+    text-transform:uppercase; letter-spacing:.06em; white-space:nowrap;
+    background:#0E1B24; font-family:'IBM Plex Mono',monospace; position:sticky; top:0; z-index:1;
+}
+.mas-tbl td { padding:7px 10px; border-bottom:1px solid rgba(255,255,255,.06); color:var(--m-text); vertical-align:middle; }
+.mas-tbl tbody tr:hover td { background:rgba(255,255,255,.04); }
+.atr-pos  { color:#ffb07c; font-weight:700; }
+.atr-neg  { color:#46C26A; font-weight:600; }
+.atr-zero { color:var(--m-muted); }
+
+/* ── SEARCH ── */
+.mas-search { display:flex; gap:8px; margin-bottom:10px; }
+.mas-search input {
+    flex:1; background:rgba(255,255,255,.05); color:var(--m-text);
+    border:1px solid rgba(255,255,255,.14); border-radius:4px; padding:7px 12px; font-size:.75rem;
+}
+.mas-search input::placeholder { color:var(--m-muted); }
+.mas-search input:focus { outline:2px solid var(--m-blue); outline-offset:1px; background:rgba(255,255,255,.08); }
+.count-badge { font-family:'IBM Plex Mono',monospace; font-size:.65rem; color:var(--m-muted); padding:4px 0; margin-bottom:4px; }
+
+/* ── AI ── */
+
+@media(max-width:720px) {
+    .mas-kpis { grid-template-columns:repeat(2,1fr); }
+    .mas-grid-3, .mas-grid-2 { grid-template-columns:1fr; }
+}
+</style>
+
+<div class="container-fluid px-3" style="max-width:1400px;">
+
+<!-- FILTROS -->
+<div class="mas-filter">
+    <div>
+        <span class="fl">Grupo</span>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <select id="f-grupo" onchange="applyFilters()">
+                <option value="">Todos os grupos</option>
+                <option>Obras Iniciais</option><option>Obras Civis</option>
+                <option>Eletromecânica</option><option>Outros</option><option>Aditivos</option>
+            </select>
+            <label class="chk-label" id="chk-aditivos-label" title="16 processos de aditivos serão ocultados">
+                <input type="checkbox" id="chk-aditivos" onchange="toggleAditivos(this)">Excluir Aditivos
+            </label>
+        </div>
+    </div>
+    <div>
+        <span class="fl">Status</span>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <select id="f-status" onchange="applyFilters()">
+                <option value="">Todos os status</option>
+                <option>Concluído</option><option>Em Andamento</option>
+                <option>A Iniciar</option><option>On Hold</option><option>Cancelado</option>
+            </select>
+            <label class="chk-label" id="chk-concluidos-label" title="34 processos concluídos serão ocultados">
+                <input type="checkbox" id="chk-concluidos" onchange="toggleConcluidos(this)">Excluir Concluídos
+            </label>
+        </div>
+    </div>
+    <div>
+        <span class="fl">Criticidade</span>
+        <select id="f-critico" onchange="applyFilters()">
+            <option value="">Todas</option>
+            <option>Crítico</option><option>Normal</option>
+        </select>
+    </div>
+    <div>
+        <span class="fl">Comprador</span>
+        <select id="f-comp" onchange="applyFilters()">
+            <option value="">Todos</option>
+            <option>André Ponzetta</option><option>Débora Duarte</option>
+            <option>Rafaela Venancio</option><option>Sheila Thomazini</option>
+            <option>Carlos Eduardo</option><option>Ana Marinho</option>
+            <option>Sheila Durval</option><option>Bruna Santos</option>
+            <option>Leticia Macedo</option>
+        </select>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="mas-kpis" id="kpis"></div>
+
+<!-- Gráficos linha 1 -->
+<div class="mas-grid-3">
+    <div class="mas-card">
+        <h3><i class="bi bi-pie-chart-fill"></i>Status do processo</h3>
+        <div class="mas-legend" id="leg-status"></div>
+        <div class="chart-wrap" style="height:175px"><canvas id="c-status" role="img"></canvas></div>
+    </div>
+    <div class="mas-card">
+        <h3><i class="bi bi-bar-chart-fill"></i>Processos por grupo</h3>
+        <div class="chart-wrap" style="height:210px"><canvas id="c-grupo" role="img"></canvas></div>
+    </div>
+    <div class="mas-card">
+        <h3><i class="bi bi-clock-history"></i>Ativos &amp; Prazo</h3>
+        <div class="mini-kpis">
+            <div class="mini-kpi">
+                <div class="mini-label">Processos Ativos</div>
+                <div class="mini-value" id="v-ativos">—</div>
+                <div class="mini-sub" id="s-ativos">Em And. + A Iniciar</div>
+            </div>
+            <div class="mini-kpi">
+                <div class="mini-label">Em Atraso</div>
+                <div class="mini-value" id="v-atraso-n" style="color:var(--m-orange)">—</div>
+                <div class="mini-sub" id="s-atraso-n">com forecast definido</div>
+            </div>
+        </div>
+        <div class="mas-legend" id="leg-prazo"></div>
+        <div class="chart-wrap" style="height:120px"><canvas id="c-prazo" role="img"></canvas></div>
+    </div>
+</div>
+
+<!-- Gráficos linha 2 -->
+<div class="mas-grid-2">
+    <div class="mas-card">
+        <h3><i class="bi bi-funnel-fill"></i>Pipeline — etapa suprimentos</h3>
+        <div class="chart-wrap" style="height:260px"><canvas id="c-etapa" role="img"></canvas></div>
+    </div>
+    <div class="mas-card">
+        <h3><i class="bi bi-exclamation-triangle-fill"></i>Atraso (dias): Forecast vs Data Necessidade</h3>
+        <div class="chart-wrap" style="height:260px"><canvas id="c-atraso" role="img"></canvas></div>
+    </div>
+</div>
+
+<!-- Tabela -->
+<div class="mas-card" style="margin-bottom:12px">
+    <h3><i class="bi bi-table"></i>Tabela de processos</h3>
+    <div class="mas-search">
+        <input type="text" id="search" placeholder="Buscar por processo, fornecedor, responsável..." oninput="renderTable()">
+    </div>
+    <div class="count-badge" id="tbl-count"></div>
+    <div class="tbl-wrap"><table class="mas-tbl" id="tbl"></table></div>
+</div>
+
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>
+const RAW = [{"grupo":"Obras Iniciais","nome":"Adequação canteiro externo intervales","etapa":"12-Concluído","coord":"Sheila Thomazini","comprador":"Sheila Durval","gestao":"Marcos Nishimura","status":"Concluído","criticidade":"Crítico","atraso":null,"forecast":null,"necessidade":"2026-02-03","fornecedor":"DT Construtora\nFBF Construções\nBenazzi\nBarbieri \nBuilders","comentario":"","nec_etapa":"2026-02-02","fc_etapa":null},{"grupo":"Obras Iniciais","nome":"Refeitório, vestiário, infraestrutura para portaria terrestre","etapa":"06-Neg. Comercial","coord":"Sheila Thomazini","comprador":"Rafaela Venancio","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Crítico","atraso":11,"forecast":"2026-07-13","necessidade":"2026-07-02","fornecedor":"Ideais\nBenazzi\nBarbieri\nConkreta","comentario":">Propostas recebidas acima do orçamento, necessario esclarecimentos. Previsão de recebimento das propostas comerciais revisadas em 19/06","nec_etapa":"2026-05-24","fc_etapa":"2026-06-23"},{"grupo":"Obras Iniciais","nome":"Portaria terrestre – Locação de containers","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"Tatiane","status":"Em Andamento","criticidade":"Crítico","atraso":52,"forecast":"2026-07-10","necessidade":"2026-05-19","fornecedor":"Vendap\nNHJ\nBrasmodulos","comentario":"","nec_etapa":"2026-04-10","fc_etapa":"2026-06-17"},{"grupo":"Obras Iniciais","nome":"Portaria terrestre - Locação de equipamentos controle de acesso","etapa":"07-Aprovação","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":38,"forecast":"2026-06-26","necessidade":"2026-05-19","fornecedor":"Seven Seas","comentario":">Ponto de atenção: prazo de entrega do equipamentos 90dias + 30dias montagem\n>Definido que o processo vai seguir como compra\nTributário sinalizou desacordo com a sequência do processo. Foi sinalizado a necessidade do processo seguir como consórcio ou retornar o processo para inclusão de novos player","nec_etapa":"2026-05-10","fc_etapa":"2026-06-12"},{"grupo":"Obras Iniciais","nome":"Passarela Metálica","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Crítico","atraso":30,"forecast":"2026-07-10","necessidade":"2026-06-10","fornecedor":"Metax\nFast Eng.","comentario":">Foi aberta uma nova rodada técnica para inclusão do escopo para fornecimento engenharia e construção da base da passarela","nec_etapa":"2026-05-07","fc_etapa":"2026-06-29"},{"grupo":"Obras Iniciais","nome":"Interferências Ferrovia - Elétrica","etapa":"12-Concluído","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"Cinthia Nascimento","status":"Concluído","criticidade":"Crítico","atraso":null,"forecast":null,"necessidade":"2026-07-24","fornecedor":"Amperagem Brasileira LTDA\nAngestrom Serviços\nVessel Engenhar","comentario":"","nec_etapa":"2026-07-24","fc_etapa":null},{"grupo":"Obras Iniciais","nome":"Avaliação Objetiva da Superfície de Pavimentos","etapa":"08-Minuta Contratual","coord":"-","comprador":"Bruna Santos","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Crítico","atraso":24,"forecast":"2026-06-25","necessidade":"2026-06-01","fornecedor":"LPC Latina\nJM Souto\nBlend","comentario":"Aguardando retorno do jurídico com a minuta para envio ao fornecedor. Retorno do jurídico previsto em 19/06.","nec_etapa":"2026-05-10","fc_etapa":"2026-06-12"},{"grupo":"Obras Iniciais","nome":"Acessos e Cercamento da Obra","etapa":"10-Assinatura","coord":"Elaine Cristina","comprador":"Sheila Durval","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":63,"forecast":"2026-07-17","necessidade":"2026-05-15","fornecedor":"DT Construtora\nBenazzi\nBarbieri \nBuilders \nIdeais","comentario":">Processo voltou a etapa de recebimento de propostas.\n>Necessario interface com a MRS","nec_etapa":"2026-05-14","fc_etapa":"2026-07-07"},{"grupo":"Obras Iniciais","nome":"Remoção de Materiais Retroárea","etapa":"06-Neg. Comercial","coord":"Sheila Thomazini","comprador":"Rafaela Venancio","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Crítico","atraso":45,"forecast":"2026-07-17","necessidade":"2026-06-02","fornecedor":"VR Demolidora\nDR Construtora\nDT Construtora\nFranciscon","comentario":">Fecharmento das propostas comerciais, prev. 12/06 \n>Possibilidade do processo entrar como aditivo no contrato da patrulha","nec_etapa":"2026-05-02","fc_etapa":"2026-06-26"},{"grupo":"Obras Iniciais","nome":"Demolição AZLog","etapa":"05-Aprov. Técnica","coord":"Sheila Thomazini","comprador":"Graziele Junqueira","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Crítico","atraso":38,"forecast":"2026-07-29","necessidade":"2026-06-21","fornecedor":"-","comentario":"","nec_etapa":"2026-05-14","fc_etapa":"2026-07-01"},{"grupo":"Obras Iniciais","nome":"Teste de cravação das estacas","etapa":"06-Neg. Comercial","coord":"Sheila Thomazini","comprador":"Rafaela Venancio","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Crítico","atraso":44,"forecast":"2026-07-15","necessidade":"2026-06-01","fornecedor":"-","comentario":">Em negociação comercial","nec_etapa":"2026-05-13","fc_etapa":"2026-06-26"},{"grupo":"Obras Iniciais","nome":"Interferências Terminal - Eletrica","etapa":"12-Concluído","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"Marcos Nishimura","status":"Concluído","criticidade":"Crítico","atraso":null,"forecast":null,"necessidade":"2026-05-27","fornecedor":"-","comentario":"","nec_etapa":"2026-05-27","fc_etapa":null},{"grupo":"Obras Iniciais","nome":"Portaria Maritima Provisoria","etapa":"04-Propostas","coord":"Sheila Thomazini","comprador":"Rafaela Venancio","gestao":"nan","status":"Em Andamento","criticidade":"Normal","atraso":-10,"forecast":"2026-08-20","necessidade":"2026-08-30","fornecedor":"-","comentario":"","nec_etapa":"2026-06-19","fc_etapa":"2026-07-10"},{"grupo":"Obras Civis","nome":"AZLOG","etapa":"*On Hold*","coord":"nan","comprador":"nan","gestao":"nan","status":"On Hold","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Obras Civis","nome":"Obras Preliminares Gerais","etapa":"12-Concluído","coord":"Sheila Thomazini","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2024-11-19","fc_etapa":null},{"grupo":"Obras Civis","nome":"Hidrografia e Geofísica","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Obras Civis","nome":"Investigação Geotécnica Onshore e Offshore","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Obras Civis","nome":"Remoção de Resíduos e Terraplanagem","etapa":"12-Concluído","coord":"Sheila Thomazini","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2024-12-19","fc_etapa":null},{"grupo":"Obras Civis","nome":"Prédios Industriais, Retroárea","etapa":"05-Aprov. Técnica","coord":"Sheila Thomazini","comprador":"Rafaela Venancio","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":9,"forecast":"2026-08-25","necessidade":"2026-08-16","fornecedor":"EGTEC\nZORTEA\nMASCARRELHAS","comentario":">Processo em andamento compilado:\nPredios Industriais / Fundações profundas / Infra ferrovia","nec_etapa":"2026-06-15","fc_etapa":null},{"grupo":"Obras Civis","nome":"Prédios Administrativos","etapa":"00-Não Iniciado","coord":"-","comprador":"-","gestao":"Marcos Nishimura","status":"A Iniciar","criticidade":"Normal","atraso":15,"forecast":"2026-11-29","necessidade":"2026-11-14","fornecedor":"-","comentario":"","nec_etapa":"2026-05-31","fc_etapa":"2026-06-15"},{"grupo":"Obras Civis","nome":"Ferrovia Infraestrutura","etapa":"04-Propostas","coord":"Sheila Thomazini","comprador":"Rafaela Venancio","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Crítico","atraso":29,"forecast":"2026-08-25","necessidade":"2026-07-27","fornecedor":"-","comentario":">Processo em sinergia com predios industriais","nec_etapa":"2026-05-19","fc_etapa":"2026-06-18"},{"grupo":"Obras Civis","nome":"Viadutos","etapa":"04-Propostas","coord":"Rafaela Venancio","comprador":"Tamara Marçal","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Crítico","atraso":-253,"forecast":"2026-08-31","necessidade":"2027-05-11","fornecedor":"Montman\nBuilders\nBarbieri","comentario":">Visita realizada em 25/05. Previsão recebimento de propostas 22/06 (possivel postergação)","nec_etapa":"2027-02-25","fc_etapa":"2026-07-13"},{"grupo":"Obras Civis","nome":"Ferrovia Superestrutura","etapa":"00-Não Iniciado","coord":"-","comprador":"-","gestao":"Marcos Nishimura","status":"A Iniciar","criticidade":"Crítico","atraso":null,"forecast":"2026-10-24","necessidade":"2026-10-24","fornecedor":"-","comentario":">Termos estão prontos, aguardando comentários finais da MRS para ir ao mercado.\nCom esses comentários finais já podemos soltar a planilha de quantitativos para suprimentos, prevendo a entrega conforme nosso cronograma.","nec_etapa":"2026-06-22","fc_etapa":"2026-06-22"},{"grupo":"Obras Civis","nome":"Obras Molhadas (Ponte e Píer)","etapa":"04-Propostas","coord":"Sheila Thomazini","comprador":"Rafaela Venancio","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Crítico","atraso":3,"forecast":"2026-09-03","necessidade":"2026-08-31","fornecedor":"Constran \nConatrucap\nEGTC\nCarioca","comentario":">Previsão de recebimento das propostas 25/06","nec_etapa":"2026-07-13","fc_etapa":"2026-07-16"},{"grupo":"Obras Civis","nome":"Dragagem","etapa":"09-MOU assinado","coord":"Sheila Thomazini","comprador":"Rafaela Venancio","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":14,"forecast":"2026-06-19","necessidade":"2026-06-05","fornecedor":"Dragabras \nJan de Nul\nVan Oord","comentario":">As condições comerciais estão validas até final de 30/05/2026. Caso LI seja prorrogada mais uma vez será necessário negociar novamente.\n>Solicitado a atualização do MOU. Expectativa de estender o prazo de vigência para ago/2026","nec_etapa":null,"fc_etapa":null},{"grupo":"Obras Civis","nome":"Fundações Profundas","etapa":"04-Propostas","coord":"Sheila Thomazini","comprador":"Rafaela Venancio","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Crítico","atraso":70,"forecast":"2026-08-25","necessidade":"2026-06-16","fornecedor":"Fundesp Infraestrutura \nDrill Co\nTecnogeo\nG2Base","comentario":">Processo em sinergia com predios industriais","nec_etapa":"2026-04-24","fc_etapa":"2026-06-18"},{"grupo":"Obras Civis","nome":"Pavimentação e Urbanismo do Terminal","etapa":"00-Não Iniciado","coord":"-","comprador":"-","gestao":"nan","status":"A Iniciar","criticidade":"Normal","atraso":null,"forecast":"2027-07-01","necessidade":"2027-07-01","fornecedor":"-","comentario":"","nec_etapa":"2027-02-06","fc_etapa":"2027-02-06"},{"grupo":"Obras Civis","nome":"ETE e ETEQ","etapa":"00-Não Iniciado","coord":"-","comprador":"-","gestao":"nan","status":"A Iniciar","criticidade":"Normal","atraso":null,"forecast":"2026-10-15","necessidade":"2026-10-15","fornecedor":"-","comentario":">Tendencia da ETE ficar no pacote de Predios Industriais e ETEQ nas Obras Molhadas","nec_etapa":"2026-06-15","fc_etapa":"2026-06-15"},{"grupo":"Eletromecânica","nome":"Sistema de Manuseio - Transportadores","etapa":"09-MOU assinado","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":23,"forecast":"2026-06-30","necessidade":"2026-06-07","fornecedor":"-","comentario":">OS da engenharia: Assinada\n>Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Sistema de Despoeiramento","etapa":"09-MOU assinado","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":31,"forecast":"2026-06-30","necessidade":"2026-05-30","fornecedor":"Aeroar\nHygronics\nTMSA","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Tombadores e Coletores","etapa":"08-Minuta Contratual","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Crítico","atraso":28,"forecast":"2026-06-30","necessidade":"2026-06-02","fornecedor":"Montheal \nSaur","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-04-17","fc_etapa":"2026-06-18"},{"grupo":"Eletromecânica","nome":"Carregador de Navios (Shiploader)","etapa":"09-MOU assinado","coord":"Luís Augusto","comprador":"Laura Moreira","gestao":"nan","status":"Em Andamento","criticidade":"Crítico","atraso":15,"forecast":"2026-06-30","necessidade":"2026-06-15","fornecedor":"-","comentario":">OS da engenharia: Assinada\n>Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Descarregador de Navios (Shipunloader)","etapa":"07-Aprovação","coord":"Luís Augusto","comprador":"Leticia Macedo","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Crítico","atraso":15,"forecast":"2026-06-30","necessidade":"2026-06-15","fornecedor":"E-Crane\nSiwertell","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex","nec_etapa":"2026-05-20","fc_etapa":"2026-06-15"},{"grupo":"Eletromecânica","nome":"Balança Rodoviária","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Normal","atraso":25,"forecast":"2026-07-22","necessidade":"2026-06-27","fornecedor":"Toledo do Brasil Ind de Balanças\nDigi Tron Instrumentos de P","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-05-08","fc_etapa":"2026-06-26"},{"grupo":"Eletromecânica","nome":"Balança Ferroviária Dinâmica","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Normal","atraso":-27,"forecast":"2026-07-22","necessidade":"2026-08-18","fornecedor":"Toledo do Brasil Ind de Balanças\nMassa Pesagem e Automação I","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-06-07","fc_etapa":"2026-06-26"},{"grupo":"Eletromecânica","nome":"Balança de Fluxo e Integradora","etapa":"09-MOU assinado","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":17,"forecast":"2026-06-19","necessidade":"2026-06-02","fornecedor":"Toledo do Brasil\nPrecia Molen","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":null,"fc_etapa":"2026-06-15"},{"grupo":"Eletromecânica","nome":"Balança Rodoviária Gate","etapa":"12-Concluído","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":">Fabricação do equipamento concluida. Pendente a entrega, necessario interface com a obra civil ampliação do gate.\n>Em processo de aditivo (tempo). Previsão da instalação da DPW jul/26, necessario receber o ativo na obra até jun/26","nec_etapa":"2025-03-18","fc_etapa":null},{"grupo":"Eletromecânica","nome":"Z Portal Scanner","etapa":"05-Aprov. Técnica","coord":"Luís Augusto","comprador":"Débora Duarte","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Normal","atraso":null,"forecast":"2026-09-30","necessidade":"2026-09-30","fornecedor":"Rapiscan\nTechscan","comentario":"Parecer técnico TMS emitido. Aguarda aprovação técnica pela DPW.","nec_etapa":"2026-05-31","fc_etapa":"2026-06-30"},{"grupo":"Eletromecânica","nome":"Gate Kiosks (2)","etapa":"*On Hold*","coord":"Luís Augusto","comprador":"Leticia Macedo","gestao":"nan","status":"On Hold","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":">Tendencia do pacote ser excluido, e passar pra DPW","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Pacote de ISPS Code","etapa":"nan","coord":"nan","comprador":"nan","gestao":"nan","status":"Cancelado","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"Pacote será incorporado no escopo da montagem de eletromecanica","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Separador magnético","etapa":"*On Hold*","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Normal","atraso":null,"forecast":"2026-11-21","necessidade":"2026-11-21","fornecedor":"Metal Detektore\nInbras\nSteinert","comentario":">Necessário nova reunião com proponentes. Aguardando adequações e revisões nas propostas técnicas.\n>Realizadso reunião de alinhamento técnico com as proponentes. Necessário revisão de propostas técnicas devido a novo escopo de montagem.","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Portas automáticas","etapa":"nan","coord":"nan","comprador":"nan","gestao":"nan","status":"Cancelado","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"Pacote será incorporado no escopo da montagem de eletromecanica","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Talhas elétricas","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Normal","atraso":-15,"forecast":"2026-07-06","necessidade":"2026-07-21","fornecedor":"Feba\nP2cranes\nStahl","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-05-15","fc_etapa":"2026-06-17"},{"grupo":"Eletromecânica","nome":"Abridor de vagões","etapa":"*On Hold*","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Normal","atraso":null,"forecast":"2026-12-20","necessidade":"2026-12-20","fornecedor":"Martin","comentario":">Retorno do pacote ao mercado no  2º semestre de 2026","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Amostrador pontual","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Normal","atraso":-112,"forecast":"2026-07-28","necessidade":"2026-11-17","fornecedor":"TAC\nCondutiva","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-09-26","fc_etapa":"2026-07-02"},{"grupo":"Eletromecânica","nome":"Trombas telescópicas","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Normal","atraso":-108,"forecast":"2026-07-28","necessidade":"2026-11-13","fornecedor":"Padix\nMacvale\nIngersol","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-09-22","fc_etapa":"2026-07-02"},{"grupo":"Eletromecânica","nome":"Bombas de Combate à Incêndio","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Normal","atraso":29,"forecast":"2026-07-30","necessidade":"2026-07-01","fornecedor":"Germek\nKBS\nRuhrpumpen\nAB Bombas","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-05-22","fc_etapa":"2026-07-02"},{"grupo":"Eletromecânica","nome":"Rosca Varredora","etapa":"nan","coord":"nan","comprador":"nan","gestao":"nan","status":"Cancelado","criticidade":"Normal","atraso":null,"forecast":"2026-02-09","necessidade":null,"fornecedor":"-","comentario":"Pacote cancelado","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Sistema de Ar comprimido (Compressores)","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Marcos Nishimura","status":"Em Andamento","criticidade":"Normal","atraso":10,"forecast":"2026-07-30","necessidade":"2026-07-20","fornecedor":"Atlas\nGardner\nIngersol","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-06-10","fc_etapa":"2026-07-02"},{"grupo":"Eletromecânica","nome":"Reservatório tipo taça","etapa":"nan","coord":"nan","comprador":"nan","gestao":"nan","status":"Cancelado","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"Pacote será incorporado no escopo da montagem de eletromecanica","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Subestação de entrada","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"Carlos Eduardo","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":-64,"forecast":"2026-07-13","necessidade":"2026-09-15","fornecedor":"SEP Engenharia \nSetta Engenharia \nActemium\nWEG\nInstall \nIHM\n","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-07-27","fc_etapa":"2026-06-17"},{"grupo":"Eletromecânica","nome":"Equipamentos Elétricos","etapa":"09-MOU assinado","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":28,"forecast":"2026-06-30","necessidade":"2026-06-02","fornecedor":"Actemium\nAMC\nIHM\nInstall\nLuzville\nMecnc\nMetta\nMSE\nSEP Engenh","comentario":">OS Engenharia assinada\n>Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"Montagem Eletromecânica","etapa":"03-RFx ao Mercado","coord":"Luís Augusto","comprador":"Carlos Eduardo","gestao":"nan","status":"Em Andamento","criticidade":"Crítico","atraso":28,"forecast":"2026-10-02","necessidade":"2026-09-04","fornecedor":"-","comentario":">Processo vai seguir com dois escopos Montagem eletromecanica & Elétrica, automação e utilidades\n> Processos serão separados nos próximos acompanhamentos.","nec_etapa":"2026-05-21","fc_etapa":"2026-06-19"},{"grupo":"Eletromecânica","nome":"Sistema de automação e instrumentação","etapa":"09-MOU assinado","coord":"nan","comprador":"Débora Duarte","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Crítico","atraso":34,"forecast":"2026-06-17","necessidade":"2026-05-14","fornecedor":"Actemium\nAutomind\nGalaxia Engenharia\nIHM\nInstall\nMecnc\nMHR\nS","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":null,"fc_etapa":null},{"grupo":"Eletromecânica","nome":"SKID","etapa":"06-Neg. Comercial","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Normal","atraso":24,"forecast":"2026-07-23","necessidade":"2026-06-29","fornecedor":"Ecobrasil\nFluxo\nPassafaro","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-04-30","fc_etapa":"2026-06-23"},{"grupo":"Eletromecânica","nome":"Lava Rodas","etapa":"05-Aprov. Técnica","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Normal","atraso":-26,"forecast":"2026-07-30","necessidade":"2026-08-25","fornecedor":"WG Metalúrigica\nSolution Drawer\nElartec","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-06-06","fc_etapa":"2026-06-23"},{"grupo":"Eletromecânica","nome":"Sistema de Aspersão","etapa":"05-Aprov. Técnica","coord":"nan","comprador":"nan","gestao":"nan","status":"Em Andamento","criticidade":"Normal","atraso":-22,"forecast":"2026-08-03","necessidade":"2026-08-25","fornecedor":"CNCC\nAgriventos","comentario":">Data de necessidade da OS em atualização devido ao processo de aprovação do Capex\n>Em on hold em função do cenário atual de estudo de layout do projeto e possível redução de equipamentos. O processo não será cancelado, apenas atualizado após consolidação do cenário atual","nec_etapa":"2026-06-01","fc_etapa":"2026-06-25"},{"grupo":"Eletromecânica","nome":"Instalação de Balanças Rodoviárias (Gate)","etapa":"06-Neg. Comercial","coord":"nan","comprador":"nan","gestao":"nan","status":"Em Andamento","criticidade":"Normal","atraso":40,"forecast":"2026-07-07","necessidade":"2026-05-28","fornecedor":"Balcater\nCaldefi\nSabil","comentario":">Negociação comercial, prev. 12/06","nec_etapa":"2026-04-30","fc_etapa":"2026-06-16"},{"grupo":"Eletromecânica","nome":"Transformador SEP","etapa":"08-Minuta Contratual","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Crítico","atraso":-118,"forecast":"2026-07-16","necessidade":"2026-11-11","fornecedor":"WEG Equipamentos Elétricps S.A.\nSiemens Brasil LYDA","comentario":">Em fase final de negociação com a WEG e discussão de minuta contratual.","nec_etapa":"2026-10-05","fc_etapa":"2026-06-21"},{"grupo":"Outros","nome":"Trilhos","etapa":"00-Não Iniciado","coord":"Letícia Macedo","comprador":"nan","gestao":"nan","status":"A Iniciar","criticidade":"Normal","atraso":null,"forecast":"2027-01-05","necessidade":"2027-01-05","fornecedor":"-","comentario":"","nec_etapa":"2026-09-30","fc_etapa":"2026-09-30"},{"grupo":"Outros","nome":"AMV","etapa":"00-Não Iniciado","coord":"Letícia Macedo","comprador":"Ana Marinho","gestao":"nan","status":"A Iniciar","criticidade":"Normal","atraso":null,"forecast":"2027-01-05","necessidade":"2027-01-05","fornecedor":"-","comentario":"","nec_etapa":"2026-09-30","fc_etapa":"2026-09-30"},{"grupo":"Outros","nome":"Elementos de Fixação","etapa":"00-Não Iniciado","coord":"Letícia Macedo","comprador":"Ana Marinho","gestao":"nan","status":"A Iniciar","criticidade":"Normal","atraso":null,"forecast":"2027-01-05","necessidade":"2027-01-05","fornecedor":"-","comentario":"","nec_etapa":"2026-09-30","fc_etapa":"2026-09-30"},{"grupo":"Outros","nome":"Dormentes","etapa":"00-Não Iniciado","coord":"Letícia Macedo","comprador":"Ana Marinho","gestao":"nan","status":"A Iniciar","criticidade":"Normal","atraso":null,"forecast":"2027-01-05","necessidade":"2027-01-05","fornecedor":"-","comentario":"","nec_etapa":"2026-09-30","fc_etapa":"2026-09-30"},{"grupo":"Outros","nome":"Gerenciamento e Fisicalização de Dragagem","etapa":"07-Aprovação","coord":"Márcio Tinen","comprador":"Sheila Thomazini","gestao":"Cinthia Nascimento","status":"Em Andamento","criticidade":"Normal","atraso":18,"forecast":"2026-06-30","necessidade":"2026-06-12","fornecedor":"Arcadis\nMTCN\nPrecurspre\nSpectrah\nTUV\nUmi San","comentario":"","nec_etapa":"2025-05-26","fc_etapa":null},{"grupo":"Outros","nome":"Pacote Gerenciamento","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"Sheila Thomazini","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-07-31","fc_etapa":null},{"grupo":"Outros","nome":"Pacote Comissionamento","etapa":"00-Não Iniciado","coord":"Luís Augusto","comprador":"André Ponzetta","gestao":"nan","status":"A Iniciar","criticidade":"Normal","atraso":null,"forecast":"2028-03-01","necessidade":"2028-03-01","fornecedor":"-","comentario":"","nec_etapa":"2027-09-03","fc_etapa":"2027-09-03"},{"grupo":"Outros","nome":"Engenharia Detalhada","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"Luiz Calazans","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-01-22","fc_etapa":null},{"grupo":"Outros","nome":"Diligenciamento","etapa":"*On Hold*","coord":"nan","comprador":"nan","gestao":"nan","status":"On Hold","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Outros","nome":"Serviços de Análise Crítica do Projeto","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2024-12-04","fc_etapa":null},{"grupo":"Outros","nome":"Monitoramento de Raios","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-02-13","fc_etapa":null},{"grupo":"Outros","nome":"Serviço de Tradução de Documentos Técnicos","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2024-11-13","fc_etapa":null},{"grupo":"Outros","nome":"Locação Sala Treinamento","etapa":"12-Concluído","coord":"nan","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-02-18","fc_etapa":null},{"grupo":"Outros","nome":"DSAP e comunicação social do projeto SEEDS.","etapa":"12-Concluído","coord":"nan","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-02-13","fc_etapa":null},{"grupo":"Outros","nome":"Execução do PGA - Programa de Gestão Ambiental","etapa":"12-Concluído","coord":"Sheila Thomazini","comprador":"Monique Nunes","gestao":"Fernanda Pereira","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2026-04-01","fc_etapa":null},{"grupo":"Outros","nome":"Fiscalização e ATO - IDG","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-03-17","fc_etapa":null},{"grupo":"Outros","nome":"Gestão e Apoio de Capex - RETA","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-03-07","fc_etapa":null},{"grupo":"Outros","nome":"Audiência Pública","etapa":"12-Concluído","coord":"nan","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-05-28","fc_etapa":null},{"grupo":"Outros","nome":"Consultoria Cassio Quissak","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-06-16","fc_etapa":null},{"grupo":"Outros","nome":"CQP de Eng Detalhada - Obras Onshore","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2026-01-30","fc_etapa":null},{"grupo":"Outros","nome":"Preparação de Áreas/Praças de Trabalho \n(Patrulha Terraplanagem)","etapa":"12-Concluído","coord":"Sheila Thomazini","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"DT Construtora\nFranciscon\nVR Demolidora","comentario":"","nec_etapa":"2025-12-15","fc_etapa":null},{"grupo":"Outros","nome":"Gerenciamento Estratégico","etapa":"10-Assinatura","coord":"Márcio Tinen","comprador":"Bruna Santos","gestao":"Fernanda Pereira","status":"Em Andamento","criticidade":"Normal","atraso":15,"forecast":"2026-06-15","necessidade":"2026-05-31","fornecedor":"Blend Solutions\nIDG\nTÜV","comentario":"","nec_etapa":"2026-05-29","fc_etapa":"2026-06-10"},{"grupo":"Outros","nome":"Sistema de Vídeo Monitoramento de Obras","etapa":"*On Hold*","coord":"nan","comprador":"nan","gestao":"nan","status":"On Hold","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo1 - Geodeep","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-01-31","fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo1 - Ausenco","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-12-09","fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo2 - Ausenco","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo1 - Toledo","etapa":"12-Concluído","coord":"Luís Augusto","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-10-13","fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo2 - Toledo","etapa":"12-Concluído","coord":"Luís Augusto","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo1 - Deloitte","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-09-19","fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo1 - Reta","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-09-19","fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo1 - IDG","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2025-10-02","fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo2 - Reta","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2026-01-27","fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo2 - IDG","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":"2026-01-08","fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo2 - Geodeep","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo3 - Toledo","etapa":"nan","coord":"Luís Augusto","comprador":"nan","gestao":"Cinthia Nascimento","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"Assinado em 28/04/2026","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo3 - Reta","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"Fernanda Pereira","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"Assinado em 30/03/26","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo3 - Geodeep","etapa":"12-Concluído","coord":"Márcio Tinen","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo1 - VR Demolidora","etapa":"12-Concluído","coord":"nan","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo1 - Geoforma","etapa":"12-Concluído","coord":"Concluído","comprador":"nan","gestao":"nan","status":"Concluído","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo3 - Ausenco","etapa":"nan","coord":"nan","comprador":"FORECAST","gestao":"nan","status":"Em Andamento","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null},{"grupo":"Aditivos","nome":"Aditivo - Afry","etapa":"nan","coord":"nan","comprador":"FORECAST","gestao":"nan","status":"Em Andamento","criticidade":"Normal","atraso":null,"forecast":null,"necessidade":null,"fornecedor":"-","comentario":"","nec_etapa":null,"fc_etapa":null}];
+
+const STATUS_COLORS = {
+  "Concluído":    "#46C26A",
+  "Em Andamento": "#2BB2EE",
+  "A Iniciar":    "#9b8cff",
+  "On Hold":      "rgba(255,255,255,.3)",
+  "Cancelado":    "#F78346"
+};
+const GRUPO_COLORS = {
+  "Eletromecânica":"#4f7cff",
+  "Outros":        "#9b8cff",
+  "Aditivos":      "#46C26A",
+  "Obras Civis":   "#2BB2EE",
+  "Obras Iniciais":"#E8A33D"
+};
+
+let charts = {};
+let filtered = [...RAW];
+
+function getFiltered(){
+  const g=document.getElementById("f-grupo").value;
+  const s=document.getElementById("f-status").value;
+  const c=document.getElementById("f-critico").value;
+  const cm=document.getElementById("f-comp").value;
+  const excAdit=document.getElementById("chk-aditivos").checked;
+  const excConc=document.getElementById("chk-concluidos").checked;
+  return RAW.filter(r=>
+    (!g||r.grupo===g)&&(!s||r.status===s)&&(!c||r.criticidade===c)&&(!cm||r.comprador===cm)&&
+    !(excAdit&&r.grupo==="Aditivos")&&!(excConc&&r.status==="Concluído")
+  );
+}
+function toggleAditivos(el){
+  document.getElementById("chk-aditivos-label").classList.toggle("active",el.checked);
+  const fg=document.getElementById("f-grupo");
+  if(el.checked&&fg.value==="Aditivos") fg.value="";
+  applyFilters();
+}
+function toggleConcluidos(el){
+  document.getElementById("chk-concluidos-label").classList.toggle("active",el.checked);
+  const fs=document.getElementById("f-status");
+  if(el.checked&&fs.value==="Concluído") fs.value="";
+  applyFilters();
+}
+function applyFilters(){ filtered=getFiltered(); renderKPIs(); renderCharts(); renderTable(); }
+
+function renderKPIs(){
+  const d=filtered,n=d.length;
+  const ea=d.filter(r=>r.status==="Em Andamento").length;
+  const co=d.filter(r=>r.status==="Concluído").length;
+  const cr=d.filter(r=>r.criticidade==="Crítico").length;
+  const ai=d.filter(r=>r.status==="A Iniciar").length;
+  document.getElementById("kpis").innerHTML=`
+    <div class="mas-kpi k-total"><div class="mas-kpi-label">Total processos</div><div class="mas-kpi-value">${n}</div><div class="mas-kpi-sub">no filtro</div></div>
+    <div class="mas-kpi k-andamento"><div class="mas-kpi-label">Em Andamento</div><div class="mas-kpi-value">${ea}</div><div class="mas-kpi-sub">${n?Math.round(ea/n*100):0}% do total</div></div>
+    <div class="mas-kpi k-concluido"><div class="mas-kpi-label">Concluídos</div><div class="mas-kpi-value">${co}</div><div class="mas-kpi-sub">${n?Math.round(co/n*100):0}% do total</div></div>
+    <div class="mas-kpi k-critico"><div class="mas-kpi-label">Críticos</div><div class="mas-kpi-value">${cr}</div><div class="mas-kpi-sub">${n?Math.round(cr/n*100):0}% do total</div></div>
+    <div class="mas-kpi k-iniciar"><div class="mas-kpi-label">A Iniciar</div><div class="mas-kpi-value">${ai}</div><div class="mas-kpi-sub">${n?Math.round(ai/n*100):0}% do total</div></div>`;
+}
+
+function count(arr,key){const m={};arr.forEach(r=>{const v=r[key]||"Outros";m[v]=(m[v]||0)+1;});return m;}
+
+Chart.register(ChartDataLabels);
+
+const CHART_DEFAULTS = { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, datalabels:{display:false}} };
+const TICK_STYLE = { font:{size:11}, color:"rgba(255,255,255,.4)" };
+const GRID_STYLE = { color:"rgba(255,255,255,.06)" };
+const DL_BAR = { display:true, anchor:'end', align:'end', color:'rgba(255,255,255,.85)', font:{size:11,weight:'700'}, padding:{left:4} };
+const DL_HBAR = { display:true, anchor:'end', align:'right', color:'rgba(255,255,255,.85)', font:{size:11,weight:'700'}, padding:{left:4}, clamp:true };
+const DL_DONUT = {
+  display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+  anchor:'center', align:'center',
+  color:'#fff', font:{size:11,weight:'700'},
+  formatter:(v,ctx) => {
+    const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+    const pct = total ? Math.round(v/total*100) : 0;
+    return pct > 4 ? v+'\n'+pct+'%' : '';
+  }
+};
+
+function renderCharts(){
+  const d=filtered;
+  const sc=count(d,"status");
+  const sl=Object.keys(sc);
+  document.getElementById("leg-status").innerHTML=sl.map(l=>`<span><span class="lsq" style="background:${STATUS_COLORS[l]||'#888'}"></span>${l} ${sc[l]}</span>`).join("");
+  if(charts.status) charts.status.destroy();
+  charts.status=new Chart(document.getElementById("c-status"),{type:"doughnut",
+    data:{labels:sl,datasets:[{data:sl.map(l=>sc[l]),backgroundColor:sl.map(l=>STATUS_COLORS[l]||'#888'),borderWidth:2,borderColor:"#13242F"}]},
+    options:{...CHART_DEFAULTS,cutout:"60%",plugins:{...CHART_DEFAULTS.plugins,datalabels:DL_DONUT}}});
+
+  const gc=count(d,"grupo");
+  const gl=Object.keys(gc).sort((a,b)=>gc[b]-gc[a]);
+  if(charts.grupo) charts.grupo.destroy();
+  charts.grupo=new Chart(document.getElementById("c-grupo"),{type:"bar",
+    data:{labels:gl,datasets:[{data:gl.map(l=>gc[l]),backgroundColor:gl.map(l=>GRUPO_COLORS[l]||'#2BB2EE'),borderRadius:5,borderSkipped:false}]},
+    options:{...CHART_DEFAULTS,scales:{x:{ticks:TICK_STYLE,grid:{display:false}},y:{ticks:TICK_STYLE,grid:GRID_STYLE,suggestedMax:v=>v.max+3}},plugins:{...CHART_DEFAULTS.plugins,datalabels:DL_BAR}}});
+
+  const ativosArr=d.filter(r=>r.status==="Em Andamento"||r.status==="A Iniciar");
+  const ativos=ativosArr.length;
+  document.getElementById("v-ativos").textContent=ativos;
+  document.getElementById("s-ativos").textContent=(d.length?Math.round(ativos/d.length*100):0)+"% do total";
+  const comDatas=ativosArr.filter(r=>r.forecast&&r.necessidade);
+  const emAtr=comDatas.filter(r=>r.atraso>0).length;
+  const noPrz=comDatas.filter(r=>r.atraso!==null&&r.atraso<=0).length;
+  const semDt=ativosArr.length-comDatas.length;
+  document.getElementById("v-atraso-n").textContent=emAtr;
+  document.getElementById("s-atraso-n").textContent="de "+comDatas.length+" c/ forecast";
+  const prazoL=["No Prazo","Em Atraso","Sem Data"];
+  const prazoD=[noPrz,emAtr,semDt];
+  const prazoC=["#46C26A","#F78346","rgba(255,255,255,.25)"];
+  document.getElementById("leg-prazo").innerHTML=prazoL.map((l,i)=>`<span><span class="lsq" style="background:${prazoC[i]}"></span>${l} ${prazoD[i]}</span>`).join("");
+  if(charts.comp) charts.comp.destroy();
+  charts.comp=new Chart(document.getElementById("c-prazo"),{type:"doughnut",
+    data:{labels:prazoL,datasets:[{data:prazoD,backgroundColor:prazoC,borderWidth:2,borderColor:"#13242F"}]},
+    options:{...CHART_DEFAULTS,cutout:"60%",plugins:{...CHART_DEFAULTS.plugins,datalabels:DL_DONUT}}});
+
+  const ec={};
+  d.forEach(r=>{const e=r.etapa||"Não informado";ec[e]=(ec[e]||0)+1;});
+  const ord=["12-Concluído","10-Assinatura","09-MOU assinado","08-Minuta Contratual","07-Aprovação","06-Neg. Comercial","05-Aprov. Técnica","04-Propostas","03-RFx ao Mercado","02-Estratégia","00-Não Iniciado","*On Hold*","Não informado"];
+  const el=ord.filter(e=>ec[e]);
+  const ecolors=el.map(e=>{
+    if(e==="12-Concluído") return "#46C26A";
+    if(e==="*On Hold*") return "rgba(255,255,255,.25)";
+    if(e==="00-Não Iniciado") return "#9b8cff";
+    return "#2BB2EE";
+  });
+  if(charts.etapa) charts.etapa.destroy();
+  charts.etapa=new Chart(document.getElementById("c-etapa"),{type:"bar",
+    data:{labels:el,datasets:[{data:el.map(e=>ec[e]),backgroundColor:ecolors,borderRadius:5,borderSkipped:false}]},
+    options:{indexAxis:"y",...CHART_DEFAULTS,scales:{x:{ticks:TICK_STYLE,grid:GRID_STYLE},y:{ticks:TICK_STYLE,grid:{display:false}}},plugins:{...CHART_DEFAULTS.plugins,datalabels:DL_HBAR}}});
+
+  const atr=d.filter(r=>r.atraso!==null&&r.atraso!==0&&r.forecast).sort((a,b)=>b.atraso-a.atraso).slice(0,9);
+  const al=atr.map(r=>r.nome.length>28?r.nome.slice(0,26)+"…":r.nome);
+  const ad=atr.map(r=>r.atraso);
+  if(charts.atraso) charts.atraso.destroy();
+  charts.atraso=new Chart(document.getElementById("c-atraso"),{type:"bar",
+    data:{labels:al,datasets:[{data:ad,backgroundColor:ad.map(v=>v>0?"#F78346":"#46C26A"),borderRadius:5,borderSkipped:false,label:"dias"}]},
+    options:{indexAxis:"y",...CHART_DEFAULTS,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw>0?"+":""}${c.raw} dias`}},
+        datalabels:{...DL_HBAR,
+          anchor: ctx => ctx.dataset.data[ctx.dataIndex] >= 0 ? 'end' : 'start',
+          align:  ctx => ctx.dataset.data[ctx.dataIndex] >= 0 ? 'right' : 'left',
+          formatter: v => (v>0?'+':'')+v+'d'}},
+      scales:{x:{ticks:{...TICK_STYLE,callback:v=>(v>0?"+":"")+v+"d"},grid:GRID_STYLE},y:{ticks:TICK_STYLE,grid:{display:false}}}}});
+}
+
+function renderTable(){
+  const q=(document.getElementById("search").value||"").toLowerCase();
+  const rows=filtered.filter(r=>!q||r.nome.toLowerCase().includes(q)||r.fornecedor.toLowerCase().includes(q)||r.comprador.toLowerCase().includes(q)||r.gestao.toLowerCase().includes(q)||r.grupo.toLowerCase().includes(q));
+  document.getElementById("tbl-count").textContent=`${rows.length} processo${rows.length!==1?"s":""}`;
+  const sc={"Concluído":"p-concluido","Em Andamento":"p-andamento","A Iniciar":"p-iniciar","On Hold":"p-onhold","Cancelado":"p-cancelado"};
+  document.getElementById("tbl").innerHTML=`
+    <thead><tr><th>#</th><th>Processo</th><th>Status</th><th>Crit.</th><th>Etapa</th><th>Nec. Etapa</th><th>FC Etapa</th><th>Nec. OS</th><th>Forecast OS</th><th>Atraso</th><th>Comentários / Pontos de Atenção</th></tr></thead>
+    <tbody>${rows.map((r,i)=>`<tr>
+      <td style="color:rgba(255,255,255,.3);font-size:.65rem;">${i+1}</td>
+      <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;" title="${r.nome}">${r.nome}</td>
+      <td><span class="pill ${sc[r.status]||'p-onhold'}">${r.status}</span></td>
+      <td><span class="pill ${r.criticidade==="Crítico"?"p-critico":"p-normal"}">${r.criticidade}</span></td>
+      <td style="font-size:.65rem;white-space:nowrap;color:rgba(255,255,255,.4);">${r.etapa}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.4);">${r.nec_etapa||"—"}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.4);">${r.fc_etapa||"—"}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.4);">${r.necessidade||"—"}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.4);">${r.forecast||"—"}</td>
+      <td class="${r.atraso===null||r.atraso===0?"atr-zero":r.atraso>0?"atr-pos":"atr-neg"}" style="font-family:'IBM Plex Mono',monospace;">${r.atraso===null||r.atraso===0?"—":(r.atraso>0?"+":"")+r.atraso+"d"}</td>
+      <td style="font-size:.68rem;color:rgba(255,255,255,.45);max-width:260px;white-space:normal;line-height:1.4;" title="${r.comentario||''}">${r.comentario?r.comentario.slice(0,120)+(r.comentario.length>120?"…":""):"—"}</td>
+    </tr>`).join("")}</tbody>`;
+}
+
+
+renderKPIs(); renderCharts(); renderTable();
+</script>
+{% endblock %}

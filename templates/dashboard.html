@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
-{% block page_icon %}<i class="bi bi-speedometer2"></i>{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
-{% block breadcrumb %}Visão Geral{% endblock %}
+{% block title %}Contratadas{% endblock %}
+{% block page_icon %}<i class="bi bi-buildings"></i>{% endblock %}
+{% block page_title %}Contratadas{% if filtro_contratada %} <span style="font-size:.65em;font-weight:500;color:rgba(255,255,255,.55);margin-left:.4rem;">— {{ filtro_contratada }}</span>{% endif %}{% endblock %}
+{% block breadcrumb %}{{ filtro_contratada or 'Todas as Contratadas' }}{% endblock %}
 
 {% block content %}
 <style>
@@ -215,7 +215,7 @@ body.exporting .pdf-only { display:flex !important; }
 <div id="dash-export">
 
 <!-- Cabeçalho do relatório (visível apenas no PDF) -->
-<div class="pdf-only" style="padding:0 .2rem .8rem; margin-bottom:.6rem; border-bottom:1px solid rgba(255,255,255,.15); display:flex; justify-content:space-between; align-items:flex-end;">
+<div class="pdf-only" style="padding:0 .2rem .8rem; margin-bottom:.6rem; border-bottom:1px solid rgba(255,255,255,.15);">
     <div>
         <div style="font-family:'IBM Plex Mono',monospace; font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.45);">TMS — Painel da Contratada</div>
         <div style="font-size:1.15rem; font-weight:800; color:#fff; line-height:1.2;">{{ filtro_contratada or 'Todas as Contratadas' }}</div>

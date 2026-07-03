@@ -585,7 +585,7 @@
         {% endif %}
         <a href="{{ url_for('dashboard') }}"
            class="nav-link-rumo {% if request.endpoint == 'dashboard' %}active{% endif %}">
-            <i class="bi bi-speedometer2"></i>Contratadas
+            <i class="bi bi-buildings"></i>Contratadas
         </a>
         <a href="{{ url_for('financeiro') }}"
            class="nav-link-rumo {% if request.endpoint == 'financeiro' %}active{% endif %}">
@@ -595,10 +595,11 @@
            class="nav-link-rumo {% if request.endpoint == 'index' %}active{% endif %}">
             <i class="bi bi-grid-3x3-gap"></i>Registros
         </a>
-        <a href="{{ url_for('construcao') }}"
-           class="nav-link-rumo {% if request.endpoint == 'construcao' %}active{% endif %}">
-            <i class="bi bi-file-earmark-text"></i>RDO's
+        <a href="{{ url_for('mas_dashboard') }}"
+           class="nav-link-rumo {% if request.endpoint == 'mas_dashboard' %}active{% endif %}">
+            <i class="bi bi-kanban" style="color:#20C9B0;"></i>MAS
         </a>
+
         {% if current_user.role in ['admin', 'master', 'rumo'] %}
         <a href="{{ url_for('admin') }}"
            class="nav-link-rumo {% if request.endpoint and (request.endpoint in ['admin', 'admin_contrato', 'admin_novo_contrato'] or request.endpoint.startswith('admin_suprimento')) %}active{% endif %}">
@@ -616,10 +617,10 @@
             <ul class="dropdown-menu dropdown-menu-end user-menu">
                 {% if current_user.role in ['admin', 'master', 'rumo'] %}
                 <li><a class="dropdown-item" href="{{ url_for('admin_usuarios') }}"><i class="bi bi-people"></i>Usuários</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('admin_dados') }}"><i class="bi bi-database"></i>Dados</a></li>
                 {% endif %}
                 {% if current_user.role == 'master' %}
                 <li><a class="dropdown-item" href="{{ url_for('admin_tms') }}"><i class="bi bi-gear-wide-connected"></i>Config. TMS</a></li>
-                <li><a class="dropdown-item item-danger" href="{{ url_for('admin_limpar_dados') }}"><i class="bi bi-trash3"></i>Limpar Dados</a></li>
                 {% endif %}
                 {% if current_user.role in ['admin', 'master', 'rumo'] %}<li><hr class="dropdown-divider"></li>{% endif %}
                 <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right" style="color:#ff7a89;"></i>Sair</a></li>
@@ -645,9 +646,12 @@
                 <span>{% block breadcrumb %}Dashboard{% endblock %}</span>
             </div>
         </div>
-        <button onclick="history.back()" class="btn-back-header" title="Voltar">
-            <i class="bi bi-arrow-left"></i><span>Voltar</span>
-        </button>
+        <div class="d-flex align-items-center gap-2">
+            <button onclick="history.back()" class="btn-back-header" title="Voltar">
+                <i class="bi bi-arrow-left"></i><span>Voltar</span>
+            </button>
+            {% block page_actions %}{% endblock %}
+        </div>
     </div>
 </div>
 

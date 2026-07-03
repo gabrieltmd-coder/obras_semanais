@@ -143,6 +143,7 @@
         .card.c-fin::before  { background: var(--amber); }
         .card.c-rdo::before  { background: var(--green); }
         .card.c-cons::before { background: #9b8cff; }
+        .card.c-mas::before  { background: #20C9B0; }
 
         .card .ic {
             width: 60px; height: 60px; border-radius: 14px;
@@ -154,6 +155,7 @@
         .card.c-fin  .ic { color: var(--amber); background: rgba(232,163,61,.14); }
         .card.c-rdo  .ic { color: var(--green); background: rgba(70,194,106,.14); }
         .card.c-cons .ic { color: #9b8cff; background: rgba(155,140,255,.14); }
+        .card.c-mas  .ic { color: #20C9B0; background: rgba(32,201,176,.14); }
 
         .card h2 {
             font-family: 'Archivo', sans-serif; font-size: 1.32rem; font-weight: 700;
@@ -177,6 +179,7 @@
         .card.c-fin:hover  .go i { color: var(--amber); }
         .card.c-rdo:hover  .go i { color: var(--green); }
         .card.c-cons:hover .go i { color: #9b8cff; }
+        .card.c-mas:hover  .go i { color: #20C9B0; }
 
         .card.locked { cursor: not-allowed; }
         .card.locked .ic, .card.locked h2, .card.locked p { opacity: .55; }
@@ -279,10 +282,10 @@
                 <span class="go">{% if current_user %}Abrir painel <i class="bi bi-arrow-right"></i>{% else %}Acesso restrito <i class="bi bi-lock-fill"></i>{% endif %}</span>
             </a>
 
-            <a {% if current_user %}href="{{ url_for('construcao') }}"{% endif %} class="card c-rdo{% if not current_user %} locked{% endif %}">
-                <span class="ic"><i class="bi bi-file-earmark-text"></i></span>
-                <h2>RDO's</h2>
-                <p>Relatórios diários de obra — consulte, filtre e gerencie os registros.</p>
+<a {% if current_user %}href="{{ url_for('mas_dashboard') }}"{% endif %} class="card c-mas{% if not current_user %} locked{% endif %}">
+                <span class="ic"><i class="bi bi-bar-chart-line"></i></span>
+                <h2>MAS Dashboard</h2>
+                <p>Painel gerencial MAS TMS — indicadores consolidados de desempenho operacional.</p>
                 <span class="go">{% if current_user %}Abrir painel <i class="bi bi-arrow-right"></i>{% else %}Acesso restrito <i class="bi bi-lock-fill"></i>{% endif %}</span>
             </a>
         </nav>
@@ -307,7 +310,7 @@
     document.addEventListener('keydown', e => {
         if (e.key === '1') window.location = "{{ url_for('dashboard') }}";
         if (e.key === '2') window.location = "{{ url_for('financeiro') }}";
-        if (e.key === '3') window.location = "{{ url_for('construcao') }}";
+        if (e.key === '3') window.location = "{{ url_for('mas_dashboard') }}";
         {% if current_user.role in ['admin', 'master', 'rumo'] %}
         if (e.key === '4') window.location = "{{ url_for('consolidado') }}";
         {% endif %}

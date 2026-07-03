@@ -1,13 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard Financeiro{% endblock %}
+{% block title %}Financeiro{% endblock %}
 {% block page_icon %}<i class="bi bi-currency-dollar"></i>{% endblock %}
-{% block page_title %}Dashboard Financeiro{% endblock %}
-{% block breadcrumb %}<a href="{{ url_for('index') }}">Início</a> / Financeiro{% endblock %}
+{% block page_title %}Financeiro{% if filtro_contratada %} <span style="font-size:.65em;font-weight:500;color:rgba(255,255,255,.55);margin-left:.4rem;">— {{ filtro_contratada }}</span>{% endif %}{% endblock %}
+{% block breadcrumb %}Gestão Financeira de Obras{% endblock %}
+
+{% block page_actions %}
+{% if can_write %}
+<a href="{{ url_for('financeiro_lancamentos') }}" class="btn-back-header" title="Lançamentos financeiros"
+   style="background:rgba(240,179,77,.12);border-color:rgba(240,179,77,.4);color:#F0B34D;">
+    <i class="bi bi-journal-plus"></i><span>Lançamentos</span>
+</a>
+{% endif %}
+{% if current_user and current_user.role in ['admin', 'master', 'rumo'] %}
+<a href="{{ url_for('financeiro_config') }}" class="btn-back-header" title="Centros de custo e orçamento">
+    <i class="bi bi-sliders"></i><span>Config</span>
+</a>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <style>
-/* ── PAINEL DE CONTROLE (grafite) ── */
+/* ── PAINEL FINANCEIRO (grafite + âmbar) ── */
 body {
     background: #0E1B24 !important;
     background-image:
@@ -20,16 +34,13 @@ body {
     border-bottom: 1.5px solid rgba(255,255,255,.10) !important;
     padding: 1rem 0 .9rem !important; margin-bottom: 1rem !important;
 }
-.page-header h1 { color: #fff !important; }
-.page-header h1 i { color: #fff !important; }
+.page-header h1, .page-header h1 i { color: #fff !important; }
 .page-header h1::before { background: #F0B34D !important; }
 .page-header .breadcrumb { color: rgba(255,255,255,.45) !important; }
-.page-header .breadcrumb a { color: #F0B34D !important; }
 .app-footer { background: #0A141C !important; margin-top: 1.2rem !important; }
 .btn-back-header { background: rgba(255,255,255,.05) !important; color: rgba(255,255,255,.85) !important; border-color: rgba(255,255,255,.18) !important; }
 .btn-back-header:hover { background: rgba(255,255,255,.14) !important; color:#fff !important; }
 
-/* ── PAINEL ── */
 .gc { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.9rem 1rem; }
 .gc-title {
     font-family:'IBM Plex Mono',monospace; font-size:.62rem; font-weight:500; text-transform:uppercase;
@@ -42,229 +53,331 @@ body {
 
 /* ── FILTRO ── */
 .d-filter {
-    background:#13242F; border:1px solid rgba(255,255,255,.09); border-left:4px solid #F0B34D;
-    border-radius:4px; padding:.7rem 1rem; margin-bottom:.8rem;
-    display:flex; align-items:flex-end; gap:.85rem; flex-wrap:wrap;
+    background: #13242F;
+    border: 1px solid rgba(255,255,255,.09);
+    border-left: 4px solid #F0B34D;
+    border-radius: 4px;
+    padding: .7rem 1rem; margin-bottom: .8rem;
+    display: flex; align-items: flex-end; gap: .85rem; flex-wrap: wrap;
 }
 .d-filter .filter-label { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:500; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.5); margin-bottom:.22rem; }
-.d-filter .form-control,
-.d-filter .form-select {
-    background:rgba(255,255,255,.05) !important; border:1px solid rgba(255,255,255,.14) !important;
-    color:#fff !important; border-radius:4px !important;
-    font-size:.78rem !important; padding:.3rem .65rem !important; height:32px !important;
+.d-filter .form-control, .d-filter .form-select {
+    background: rgba(255,255,255,.05) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    color: #fff !important; border-radius: 4px !important;
+    font-size: .78rem !important; padding: .3rem .65rem !important; height: 32px !important;
 }
 .d-filter .form-select option { background:#13242F; }
 .d-filter .btn { height:32px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; padding:.3rem .8rem; display:inline-flex; align-items:center; gap:.35rem; border:1px solid; }
-.d-filter .btn-f { background:rgba(240,179,77,.16); border-color:rgba(240,179,77,.4); color:#f3c270; }
-.d-filter .btn-f:hover { background:rgba(240,179,77,.28); }
+.d-filter .btn-f { background:rgba(240,179,77,.14); border-color:rgba(240,179,77,.4); color:#F0B34D; }
+.d-filter .btn-f:hover { background:rgba(240,179,77,.26); }
 .d-filter .btn-x { background:rgba(200,50,75,.14); border-color:rgba(200,50,75,.32); color:#ff7a89; }
 
 /* ── KPI STRIP ── */
 .kpi-strip { display:flex; gap:.6rem; margin-bottom:.8rem; flex-wrap:wrap; }
-.kpi-mini { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.6rem .85rem; flex:1; min-width:140px; position:relative; overflow:hidden; }
+.kpi-mini {
+    background:#13242F; border:1px solid rgba(255,255,255,.09);
+    border-radius:4px; padding:.6rem .85rem; flex:1; min-width:135px;
+    position:relative; overflow:hidden;
+}
 .kpi-mini::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:rgba(255,255,255,.14); transform:skewX(-14deg) translateX(-1px); }
-.kpi-mini.am::before  { background:#F0B34D; }
-.kpi-mini.g::before   { background:#46C26A; }
-.kpi-mini.red::before { background:#ff7a89; }
-.kpi-ml { font-family:'IBM Plex Mono',monospace; font-size:.56rem; font-weight:500; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.45); margin-bottom:.22rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-left:.3rem; }
-.kpi-mv { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:600; color:#fff; line-height:1; padding-left:.3rem; font-variant-numeric:tabular-nums; }
-.kpi-mv.sm { font-size:.8rem; }
+.kpi-mini.a::before { background:#F0B34D; }
+.kpi-mini.c::before { background:#2BB2EE; }
+.kpi-mini.g::before { background:#46C26A; }
+.kpi-mini.p::before { background:#9b8cff; }
+.kpi-mini.r::before { background:#ff7a89; }
+.kpi-mini .kl { font-family:'IBM Plex Mono',monospace; font-size:.55rem; font-weight:500; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.45); margin-bottom:.3rem; white-space:nowrap; }
+.kpi-mini .kv { font-family:'Archivo',sans-serif; font-size:1.12rem; font-weight:800; color:#fff; line-height:1.1; white-space:nowrap; }
+.kpi-mini .ks { font-family:'IBM Plex Mono',monospace; font-size:.56rem; color:rgba(255,255,255,.35); margin-top:.2rem; white-space:nowrap; }
 
-/* ── TABELA DE CONTRATOS ── */
-.fin-table { width:100%; border-collapse:collapse; font-size:.8rem; }
-.fin-table thead tr { background:rgba(255,255,255,.04); }
-.fin-table th {
-    padding:.5rem .65rem; text-align:left;
-    font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:500; text-transform:uppercase;
-    letter-spacing:.1em; color:rgba(255,255,255,.5); border-bottom:1px solid rgba(255,255,255,.1);
+/* ── TABS ── */
+.fin-tabs { display:flex; gap:.4rem; margin-bottom:.8rem; flex-wrap:wrap; }
+.fin-tab {
+    font-family:'IBM Plex Mono',monospace; font-size:.66rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.08em;
+    background:#13242F; color:rgba(255,255,255,.55);
+    border:1px solid rgba(255,255,255,.1); border-radius:4px;
+    padding:.45rem .95rem; cursor:pointer; display:inline-flex; align-items:center; gap:.4rem;
+    transition:all .15s;
 }
-.fin-table th.r { text-align:right; }
-.fin-table td { padding:.46rem .65rem; border-bottom:1px solid rgba(255,255,255,.05); color:rgba(255,255,255,.85); vertical-align:middle; }
-.fin-table td.r { text-align:right; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; }
-.fin-table tbody tr:hover { background:rgba(255,255,255,.04); }
+.fin-tab i { font-size:.8rem; }
+.fin-tab:hover { color:#fff; border-color:rgba(240,179,77,.4); }
+.fin-tab.active { background:rgba(240,179,77,.14); border-color:rgba(240,179,77,.55); color:#F0B34D; }
+.fin-pane { display:none; }
+.fin-pane.active { display:block; }
 
-.prog-bar { height:7px; background:rgba(255,255,255,.08); overflow:hidden; min-width:80px; }
-.prog-fill { height:100%; transform:skewX(-14deg); transform-origin:left; transition:width .4s; }
+/* ── TABELA ── */
+.fin-table { font-size:.78rem; color:#e8f3fb; width:100%; border-collapse:collapse; }
+.fin-table th { font-family:'IBM Plex Mono',monospace; font-size:.56rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.45);
+    border-bottom:2px solid rgba(255,255,255,.1); padding:.45rem .6rem; white-space:nowrap;
+    background:#0E1B24; position:sticky; top:0; z-index:1; }
+.fin-table td { padding:.4rem .6rem; border-bottom:1px solid rgba(255,255,255,.06); white-space:nowrap; vertical-align:middle; }
+.fin-table tbody tr:hover td { background:rgba(255,255,255,.04); }
+.mono { font-family:'IBM Plex Mono',monospace; }
+.pill { display:inline-block; font-size:.62rem; font-weight:600; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+.pill-capex { background:rgba(43,178,238,.16); color:#6fd6ff; }
+.pill-opex  { background:rgba(155,140,255,.16); color:#b8adff; }
+.pill-ativo { background:rgba(70,194,106,.16); color:#46C26A; }
+.pill-encerrado { background:rgba(255,255,255,.1); color:rgba(255,255,255,.5); }
 
-.badge-ativo,.badge-encerrado { font-family:'IBM Plex Mono',monospace; border-radius:4px; font-size:.58rem; font-weight:500; text-transform:uppercase; letter-spacing:.06em; padding:.16rem .5rem; border:1px solid; }
-.badge-ativo    { background:rgba(70,194,106,.16); color:#5bd17e; border-color:rgba(70,194,106,.4); }
-.badge-encerrado{ background:rgba(255,122,137,.14); color:#ff7a89; border-color:rgba(255,122,137,.34); }
+/* ── EVM CARDS ── */
+.evm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(165px,1fr)); gap:.6rem; margin-bottom:.8rem; }
+.evm-card { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.8rem .9rem; }
+.evm-card .el { font-family:'IBM Plex Mono',monospace; font-size:.56rem; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.45); }
+.evm-card .ev { font-family:'Archivo',sans-serif; font-size:1.3rem; font-weight:800; color:#fff; margin-top:.25rem; }
+.evm-card .es { font-size:.62rem; color:rgba(255,255,255,.4); margin-top:.2rem; line-height:1.35; }
+.evm-good { color:#46C26A !important; }
+.evm-bad  { color:#ff7a89 !important; }
 
-/* ── TEMA OCEÂNICO (override) ── */
-body {
-    background-color: #030e1a !important;
-    background-image:
-        radial-gradient(120% 70% at 50% -8%, #11567f 0%, transparent 52%),
-        linear-gradient(180deg, #0b3050 0%, #082338 40%, #051726 70%, #030e1a 100%) !important;
-    background-repeat: no-repeat !important;
-    background-size: 100% 100% !important;
-}
-body::after {
-    content:''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background:
-        radial-gradient(460px 460px at 95% 6%, rgba(232,163,61,.13), transparent 70%),
-        radial-gradient(400px 400px at 2% 94%, rgba(63,200,200,.11), transparent 70%);
-}
-.navbar-rumo { background: rgba(4,18,32,.72) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,.08) !important; }
-.page-header { background: transparent !important; border-bottom: 1px solid rgba(255,255,255,.10) !important; position: relative; z-index: 1; }
-main { position: relative; z-index: 1; }
-.app-footer { background: rgba(4,18,32,.6) !important; }
-.gc, .kpi-mini, .d-filter {
-    background: rgba(255,255,255,.055) !important;
-    border-color: rgba(255,255,255,.12) !important;
-    backdrop-filter: blur(14px) saturate(120%);
-    -webkit-backdrop-filter: blur(14px) saturate(120%);
-}
-.gc { border-radius: 14px !important; }
-.kpi-mini, .d-filter { border-radius: 12px !important; }
+.empty-cta { text-align:center; padding:2.2rem 1rem; color:rgba(255,255,255,.45); font-size:.85rem; }
+.empty-cta i { font-size:1.8rem; display:block; margin-bottom:.5rem; opacity:.4; }
+.empty-cta a { color:#F0B34D; }
 </style>
 
-<div style="color:#fff;">
+<div class="container-fluid px-3" style="max-width:1420px;">
 
-{% if not kpis %}
-<div class="gc text-center py-4">
-    <i class="bi bi-currency-dollar" style="font-size:2rem;color:rgba(255,255,255,.18);display:block;margin-bottom:.5rem;"></i>
-    <p style="color:rgba(255,255,255,.4);font-size:.84rem;margin:0;">Nenhum registro ainda. <a href="{{ url_for('novo') }}" style="color:#F0B34D;">Criar o primeiro registro</a>.</p>
-</div>
-
-{% else %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="alert alert-{{ 'danger' if cat=='danger' else 'success' if cat=='success' else 'warning' }} alert-dismissible fade show py-2 mb-2" style="font-size:.82rem;">
+    {{ msg }}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+{% endwith %}
 
 <!-- FILTROS -->
 <form method="get" class="d-filter">
     <div>
         <div class="filter-label">Contratada</div>
-        <select name="contratada" class="form-select" style="min-width:160px;">
+        <select name="contratada" class="form-select" style="min-width:180px;" {% if viewer_contratada %}disabled{% endif %}>
             <option value="">Todas</option>
-            {% for c in contratadas %}<option value="{{ c }}" {% if filtro_contratada==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+            {% for c in contratadas %}
+            <option value="{{ c }}" {% if filtro_contratada == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
         </select>
     </div>
     <div>
         <div class="filter-label">De</div>
-        <input type="date" name="de" class="form-control" value="{{ filtro_de }}" style="width:140px;">
+        <input type="date" name="de" class="form-control" value="{{ filtro_de }}" style="width:145px;">
     </div>
     <div>
         <div class="filter-label">Até</div>
-        <input type="date" name="ate" class="form-control" value="{{ filtro_ate }}" style="width:140px;">
+        <input type="date" name="ate" class="form-control" value="{{ filtro_ate }}" style="width:145px;">
     </div>
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-f"><i class="bi bi-funnel"></i>Filtrar</button>
-        {% if filtro_contratada or filtro_de or filtro_ate %}
-        <a href="{{ url_for('financeiro') }}" class="btn btn-x"><i class="bi bi-x-lg"></i></a>
-        {% endif %}
-    </div>
+    <button type="submit" class="btn btn-f"><i class="bi bi-funnel"></i>Filtrar</button>
+    {% if filtro_contratada or filtro_de or filtro_ate %}
+    <a href="{{ url_for('financeiro') }}" class="btn btn-x"><i class="bi bi-x-lg"></i></a>
+    {% endif %}
 </form>
+
+{% if not kpis %}
+<div class="gc"><div class="empty-cta">
+    <i class="bi bi-inbox"></i>
+    Nenhum registro financeiro encontrado para o filtro selecionado.
+</div></div>
+{% else %}
 
 <!-- KPI STRIP -->
 <div class="kpi-strip">
-    <div class="kpi-mini am">
-        <div class="kpi-ml">Valor Total Contratos</div>
-        <div class="kpi-mv sm">{{ kpis.total_valor_contrato|currency }}</div>
+    <div class="kpi-mini a">
+        <div class="kl">Contratado Efetivo</div>
+        <div class="kv">{{ kpis.total_valor_contrato|currency }}</div>
+        <div class="ks">base {{ kpis.total_base|currency }} + adit. {{ kpis.total_aditivos|currency }}</div>
+    </div>
+    <div class="kpi-mini c">
+        <div class="kl">Medido Acumulado</div>
+        <div class="kv">{{ kpis.total_medido|currency }}</div>
+        <div class="ks">{{ kpis.pct_global }}% do contratado</div>
     </div>
     <div class="kpi-mini g">
-        <div class="kpi-ml">Total Medido</div>
-        <div class="kpi-mv sm">{{ kpis.total_medido|currency }}</div>
+        <div class="kl">Saldo Contratual</div>
+        <div class="kv">{{ kpis.saldo|currency }}</div>
+        <div class="ks">a medir</div>
     </div>
-    {% if kpis.saldo >= 0 %}
-    <div class="kpi-mini g">
-    {% else %}
-    <div class="kpi-mini red">
+    <div class="kpi-mini p">
+        <div class="kl">Pago</div>
+        <div class="kv">{{ kpis.pago|currency }}</div>
+        <div class="ks">faturado {{ kpis.faturado|currency }}</div>
+    </div>
+    <div class="kpi-mini r">
+        <div class="kl">Retenções Acum.</div>
+        <div class="kv">{{ kpis.retido|currency }}</div>
+        <div class="ks">caução retida</div>
+    </div>
+    <div class="kpi-mini a">
+        <div class="kl">Medição da Semana</div>
+        <div class="kv">{{ kpis.valor_semana|currency }}</div>
+        <div class="ks">{{ kpis.ultima_semana }}</div>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="fin-tabs">
+    <button type="button" class="fin-tab active" data-pane="pane-geral"><i class="bi bi-grid-1x2"></i>Visão Geral</button>
+    <button type="button" class="fin-tab" data-pane="pane-caixa"><i class="bi bi-cash-stack"></i>Fluxo de Caixa</button>
+    <button type="button" class="fin-tab" data-pane="pane-capex"><i class="bi bi-diagram-3"></i>CAPEX / OPEX</button>
+    <button type="button" class="fin-tab" data-pane="pane-contratos"><i class="bi bi-folder2-open"></i>Contratos</button>
+    <button type="button" class="fin-tab" data-pane="pane-evm"><i class="bi bi-graph-up-arrow"></i>Análise EVM</button>
+</div>
+
+<!-- ══ ABA: VISÃO GERAL ══ -->
+<div class="fin-pane active" id="pane-geral">
+    <div class="row g-2 mb-2">
+        <div class="col-lg-5">
+            <div class="gc h-100">
+                <div class="gc-title"><span><i class="bi bi-funnel-fill"></i>Funil Financeiro</span>
+                    <span class="gc-sub">orçado → pago</span></div>
+                <div style="height:230px;"><canvas id="chartFunil"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="gc h-100">
+                <div class="gc-title"><span><i class="bi bi-graph-up"></i>Curva S Financeira</span>
+                    <span class="gc-sub">medido acumulado × linha de base</span></div>
+                <div style="height:230px;"><canvas id="chartFinanceiro"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div class="gc">
+        <div class="gc-title"><span><i class="bi bi-bar-chart-horizontal"></i>Medição por Contratada</span></div>
+        <div style="height:220px;"><canvas id="chartBarContratada"></canvas></div>
+    </div>
+</div>
+
+<!-- ══ ABA: FLUXO DE CAIXA ══ -->
+<div class="fin-pane" id="pane-caixa">
+    <div class="gc mb-2">
+        <div class="gc-title"><span><i class="bi bi-cash-stack"></i>Desembolso Mensal</span>
+            <span class="gc-sub">pago · previsto (lançamentos) · projetado (baseline + prazo pgto)</span></div>
+        {% if n_lancamentos == 0 %}
+        <div class="empty-cta" style="padding:1.2rem;">
+            <i class="bi bi-journal-x"></i>
+            Nenhum lançamento financeiro cadastrado — o fluxo abaixo usa apenas a projeção da linha de base.<br>
+            {% if can_write %}<a href="{{ url_for('financeiro_lancamentos') }}">Cadastrar lançamentos (medição → fatura → pagamento) →</a>{% endif %}
+        </div>
+        {% endif %}
+        <div style="height:280px;"><canvas id="chartCaixa"></canvas></div>
+    </div>
+    <div class="gc">
+        <div class="gc-title"><span><i class="bi bi-info-circle"></i>Como é calculado</span></div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.5);line-height:1.7;">
+            <b style="color:#46C26A;">Pago</b> — lançamentos com data de pagamento realizada. ·
+            <b style="color:#F0B34D;">Previsto</b> — lançamentos aguardando pagamento (data prevista). ·
+            <b style="color:rgba(255,255,255,.65);">Projetado</b> — linha de base financeira mensal dos contratos, deslocada pelo prazo de pagamento e líquida de retenções/impostos.
+            A linha azul mostra o desembolso acumulado.
+        </div>
+    </div>
+</div>
+
+<!-- ══ ABA: CAPEX / OPEX ══ -->
+<div class="fin-pane" id="pane-capex">
+    {% if not tem_centros %}
+    <div class="gc mb-2"><div class="empty-cta" style="padding:1.2rem;">
+        <i class="bi bi-diagram-3"></i>
+        Nenhum centro de custo cadastrado — os contratos aparecem como "Sem centro de custo".<br>
+        {% if current_user and current_user.role in ['admin','master','rumo'] %}
+        <a href="{{ url_for('financeiro_config') }}">Cadastrar centros de custo e orçamento →</a>
+        {% endif %}
+    </div></div>
     {% endif %}
-        <div class="kpi-ml">Saldo Disponível</div>
-        <div class="kpi-mv sm" style="color:{% if kpis.saldo >= 0 %}#46C26A{% else %}#ff7a89{% endif %};">
-            {{ kpis.saldo|currency }}
-        </div>
-    </div>
-    <div class="kpi-mini am">
-        <div class="kpi-ml">% Executado</div>
-        <div class="kpi-mv" style="color:#F0B34D;">{{ kpis.pct_global }}%</div>
-    </div>
-    <div class="kpi-mini g">
-        <div class="kpi-ml">Medição da Semana</div>
-        <div class="kpi-mv sm">{{ kpis.valor_semana|currency }}</div>
-    </div>
-</div>
-
-<!-- CURVA S FINANCEIRA + BARRA POR CONTRATADA -->
-<div class="row g-2 mb-2">
-    <div class="col-lg-8">
-        <div class="gc h-100">
-            <div class="gc-title">
-                <span><i class="bi bi-graph-up-arrow"></i>Curva S Financeira</span>
-                <span class="gc-sub">R$ Acumulado</span>
+    <div class="row g-2">
+        <div class="col-lg-4">
+            <div class="gc h-100">
+                <div class="gc-title"><span><i class="bi bi-pie-chart-fill"></i>CAPEX × OPEX</span>
+                    <span class="gc-sub">comprometido</span></div>
+                <div style="height:230px;"><canvas id="chartClasse"></canvas></div>
+                <div class="mt-2" style="font-size:.72rem;color:rgba(255,255,255,.5);" id="classeResumo"></div>
             </div>
-            <canvas id="chartFinanceiro" height="130"></canvas>
         </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="gc h-100">
-            <div class="gc-title">
-                <span><i class="bi bi-bar-chart-horizontal"></i>Medição por Contratada</span>
-                <span class="gc-sub">R$ Total</span>
+        <div class="col-lg-8">
+            <div class="gc h-100">
+                <div class="gc-title"><span><i class="bi bi-bar-chart-steps"></i>Por Centro de Custo</span>
+                    <span class="gc-sub">orçado × comprometido × medido</span></div>
+                <div style="height:270px;"><canvas id="chartCC"></canvas></div>
             </div>
-            <canvas id="chartBarContratada" height="200"></canvas>
         </div>
     </div>
 </div>
 
-<!-- TABELA DE CONTRATOS -->
-<div class="gc">
-    <div class="gc-title">
-        <span><i class="bi bi-table"></i>Resumo por Contrato</span>
-        <span class="gc-sub">{{ contratos_fin|length }} contrato(s)</span>
-    </div>
-    {% if contratos_fin %}
-    <div style="overflow-x:auto;">
-    <table class="fin-table">
-        <thead>
+<!-- ══ ABA: CONTRATOS ══ -->
+<div class="fin-pane" id="pane-contratos">
+    <div class="gc" style="padding:0; overflow-x:auto; max-height:520px; overflow-y:auto;">
+        <table class="fin-table">
+            <thead><tr>
+                <th>Contratada</th><th>Contrato</th><th>Classe</th><th>Centro de Custo</th>
+                <th class="text-end">Base</th><th class="text-end">Aditivos</th>
+                <th class="text-end">Efetivo</th><th class="text-end">Medido</th>
+                <th class="text-end">%</th><th class="text-end">Saldo</th>
+                <th class="text-end">Pago</th><th>Status</th>
+            </tr></thead>
+            <tbody>
+            {% for c in contratos_fin %}
             <tr>
-                <th>Contratada</th>
-                <th>Contrato</th>
-                <th class="r">Valor do Contrato</th>
-                <th class="r">Total Medido</th>
-                <th class="r">Saldo</th>
-                <th style="text-align:center; width:120px;">% Executado</th>
-                <th style="text-align:center;">Status</th>
+                <td style="font-weight:600;">{{ c.contratada }}</td>
+                <td class="mono" style="color:rgba(255,255,255,.55);">{{ c.contrato }}</td>
+                <td><span class="pill pill-{{ c.classificacao|lower }}">{{ c.classificacao }}</span></td>
+                <td style="color:rgba(255,255,255,.6);">{{ c.centro_custo or '—' }}</td>
+                <td class="text-end mono">{{ c.valor_base|currency }}</td>
+                <td class="text-end mono" style="color:{% if c.aditivos %}#F0B34D{% else %}rgba(255,255,255,.3){% endif %};">
+                    {% if c.aditivos %}+{{ c.aditivos|currency }}{% else %}—{% endif %}</td>
+                <td class="text-end mono" style="font-weight:700;">{{ c.valor|currency }}</td>
+                <td class="text-end mono" style="color:#2BB2EE;">{{ c.medido|currency }}</td>
+                <td class="text-end mono" style="color:{% if c.pct >= 100 %}#46C26A{% elif c.pct >= 70 %}#F0B34D{% else %}#fff{% endif %};">{{ c.pct }}%</td>
+                <td class="text-end mono">{{ c.saldo|currency }}</td>
+                <td class="text-end mono" style="color:#46C26A;">{% if c.pago %}{{ c.pago|currency }}{% else %}—{% endif %}</td>
+                <td><span class="pill pill-{{ c.status }}">{{ c.status }}</span></td>
             </tr>
-        </thead>
-        <tbody>
-        {% for c in contratos_fin %}
-        {% set pct_color = '#46C26A' if c.pct >= 80 else ('#F0B34D' if c.pct >= 40 else '#2BB2EE') %}
-        <tr>
-            <td style="font-weight:600;">{{ c.contratada }}</td>
-            <td style="color:rgba(255,255,255,.55); font-size:.74rem;">{{ c.contrato }}</td>
-            <td class="r">{% if c.valor %}{{ c.valor|currency }}{% else %}<span style="color:rgba(255,255,255,.25);">—</span>{% endif %}</td>
-            <td class="r" style="color:#5bd17e;">{{ c.medido|currency }}</td>
-            <td class="r" style="color:{% if c.saldo >= 0 %}#5bd17e{% else %}#ff7a89{% endif %};">
-                {{ c.saldo|currency }}
-            </td>
-            <td style="padding:.46rem .65rem;">
-                <div style="display:flex;align-items:center;gap:.5rem;">
-                    <div class="prog-bar" style="flex:1;">
-                        <div class="prog-fill" style="width:{{ [c.pct,100]|min }}%; background:{{ pct_color }};"></div>
-                    </div>
-                    <span style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;font-weight:600;color:{{ pct_color }};min-width:38px;text-align:right;">{{ c.pct }}%</span>
-                </div>
-            </td>
-            <td style="text-align:center;">
-                {% if c.status == 'ativo' %}
-                <span class="badge-ativo">Ativo</span>
-                {% else %}
-                <span class="badge-encerrado">Encerrado</span>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
-    {% else %}
-    <p style="color:rgba(255,255,255,.35);font-size:.82rem;text-align:center;padding:1rem 0;margin:0;">Nenhum contrato configurado.</p>
+</div>
+
+<!-- ══ ABA: EVM ══ -->
+<div class="fin-pane" id="pane-evm">
+    {% if evm %}
+    <div class="evm-grid">
+        <div class="evm-card">
+            <div class="el">PV — Valor Planejado</div>
+            <div class="ev">{{ evm.pv|currency }}</div>
+            <div class="es">Linha de base financeira acumulada até o mês atual.</div>
+        </div>
+        <div class="evm-card">
+            <div class="el">EV — Valor Agregado</div>
+            <div class="ev">{{ evm.ev|currency }}</div>
+            <div class="es">Avanço físico × valor contratado efetivo.</div>
+        </div>
+        <div class="evm-card">
+            <div class="el">AC — Custo Real</div>
+            <div class="ev">{{ evm.ac|currency }}</div>
+            <div class="es">Total medido acumulado (proxy de custo incorrido).</div>
+        </div>
+        <div class="evm-card">
+            <div class="el">CPI — Desemp. de Custo</div>
+            <div class="ev {{ 'evm-good' if evm.cpi and evm.cpi >= 1 else 'evm-bad' if evm.cpi else '' }}">{{ evm.cpi if evm.cpi is not none else '—' }}</div>
+            <div class="es">EV ÷ AC · ≥ 1,00 = custo abaixo do valor agregado.</div>
+        </div>
+        <div class="evm-card">
+            <div class="el">SPI — Desemp. de Prazo</div>
+            <div class="ev {{ 'evm-good' if evm.spi and evm.spi >= 1 else 'evm-bad' if evm.spi else '' }}">{{ evm.spi if evm.spi is not none else '—' }}</div>
+            <div class="es">EV ÷ PV · ≥ 1,00 = adiantado em relação à baseline.</div>
+        </div>
+        <div class="evm-card">
+            <div class="el">EAC — Custo Est. Final</div>
+            <div class="ev">{% if evm.eac is not none %}{{ evm.eac|currency }}{% else %}—{% endif %}</div>
+            <div class="es">Contratado ÷ CPI · projeção mantendo o desempenho atual.</div>
+        </div>
+    </div>
+    <div class="gc">
+        <div class="gc-title"><span><i class="bi bi-bar-chart-line"></i>PV × EV × AC</span>
+            <span class="gc-sub">var. custo {{ evm.var_custo|currency }} · var. prazo {{ evm.var_prazo|currency }}</span></div>
+        <div style="height:180px;"><canvas id="chartEVM"></canvas></div>
+    </div>
     {% endif %}
 </div>
 
 {% endif %}
 </div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -273,90 +386,155 @@ main { position: relative; z-index: 1; }
 <script>
 Chart.register(ChartDataLabels);
 
+// Tabs
+document.querySelectorAll('.fin-tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.fin-tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.fin-pane').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.pane).classList.add('active');
+}));
+
+const fmtK = v => {
+    if (v === null || v === undefined) return '';
+    const a = Math.abs(v);
+    if (a >= 1e6) return 'R$ ' + (v/1e6).toFixed(1).replace('.', ',') + 'M';
+    if (a >= 1e3) return 'R$ ' + (v/1e3).toFixed(0) + 'k';
+    return 'R$ ' + Number(v).toFixed(0);
+};
+const TICK = { font:{size:10}, color:'rgba(255,255,255,.4)' };
+const GRID = { color:'rgba(255,255,255,.06)' };
+
+{% if kpis %}
 const LABELS    = {{ chart_labels|safe }};
 const FIN_ACUM  = {{ curva_fin_acum|safe }};
 const FIN_BASE  = {{ curva_fin_base|safe }};
-const BAR_LABELS  = {{ bar_labels|safe }};
-const BAR_VALS    = {{ bar_vals|safe }};
-const BAR_COLORS  = {{ bar_colors|safe }};
+const FUNIL_L   = {{ funil_labels|safe }};
+const FUNIL_V   = {{ funil|safe }};
+const BAR_L     = {{ bar_labels|safe }};
+const BAR_V     = {{ bar_vals|safe }};
+const BAR_C     = {{ bar_colors|safe }};
+const CF_L      = {{ cf_labels|safe }};
+const CF_PAGO   = {{ cf_pago|safe }};
+const CF_PREV   = {{ cf_prev|safe }};
+const CF_PROJ   = {{ cf_proj|safe }};
+const CF_ACUM   = {{ cf_acum|safe }};
+const CLASSE    = {{ class_data|safe }};
+const CC_L      = {{ cc_labels|safe }};
+const CC_ORC    = {{ cc_orcado|safe }};
+const CC_COMP   = {{ cc_comprometido|safe }};
+const CC_MED    = {{ cc_medido|safe }};
+const EVM       = {{ evm|tojson if evm else 'null' }};
 
-const C_AMBER = '#F0B34D', C_CYAN = '#2BB2EE';
-const GRID = 'rgba(255,255,255,.06)';
-const TICK = { color:'rgba(255,255,255,.45)', font:{ size:10, family:"'IBM Plex Mono',monospace" } };
-
-Chart.defaults.font.family = "'IBM Plex Sans',system-ui,sans-serif";
-Chart.defaults.set('plugins.datalabels', {
-    color: '#fff',
-    font: { size: 10, weight: 600, family: "'IBM Plex Mono',monospace" },
-    display: ctx => ctx.dataset.data[ctx.dataIndex] != null,
+// ── Funil financeiro ──
+new Chart(document.getElementById('chartFunil'), {
+    type: 'bar',
+    data: { labels: FUNIL_L, datasets: [{
+        data: FUNIL_V,
+        backgroundColor: ['rgba(255,255,255,.28)','#F0B34D','#2BB2EE','#9b8cff','#46C26A'],
+        borderRadius: 4, borderSkipped: false }] },
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{display:false},
+            datalabels:{ anchor:'end', align:'right', clamp:true, color:'#fff',
+                         font:{size:10,weight:'700'}, formatter: fmtK } },
+        scales: { x:{ ticks:{...TICK, callback:fmtK}, grid:GRID },
+                  y:{ ticks:{...TICK, font:{size:11}}, grid:{display:false} } } }
 });
 
-// ── Curva S Financeira ──
-if (document.getElementById('chartFinanceiro') && LABELS.length) {
-    new Chart(document.getElementById('chartFinanceiro'), {
-        type: 'line',
-        data: {
-            labels: LABELS,
-            datasets: [{
-                label: 'Realizado (R$)',
-                data: FIN_ACUM,
-                borderColor: C_AMBER,
-                backgroundColor: 'rgba(240,179,77,.08)',
-                borderWidth: 2,
-                pointRadius: 3, pointBackgroundColor: C_AMBER,
-                fill: true, tension: 0.4,
-            },{
-                label: 'Linha de Base',
-                data: FIN_BASE,
-                borderColor: C_CYAN,
-                borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
-            }]
-        },
-        options: {
-            responsive:true, animation:{ duration:600 },
-            plugins:{
-                legend:{ position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:12, color:'rgba(255,255,255,.5)' }},
-                tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===1?'':' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
-                datalabels:{
-                    display: ctx => ctx.datasetIndex===0 && ctx.dataset.data[ctx.dataIndex]!=null,
-                    align:'top', anchor:'end', color:C_AMBER,
-                    formatter: v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'
-                }
-            },
-            scales:{
-                x:{ grid:{color:GRID}, ticks:TICK },
-                y:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>'R$'+(v/1000).toLocaleString('pt-BR')+'k' }}
-            }
-        }
+// ── Curva S ──
+if (LABELS.length) new Chart(document.getElementById('chartFinanceiro'), {
+    type: 'line',
+    data: { labels: LABELS, datasets: [
+        { label:'Medido acumulado', data:FIN_ACUM, borderColor:'#F0B34D',
+          backgroundColor:'rgba(240,179,77,.12)', fill:true, tension:.3, pointRadius:2 },
+        { label:'Linha de base', data:FIN_BASE, borderColor:'rgba(255,255,255,.45)',
+          borderDash:[6,4], fill:false, tension:.3, pointRadius:0 }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{ labels:{ color:'rgba(255,255,255,.6)', font:{size:10}, boxWidth:14 } },
+                   datalabels:{display:false} },
+        scales: { x:{ ticks:{...TICK, maxTicksLimit:12}, grid:{display:false} },
+                  y:{ ticks:{...TICK, callback:fmtK}, grid:GRID } } }
+});
+
+// ── Medição por contratada ──
+if (BAR_L.length) new Chart(document.getElementById('chartBarContratada'), {
+    type: 'bar',
+    data: { labels: BAR_L, datasets: [{ data: BAR_V, backgroundColor: BAR_C, borderRadius: 4, borderSkipped:false }] },
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{display:false},
+            datalabels:{ anchor:'end', align:'right', clamp:true, color:'#fff', font:{size:10,weight:'700'}, formatter:fmtK } },
+        scales: { x:{ ticks:{...TICK, callback:fmtK}, grid:GRID },
+                  y:{ ticks:TICK, grid:{display:false} } } }
+});
+
+// ── Fluxo de caixa ──
+if (CF_L.length) {
+    new Chart(document.getElementById('chartCaixa'), {
+        data: { labels: CF_L, datasets: [
+            { type:'bar', label:'Pago', data:CF_PAGO, backgroundColor:'#46C26A', stack:'s', borderRadius:3 },
+            { type:'bar', label:'Previsto', data:CF_PREV, backgroundColor:'#F0B34D', stack:'s', borderRadius:3 },
+            { type:'bar', label:'Projetado', data:CF_PROJ, backgroundColor:'rgba(255,255,255,.3)', stack:'s', borderRadius:3 },
+            { type:'line', label:'Acumulado', data:CF_ACUM, borderColor:'#2BB2EE', yAxisID:'y2',
+              tension:.3, pointRadius:2, fill:false }
+        ]},
+        options: { responsive:true, maintainAspectRatio:false,
+            plugins: { legend:{ labels:{ color:'rgba(255,255,255,.6)', font:{size:10}, boxWidth:14 } },
+                       datalabels:{display:false} },
+            scales: { x:{ stacked:true, ticks:{...TICK, maxTicksLimit:18}, grid:{display:false} },
+                      y:{ stacked:true, ticks:{...TICK, callback:fmtK}, grid:GRID },
+                      y2:{ position:'right', ticks:{...TICK, callback:fmtK}, grid:{display:false} } } }
     });
+} else {
+    const cv = document.getElementById('chartCaixa');
+    if (cv) cv.parentElement.innerHTML = '<div class="empty-cta"><i class="bi bi-cash-stack"></i>Sem dados de fluxo de caixa — cadastre lançamentos ou linhas de base financeiras.</div>';
 }
 
-// ── Barra por Contratada ──
-if (document.getElementById('chartBarContratada') && BAR_LABELS.length) {
-    new Chart(document.getElementById('chartBarContratada'), {
-        type: 'bar',
-        data: {
-            labels: BAR_LABELS,
-            datasets:[{ label:'Medição (R$)', data: BAR_VALS, backgroundColor: BAR_COLORS, borderRadius: 2, borderSkipped: false }]
-        },
-        options: {
-            indexAxis:'y', responsive:true, animation:{ duration:600 },
-            layout:{ padding:{ right:55 } },
-            plugins:{
-                legend:{ display:false },
-                tooltip:{ callbacks:{ label: ctx=>' R$ '+ctx.parsed.x.toLocaleString('pt-BR',{minimumFractionDigits:2}) }},
-                datalabels:{
-                    anchor:'end', align:'end', color:'#fff', clip:false,
-                    formatter: v => 'R$'+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k'
-                }
-            },
-            scales:{
-                x:{ grid:{color:GRID}, ticks:{ ...TICK, callback: v=>'R$'+(v/1000).toLocaleString('pt-BR')+'k' },
-                    max: BAR_VALS.length ? Math.max(...BAR_VALS) * 1.35 : 100 },
-                y:{ grid:{display:false}, ticks:TICK }
-            }
-        }
-    });
-}
+// ── CAPEX × OPEX ──
+const capex = CLASSE.CAPEX || {comprometido:0, medido:0, pago:0};
+const opex  = CLASSE.OPEX  || {comprometido:0, medido:0, pago:0};
+new Chart(document.getElementById('chartClasse'), {
+    type: 'doughnut',
+    data: { labels:['CAPEX','OPEX'], datasets:[{
+        data:[capex.comprometido, opex.comprometido],
+        backgroundColor:['#2BB2EE','#9b8cff'], borderWidth:2, borderColor:'#13242F' }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'58%',
+        plugins: { legend:{ position:'bottom', labels:{ color:'rgba(255,255,255,.6)', font:{size:10}, boxWidth:12 } },
+            datalabels:{ color:'#fff', font:{size:11,weight:'700'},
+                display: c => c.dataset.data[c.dataIndex] > 0,
+                formatter: (v,c) => { const t = c.dataset.data.reduce((a,b)=>a+b,0);
+                    return t ? Math.round(v/t*100)+'%' : ''; } } } }
+});
+document.getElementById('classeResumo').innerHTML =
+    `<b style="color:#6fd6ff;">CAPEX</b> medido ${fmtK(capex.medido)} · pago ${fmtK(capex.pago)}<br>` +
+    `<b style="color:#b8adff;">OPEX</b> medido ${fmtK(opex.medido)} · pago ${fmtK(opex.pago)}`;
+
+// ── Por centro de custo ──
+if (CC_L.length) new Chart(document.getElementById('chartCC'), {
+    type: 'bar',
+    data: { labels: CC_L, datasets: [
+        { label:'Orçado', data:CC_ORC, backgroundColor:'rgba(255,255,255,.28)', borderRadius:3 },
+        { label:'Comprometido', data:CC_COMP, backgroundColor:'#F0B34D', borderRadius:3 },
+        { label:'Medido', data:CC_MED, backgroundColor:'#2BB2EE', borderRadius:3 }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{ labels:{ color:'rgba(255,255,255,.6)', font:{size:10}, boxWidth:14 } },
+                   datalabels:{display:false} },
+        scales: { x:{ ticks:TICK, grid:{display:false} },
+                  y:{ ticks:{...TICK, callback:fmtK}, grid:GRID } } }
+});
+
+// ── EVM ──
+if (EVM) new Chart(document.getElementById('chartEVM'), {
+    type: 'bar',
+    data: { labels:['PV — Planejado','EV — Agregado','AC — Custo Real'], datasets:[{
+        data:[EVM.pv, EVM.ev, EVM.ac],
+        backgroundColor:['rgba(255,255,255,.3)','#46C26A','#F0B34D'], borderRadius:4, borderSkipped:false }] },
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{display:false},
+            datalabels:{ anchor:'end', align:'right', clamp:true, color:'#fff', font:{size:10,weight:'700'}, formatter:fmtK } },
+        scales: { x:{ ticks:{...TICK, callback:fmtK}, grid:GRID },
+                  y:{ ticks:{...TICK, font:{size:11}}, grid:{display:false} } } }
+});
+{% endif %}
 </script>
 {% endblock %}

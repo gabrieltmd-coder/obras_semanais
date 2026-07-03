@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Config. Financeira{% endblock %}
+{% block page_icon %}<i class="bi bi-sliders"></i>{% endblock %}
+{% block page_title %}Configuração Financeira{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('financeiro') }}">Financeiro</a> / Centros de Custo &amp; Orçamento{% endblock %}
+
+{% block content %}
+<style>
+.cfg-card { background:#fff; border:1px solid var(--tms-border); border-radius:10px; margin-bottom:1.2rem; overflow:hidden; }
+.cfg-head { background:var(--tms-bg); padding:.7rem 1.1rem; border-bottom:1px solid var(--tms-border);
+    font-family:'IBM Plex Mono',monospace; font-size:.64rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.09em; color:var(--tms-dark);
+    display:flex; align-items:center; justify-content:space-between; }
+.cfg-head i { color:#F0B34D; margin-right:.4rem; }
+.cfg-body { padding:1rem 1.1rem; }
+.cc-table { font-size:.8rem; }
+.cc-table th { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.07em; color:var(--tms-muted);
+    border-bottom:2px solid var(--tms-border); padding:.45rem .6rem; }
+.cc-table td { padding:.4rem .6rem; border-bottom:1px solid var(--tms-border); vertical-align:middle; }
+.pill { display:inline-block; font-size:.62rem; font-weight:600; padding:2px 9px; border-radius:20px; }
+.pill-capex { background:#E6F2FF; color:#005FA3; }
+.pill-opex  { background:#F3E8FB; color:#6B2D8B; }
+.orc-table { font-size:.72rem; border-collapse:collapse; width:100%; }
+.orc-table th { font-family:'IBM Plex Mono',monospace; font-size:.56rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.05em; color:var(--tms-muted);
+    background:var(--tms-bg); border:1px solid var(--tms-border); padding:.35rem .4rem; text-align:center; white-space:nowrap; }
+.orc-table td { border:1px solid var(--tms-border); padding:0; }
+.orc-table td.cc-nome { padding:.35rem .6rem; font-weight:600; white-space:nowrap; background:#fff; }
+.orc-table input { width:100%; min-width:78px; border:none; padding:.32rem .4rem; font-size:.72rem;
+    font-family:'IBM Plex Mono',monospace; text-align:right; background:transparent; }
+.orc-table input:focus { outline:2px solid #F0B34D; outline-offset:-2px; background:#FFFBF0; }
+.orc-table td.tot { padding:.32rem .5rem; text-align:right; font-family:'IBM Plex Mono',monospace;
+    font-weight:700; background:var(--tms-bg); white-space:nowrap; }
+.form-label-sm { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.07em; color:var(--tms-muted); margin-bottom:.2rem; display:block; }
+</style>
+
+<div class="container-fluid px-3" style="max-width:1300px;">
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="alert alert-{{ 'danger' if cat=='danger' else 'success' if cat=='success' else 'warning' }} alert-dismissible fade show py-2 mb-2" style="font-size:.82rem;">
+    {{ msg }}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+{% endwith %}
+
+<!-- ══ CENTROS DE CUSTO ══ -->
+<div class="cfg-card">
+    <div class="cfg-head"><span><i class="bi bi-diagram-3"></i>Centros de Custo</span>
+        <span style="font-weight:400;color:var(--tms-muted);">{{ centros|length }} cadastrados</span></div>
+    <div class="cfg-body">
+        <form method="post" action="{{ url_for('financeiro_config_centro') }}" class="row g-2 align-items-end mb-3" id="formCentro">
+            <input type="hidden" name="id" id="cc_id" value="">
+            <div class="col-md-2">
+                <span class="form-label-sm">Código</span>
+                <input type="text" name="codigo" id="cc_codigo" class="form-control form-control-sm" placeholder="CC-01">
+            </div>
+            <div class="col-md-4">
+                <span class="form-label-sm">Nome *</span>
+                <input type="text" name="nome" id="cc_nome" class="form-control form-control-sm" placeholder="Ex: Obras Civis" required>
+            </div>
+            <div class="col-md-2">
+                <span class="form-label-sm">Tipo padrão</span>
+                <select name="tipo" id="cc_tipo" class="form-select form-select-sm">
+                    <option value="CAPEX">CAPEX</option>
+                    <option value="OPEX">OPEX</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary-rumo"><i class="bi bi-plus-lg me-1"></i><span id="cc_btn_label">Adicionar</span></button>
+                <button type="button" class="btn btn-sm btn-secondary-rumo" id="cc_cancel" style="display:none;" onclick="cancelarEdicaoCC()">Cancelar</button>
+            </div>
+        </form>
+        {% if centros %}
+        <table class="table table-sm cc-table mb-0">
+            <thead><tr><th>Código</th><th>Nome</th><th>Tipo</th><th style="width:90px;"></th></tr></thead>
+            <tbody>
+            {% for c in centros %}
+            <tr>
+                <td style="font-family:'IBM Plex Mono',monospace;">{{ c.codigo or '—' }}</td>
+                <td style="font-weight:600;">{{ c.nome }}</td>
+                <td><span class="pill pill-{{ (c.tipo or 'CAPEX')|lower }}">{{ c.tipo or 'CAPEX' }}</span></td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm p-0 px-1" title="Editar"
+                            onclick='editarCC({{ c|tojson }})'><i class="bi bi-pencil" style="color:#005FA3;"></i></button>
+                    <form method="post" action="{{ url_for('financeiro_config_centro_excluir', cid=c.id) }}"
+                          style="display:inline;" onsubmit="return confirm('Excluir o centro de custo \'{{ c.nome }}\'? Os orçamentos vinculados serão removidos.');">
+                        <button type="submit" class="btn btn-sm p-0 px-1" title="Excluir"><i class="bi bi-trash3" style="color:#b02a37;"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-3" style="color:var(--tms-muted);font-size:.8rem;">
+            Nenhum centro de custo ainda — cadastre o primeiro acima. Depois vincule cada contrato a um centro em <b>Configurar Contrato</b>.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ══ ORÇAMENTO MENSAL ══ -->
+<div class="cfg-card">
+    <div class="cfg-head">
+        <span><i class="bi bi-calendar3"></i>Orçamento Mensal por Centro de Custo</span>
+        <form method="get" class="d-flex align-items-center gap-2">
+            <select name="ano" class="form-select form-select-sm" style="width:100px;font-size:.75rem;" onchange="this.form.submit()">
+                {% for a in anos %}<option value="{{ a }}" {% if a == ano %}selected{% endif %}>{{ a }}</option>{% endfor %}
+                {% if (ano + 1) not in anos %}<option value="{{ ano + 1 }}">{{ ano + 1 }}</option>{% endif %}
+            </select>
+        </form>
+    </div>
+    <div class="cfg-body">
+        {% if centros %}
+        <form method="post" action="{{ url_for('financeiro_config_orcamento') }}">
+            <input type="hidden" name="ano" value="{{ ano }}">
+            <div style="overflow-x:auto;">
+                <table class="orc-table">
+                    <thead><tr>
+                        <th style="text-align:left;">Centro de Custo</th>
+                        {% for m in meses %}<th>{{ m[5:] }}/{{ m[2:4] }}</th>{% endfor %}
+                        <th>Total</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for c in centros %}
+                    <tr>
+                        <td class="cc-nome">{{ c.nome }}</td>
+                        {% for m in meses %}
+                        <td><input type="text" name="orc|{{ c.id }}|{{ m }}" class="orc-input"
+                                   value="{% set v = orc_map.get(c.id, {}).get(m) %}{% if v %}{{ '%.2f'|format(v)|replace('.', ',') }}{% endif %}"
+                                   placeholder="—" oninput="totalizar()"></td>
+                        {% endfor %}
+                        <td class="tot row-tot">—</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div style="font-size:.7rem;color:var(--tms-muted);">
+                    Valores em R$ · campos vazios não são gravados · salvar substitui o orçamento de {{ ano }}.
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary-rumo"><i class="bi bi-check-lg me-1"></i>Salvar Orçamento {{ ano }}</button>
+            </div>
+        </form>
+        {% else %}
+        <div class="text-center py-3" style="color:var(--tms-muted);font-size:.8rem;">
+            Cadastre centros de custo acima para habilitar a grade de orçamento.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editarCC(c) {
+    document.getElementById('cc_id').value     = c.id;
+    document.getElementById('cc_codigo').value = c.codigo || '';
+    document.getElementById('cc_nome').value   = c.nome || '';
+    document.getElementById('cc_tipo').value   = c.tipo || 'CAPEX';
+    document.getElementById('cc_btn_label').textContent = 'Salvar alteração';
+    document.getElementById('cc_cancel').style.display = '';
+    document.getElementById('cc_nome').focus();
+}
+function cancelarEdicaoCC() {
+    document.getElementById('formCentro').reset();
+    document.getElementById('cc_id').value = '';
+    document.getElementById('cc_btn_label').textContent = 'Adicionar';
+    document.getElementById('cc_cancel').style.display = 'none';
+}
+function num(v) { return parseFloat(String(v || '0').replace(/\./g, '').replace(',', '.')) || 0; }
+function totalizar() {
+    document.querySelectorAll('.orc-table tbody tr').forEach(tr => {
+        let t = 0;
+        tr.querySelectorAll('input.orc-input').forEach(i => t += num(i.value));
+        const cell = tr.querySelector('.row-tot');
+        if (cell) cell.textContent = t ? t.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}) : '—';
+    });
+}
+totalizar();
+</script>
+{% endblock %}

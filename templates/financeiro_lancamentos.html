@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Lançamentos Financeiros{% endblock %}
+{% block page_icon %}<i class="bi bi-journal-plus"></i>{% endblock %}
+{% block page_title %}Lançamentos Financeiros{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('financeiro') }}">Financeiro</a> / Lançamentos{% endblock %}
+
+{% block page_actions %}
+{% if can_write %}
+<button type="button" class="btn-back-header" data-bs-toggle="modal" data-bs-target="#modalLanc"
+        onclick="prepararNovo()" style="background:rgba(240,179,77,.12);border-color:rgba(240,179,77,.4);color:#F0B34D;">
+    <i class="bi bi-plus-lg"></i><span>Novo Lançamento</span>
+</button>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+.lanc-filter { background:#fff; border:1px solid var(--tms-border); border-left:4px solid #F0B34D;
+    border-radius:8px; padding:.7rem 1rem; margin-bottom:1rem;
+    display:flex; align-items:flex-end; gap:.75rem; flex-wrap:wrap; }
+.lanc-filter .fl { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.08em; color:var(--tms-muted); margin-bottom:.2rem; display:block; }
+.lanc-filter .form-control, .lanc-filter .form-select { font-size:.78rem; height:32px; padding:.3rem .6rem; border-radius:6px; }
+.lanc-filter .btn { height:32px; font-size:.75rem; padding:.3rem .85rem; border-radius:6px; }
+.lanc-table { font-size:.76rem; }
+.lanc-table th { font-family:'IBM Plex Mono',monospace; font-size:.56rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.07em; color:var(--tms-muted);
+    background:var(--tms-bg); border-bottom:2px solid var(--tms-border);
+    padding:.5rem .6rem; white-space:nowrap; position:sticky; top:0; z-index:1; }
+.lanc-table td { padding:.4rem .6rem; border-bottom:1px solid var(--tms-border); white-space:nowrap; vertical-align:middle; }
+.lanc-table tbody tr:hover { background:var(--tms-bg); }
+.mono { font-family:'IBM Plex Mono',monospace; }
+.pill { display:inline-block; font-size:.62rem; font-weight:600; padding:2px 9px; border-radius:20px; }
+.pill-medido   { background:#E6F2FF; color:#005FA3; }
+.pill-faturado { background:#FFF4E0; color:#9a6a00; }
+.pill-pago     { background:#E6F7EC; color:#007A20; }
+.stat-pill { display:inline-flex; align-items:center; gap:.3rem; background:var(--tms-bg);
+    border:1px solid var(--tms-border); border-radius:20px;
+    font-family:'IBM Plex Mono',monospace; font-size:.68rem; font-weight:600;
+    color:var(--tms-muted); padding:.2rem .7rem; }
+.table-wrap { overflow-x:auto; border:1px solid var(--tms-border); border-radius:10px; background:#fff; max-height:600px; overflow-y:auto; }
+.modal .form-label { font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.07em; color:var(--tms-muted); margin-bottom:.2rem; }
+.modal .form-control, .modal .form-select { font-size:.8rem; }
+.modal .sec-label { font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.08em; color:#9a6a00;
+    border-bottom:1px solid var(--tms-border); padding-bottom:.3rem; margin:.6rem 0 .5rem; }
+</style>
+
+<div class="container-fluid px-3" style="max-width:1420px;">
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="alert alert-{{ 'danger' if cat=='danger' else 'success' if cat=='success' else 'warning' }} alert-dismissible fade show py-2 mb-2" style="font-size:.82rem;">
+    {{ msg }}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+{% endwith %}
+
+<!-- FILTROS -->
+<form method="get" class="lanc-filter">
+    <div>
+        <span class="fl">Contratada</span>
+        <select name="contratada" class="form-select" style="min-width:170px;" {% if viewer_contratada %}disabled{% endif %}>
+            <option value="">Todas</option>
+            {% for c in contratadas_list %}
+            <option value="{{ c }}" {% if f_contratada == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <span class="fl">Status</span>
+        <select name="status" class="form-select" style="min-width:130px;">
+            <option value="">Todos</option>
+            <option value="medido"   {% if f_status == 'medido' %}selected{% endif %}>Medido</option>
+            <option value="faturado" {% if f_status == 'faturado' %}selected{% endif %}>Faturado</option>
+            <option value="pago"     {% if f_status == 'pago' %}selected{% endif %}>Pago</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary-rumo"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+    {% if f_contratada or f_status %}
+    <a href="{{ url_for('financeiro_lancamentos') }}" class="btn btn-secondary-rumo"><i class="bi bi-x-lg"></i></a>
+    {% endif %}
+    <div class="ms-auto d-flex gap-2 align-items-end">
+        <span class="stat-pill"><i class="bi bi-journal-text"></i>{{ lancamentos|length }} lançamentos</span>
+        <span class="stat-pill">bruto {{ tot_bruto|currency }}</span>
+        <span class="stat-pill">líquido {{ tot_liquido|currency }}</span>
+    </div>
+</form>
+
+<!-- TABELA -->
+<div class="table-wrap mb-4">
+    <table class="table table-sm lanc-table mb-0">
+        <thead><tr>
+            <th>Competência</th><th>Contratada</th><th>Contrato</th><th>Descrição</th>
+            <th class="text-end">Bruto</th><th class="text-end">Ret.%</th><th class="text-end">Imp.%</th>
+            <th class="text-end">Líquido</th>
+            <th>Medição</th><th>Fat. Prev</th><th>Fat. Real</th><th>Pgto Prev</th><th>Pgto Real</th>
+            <th>Status</th>{% if can_write %}<th></th>{% endif %}
+        </tr></thead>
+        <tbody>
+        {% if lancamentos %}
+            {% for l in lancamentos %}
+            <tr>
+                <td class="mono">{{ l.competencia }}</td>
+                <td style="font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;">{{ l.contratada }}</td>
+                <td class="mono" style="color:var(--tms-muted);">{{ l.contrato }}</td>
+                <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;" title="{{ l.descricao }}">{{ l.descricao or '—' }}</td>
+                <td class="text-end mono">{{ l.valor_bruto|currency }}</td>
+                <td class="text-end mono" style="color:var(--tms-muted);">{{ l.retencao_pct or 0 }}%</td>
+                <td class="text-end mono" style="color:var(--tms-muted);">{{ l.impostos_pct or 0 }}%</td>
+                <td class="text-end mono" style="font-weight:700;">{{ l.valor_liquido|currency }}</td>
+                <td class="mono" style="font-size:.68rem;">{{ l.data_medicao or '—' }}</td>
+                <td class="mono" style="font-size:.68rem;color:var(--tms-muted);">{{ l.data_fat_prev or '—' }}</td>
+                <td class="mono" style="font-size:.68rem;">{{ l.data_fat_real or '—' }}</td>
+                <td class="mono" style="font-size:.68rem;color:var(--tms-muted);">{{ l.data_pgto_prev or '—' }}</td>
+                <td class="mono" style="font-size:.68rem;">{{ l.data_pgto_real or '—' }}</td>
+                <td><span class="pill pill-{{ lancamento_status(l) }}">{{ lancamento_status(l) }}</span></td>
+                {% if can_write %}
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm p-0 px-1" title="Editar"
+                            data-bs-toggle="modal" data-bs-target="#modalLanc"
+                            onclick='prepararEdicao({{ l|tojson }})'>
+                        <i class="bi bi-pencil" style="color:#005FA3;"></i>
+                    </button>
+                    <form method="post" action="{{ url_for('financeiro_lancamento_excluir', lid=l.id) }}"
+                          style="display:inline;" onsubmit="return confirm('Excluir este lançamento?');">
+                        <button type="submit" class="btn btn-sm p-0 px-1" title="Excluir">
+                            <i class="bi bi-trash3" style="color:#b02a37;"></i>
+                        </button>
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="15" class="text-center py-4" style="color:var(--tms-muted);font-size:.82rem;">
+                <i class="bi bi-inbox" style="font-size:1.5rem;display:block;margin-bottom:.4rem;opacity:.4;"></i>
+                Nenhum lançamento encontrado.
+                {% if can_write %}Use o botão <b>Novo Lançamento</b> no topo da página.{% endif %}
+            </td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+</div>
+
+<!-- MODAL NOVO/EDITAR -->
+{% if can_write %}
+<div class="modal fade" id="modalLanc" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post" id="formLanc" action="{{ url_for('financeiro_lancamento_novo') }}">
+        <div class="modal-header py-2">
+            <h6 class="modal-title" id="modalLancTitle" style="font-weight:800;">Novo Lançamento</h6>
+            <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-2">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label">Contrato *</label>
+                    <select name="contrato_key" id="f_contrato_key" class="form-select" required onchange="preencherContrato()">
+                        <option value="">Selecione...</option>
+                        {% for c in contratos_opts %}
+                        <option value="{{ c.key }}">{{ c.contratada }} — {{ c.contrato }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Competência *</label>
+                    <input type="month" name="competencia" id="f_competencia" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data da Medição</label>
+                    <input type="date" name="data_medicao" id="f_data_medicao" class="form-control">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Descrição</label>
+                    <input type="text" name="descricao" id="f_descricao" class="form-control" placeholder="Ex: Boletim de Medição nº 12">
+                </div>
+            </div>
+            <div class="sec-label">Valores</div>
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label">Valor Bruto (R$) *</label>
+                    <input type="text" name="valor_bruto" id="f_valor_bruto" class="form-control" required
+                           placeholder="0,00" oninput="calcLiquido()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Retenção (%)</label>
+                    <input type="text" name="retencao_pct" id="f_retencao_pct" class="form-control" placeholder="0" oninput="calcLiquido()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Impostos (%)</label>
+                    <input type="text" name="impostos_pct" id="f_impostos_pct" class="form-control" placeholder="0" oninput="calcLiquido()">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div style="font-size:.75rem;color:var(--tms-muted);">
+                        Líquido<br><b id="f_liquido_preview" style="color:#007A20;font-size:.9rem;">—</b>
+                    </div>
+                </div>
+            </div>
+            <div class="sec-label">Faturamento &amp; Pagamento</div>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label">Faturamento Previsto</label>
+                    <input type="date" name="data_fat_prev" id="f_data_fat_prev" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Faturamento Real</label>
+                    <input type="date" name="data_fat_real" id="f_data_fat_real" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Pagamento Previsto</label>
+                    <input type="date" name="data_pgto_prev" id="f_data_pgto_prev" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Pagamento Real</label>
+                    <input type="date" name="data_pgto_real" id="f_data_pgto_real" class="form-control">
+                </div>
+            </div>
+            <div style="font-size:.68rem;color:var(--tms-muted);margin-top:.6rem;">
+                O status é derivado automaticamente: <b>pago</b> se houver pagamento real; <b>faturado</b> se houver faturamento real; caso contrário, <b>medido</b>.
+            </div>
+        </div>
+        <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-secondary-rumo" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-primary-rumo"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if can_write %}
+<script>
+const CONTRATOS = {{ contratos_opts|tojson }};
+const URL_NOVO  = "{{ url_for('financeiro_lancamento_novo') }}";
+
+function preencherContrato() {
+    const key = document.getElementById('f_contrato_key').value;
+    const c = CONTRATOS.find(x => x.key === key);
+    if (!c) return;
+    const ret = document.getElementById('f_retencao_pct');
+    const imp = document.getElementById('f_impostos_pct');
+    if (!ret.value || ret.value === '0') ret.value = String(c.retencao_pct).replace('.', ',');
+    if (!imp.value || imp.value === '0') imp.value = String(c.impostos_pct).replace('.', ',');
+    calcLiquido();
+}
+
+function num(v) { return parseFloat(String(v || '0').replace(/\./g, '').replace(',', '.')) || 0; }
+
+function calcLiquido() {
+    const b = num(document.getElementById('f_valor_bruto').value);
+    const r = num(document.getElementById('f_retencao_pct').value);
+    const i = num(document.getElementById('f_impostos_pct').value);
+    const l = b * (1 - (r + i) / 100);
+    document.getElementById('f_liquido_preview').textContent =
+        b ? l.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}) : '—';
+}
+
+function prepararNovo() {
+    document.getElementById('formLanc').action = URL_NOVO;
+    document.getElementById('modalLancTitle').textContent = 'Novo Lançamento';
+    document.getElementById('formLanc').reset();
+    calcLiquido();
+}
+
+function prepararEdicao(l) {
+    const f = document.getElementById('formLanc');
+    f.action = "{{ url_for('financeiro_lancamento_editar', lid='__ID__') }}".replace('__ID__', l.id);
+    document.getElementById('modalLancTitle').textContent = 'Editar Lançamento';
+    document.getElementById('f_contrato_key').value = l.contratada + '||' + l.contrato;
+    document.getElementById('f_competencia').value  = l.competencia || '';
+    document.getElementById('f_data_medicao').value = l.data_medicao || '';
+    document.getElementById('f_descricao').value    = l.descricao || '';
+    document.getElementById('f_valor_bruto').value  = (l.valor_bruto || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('f_retencao_pct').value = String(l.retencao_pct || 0).replace('.', ',');
+    document.getElementById('f_impostos_pct').value = String(l.impostos_pct || 0).replace('.', ',');
+    document.getElementById('f_data_fat_prev').value  = l.data_fat_prev || '';
+    document.getElementById('f_data_fat_real').value  = l.data_fat_real || '';
+    document.getElementById('f_data_pgto_prev').value = l.data_pgto_prev || '';
+    document.getElementById('f_data_pgto_real').value = l.data_pgto_real || '';
+    calcLiquido();
+}
+</script>
+{% endif %}
+{% endblock %}

@@ -164,6 +164,41 @@
                     <small style="color:var(--tms-muted); font-size:.68rem;">Substituir cálculo automático por data.</small>
                 </div>
             </div>
+            <div class="row g-3 mt-1">
+                <div class="col-md-3">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Classificação</label>
+                    <select name="classificacao" class="adm-select">
+                        {% set cls = (contrato.get('classificacao') or 'CAPEX')|upper %}
+                        <option value="CAPEX" {% if cls == 'CAPEX' %}selected{% endif %}>CAPEX — Investimento</option>
+                        <option value="OPEX" {% if cls == 'OPEX' %}selected{% endif %}>OPEX — Operacional</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Centro de Custo</label>
+                    <select name="centro_custo" class="adm-select">
+                        <option value="">— Sem centro —</option>
+                        {% for cc in centros_custo %}
+                        <option value="{{ cc.id }}" {% if contrato.get('centro_custo') == cc.id %}selected{% endif %}>{{ cc.codigo }} {{ cc.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <small style="color:var(--tms-muted); font-size:.68rem;">Cadastre em Financeiro → Config.</small>
+                </div>
+                <div class="col-md-2">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Prazo Pgto (dias)</label>
+                    <input type="number" name="prazo_pagamento_dias" class="adm-input" min="0" step="1"
+                           value="{{ contrato.get('prazo_pagamento_dias', 30) }}">
+                </div>
+                <div class="col-md-2">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Retenção (%)</label>
+                    <input type="text" name="retencao_pct" class="adm-input" placeholder="0"
+                           value="{{ ('%.2f'|format(contrato.get('retencao_pct', 0) or 0))|replace('.', ',') }}">
+                </div>
+                <div class="col-md-2">
+                    <label style="font-size:.72rem; font-weight:700; color:var(--tms-muted); text-transform:uppercase; letter-spacing:.07em; display:block; margin-bottom:.3rem;">Impostos (%)</label>
+                    <input type="text" name="impostos_pct" class="adm-input" placeholder="0"
+                           value="{{ ('%.2f'|format(contrato.get('impostos_pct', 0) or 0))|replace('.', ',') }}">
+                </div>
+            </div>
         </div>
     </div>
 
