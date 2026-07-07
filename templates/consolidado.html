@@ -88,6 +88,13 @@ main { position: relative; z-index: 1; }
 .gc { border-radius: 14px !important; }
 .kpi-mini { border-radius: 12px !important; }
 
+/* Scrollbar fina nos gráficos com rolagem vertical */
+.chart-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.22) transparent; }
+.chart-scroll::-webkit-scrollbar { width: 7px; }
+.chart-scroll::-webkit-scrollbar-track { background: transparent; }
+.chart-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 4px; }
+.chart-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.32); }
+
 /* Botão exportar */
 .btn-export-cons { background:rgba(43,178,238,.12); border:1px solid rgba(43,178,238,.38); color:#cfeefb;
     height:32px; border-radius:8px; font-family:'IBM Plex Mono',monospace; font-size:.66rem;
@@ -264,13 +271,17 @@ body.exporting-cons .pdf-only-cons { display:flex !important; }
     <div class="col-lg-6 d-flex">
         <div class="gc w-100 d-flex flex-column" style="min-height:230px;">
             <div class="gc-title"><span><i class="bi bi-bar-chart-horizontal"></i>Medição por Contratada</span><span class="gc-sub">R$ Total</span></div>
-            <div style="position:relative;flex:1;min-height:180px;"><canvas id="chartMedido"></canvas></div>
+            <div class="chart-scroll" style="flex:1;min-height:180px;max-height:230px;overflow-y:auto;">
+                <div id="chartMedidoWrap" style="position:relative;height:180px;"><canvas id="chartMedido"></canvas></div>
+            </div>
         </div>
     </div>
     <div class="col-lg-6 d-flex">
         <div class="gc w-100 d-flex flex-column" style="min-height:230px;">
             <div class="gc-title"><span><i class="bi bi-speedometer"></i>% Executado por Contratada</span><span class="gc-sub">Medido / Contratado</span></div>
-            <div style="position:relative;flex:1;min-height:180px;"><canvas id="chartPct"></canvas></div>
+            <div class="chart-scroll" style="flex:1;min-height:180px;max-height:230px;overflow-y:auto;">
+                <div id="chartPctWrap" style="position:relative;height:180px;"><canvas id="chartPct"></canvas></div>
+            </div>
         </div>
     </div>
 </div>
@@ -296,7 +307,7 @@ body.exporting-cons .pdf-only-cons { display:flex !important; }
 {% endif %}
 
 <!-- CONTRATOS POR ÁREA + HISTOGRAMA -->
-<div class="d-flex flex-wrap gap-2 mt-2 align-items-stretch">
+<div class="row g-2 mt-2 align-items-stretch">
 
 {% if por_area %}
 {% set area_icons = {
@@ -306,7 +317,8 @@ body.exporting-cons .pdf-only-cons { display:flex !important; }
     'Engenharia':            'cpu',
     'Meio Ambiente':         'tree'
 } %}
-<div class="gc" style="flex:1.25 1 320px; min-width:320px;">
+<div class="col-lg-7 d-flex">
+<div class="gc w-100" style="min-width:0;">
     <div class="gc-title"><span><i class="bi bi-diagram-3"></i>Contratos por Área</span></div>
     <div style="display:flex; align-items:center; gap:.7rem; padding:.6rem .8rem; background:rgba(240,179,77,.18); border:1px solid rgba(240,179,77,.3); border-radius:8px; margin-bottom:.5rem;">
         <i class="bi bi-building-fill-check" style="color:#F0B34D; font-size:1.15rem; flex-shrink:0;"></i>
@@ -331,10 +343,12 @@ body.exporting-cons .pdf-only-cons { display:flex !important; }
         <div id="adp-cards"></div>
     </div>
 </div>
+</div>
 {% endif %}
 
 <!-- HISTOGRAMA -->
-<div class="gc d-flex flex-column" style="flex:1 1 300px; min-width:300px;">
+<div class="col-lg-5 d-flex">
+<div class="gc w-100 d-flex flex-column" style="min-width:0;">
     <div class="gc-title">
         <span><i class="bi bi-people-fill"></i>Histograma</span>
         {% if hist_kpis.semana %}<span class="gc-sub">{{ hist_kpis.semana }}</span>{% endif %}
@@ -380,8 +394,9 @@ body.exporting-cons .pdf-only-cons { display:flex !important; }
         </tbody>
     </table>
 </div>
+</div>
 
-</div><!-- fim flex row -->
+</div><!-- fim row -->
 </div><!-- /cons-export -->
 <style>
 @keyframes fadeSlideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
@@ -1054,8 +1069,13 @@ if (document.getElementById('chartCurvaFis') && LABELS.length) {
     });
 }
 
+// Altura por barra: garante espaço para TODOS os rótulos do eixo Y (com scroll)
+const _barH = 34;
+const _chartH = n => Math.max(180, n * _barH + 24);
+
 // Medição por contratada (barra horizontal)
 if (document.getElementById('chartMedido') && BAR_LABELS.length) {
+    document.getElementById('chartMedidoWrap').style.height = _chartH(BAR_LABELS.length) + 'px';
     new Chart(document.getElementById('chartMedido'), {
         type:'bar',
         data:{ labels:BAR_LABELS, datasets:[{ label:'Medição (R$)', data:BAR_MEDIDO, backgroundColor:CORES, borderRadius:4, borderSkipped:false }]},
@@ -1065,13 +1085,14 @@ if (document.getElementById('chartMedido') && BAR_LABELS.length) {
                 datalabels:{ anchor:'end', align:'end', color:'#fff', clip:false, formatter: rs }
             },
             scales:{ x:{ grid:{color:GRID}, ticks:{ ...TICK, callback:v=>rs(v) }, max: BAR_MEDIDO.length?Math.max(...BAR_MEDIDO)*1.35:100 },
-                     y:{ grid:{display:false}, ticks:TICK } }
+                     y:{ grid:{display:false}, ticks:{ ...TICK, autoSkip:false } } }
         }
     });
 }
 
 // % Executado por contratada (barra horizontal)
 if (document.getElementById('chartPct') && BAR_LABELS.length) {
+    document.getElementById('chartPctWrap').style.height = _chartH(BAR_LABELS.length) + 'px';
     new Chart(document.getElementById('chartPct'), {
         type:'bar',
         data:{ labels:BAR_LABELS, datasets:[{ label:'% Executado', data:BAR_PCT,
@@ -1083,7 +1104,7 @@ if (document.getElementById('chartPct') && BAR_LABELS.length) {
                 datalabels:{ anchor:'end', align:'end', color:'#fff', clip:false, formatter:v=>v+'%' }
             },
             scales:{ x:{ grid:{color:GRID}, ticks:{ ...TICK, callback:v=>v+'%' }, max:100, beginAtZero:true },
-                     y:{ grid:{display:false}, ticks:TICK } }
+                     y:{ grid:{display:false}, ticks:{ ...TICK, autoSkip:false } } }
         }
     });
 }
