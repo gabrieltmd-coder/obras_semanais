@@ -235,7 +235,7 @@ WIPE_COLS = [
     ('suprimentos', 'Suprimentos'), ('pacotes', 'Pacotes'),
     ('centros_custo', 'Centros de custo'), ('lancamentos', 'Lançamentos financeiros'),
     ('orcamentos', 'Orçamentos'),
-    ('usuarios', 'Usuários'), ('auditoria', 'Auditoria'), ('tms', 'Configurações TMS'),
+    ('usuarios', 'Usuários'), ('auditoria', 'Auditoria'), ('tms', 'Dados TMS'),
 ]
 
 
@@ -748,6 +748,18 @@ PLUVIOMETRIA_OPCOES = [
     "Incidência de Raio",
     "Sem Expediente",
 ]
+
+# Estimativa de precipitação diária (mm) por estado qualitativo — usada para
+# converter os registros de pluviometria (qualitativos) em uma série semanal (mm)
+# no gráfico "Pluviometria Semanal" do dashboard.
+PLUVIOMETRIA_MM = {
+    "Tempo Bom":          0,
+    "Chuva Produtiva":    4,
+    "Chuva Parcial":      12,
+    "Chuva Improdutiva":  28,
+    "Incidência de Raio": 20,
+    "Sem Expediente":     0,
+}
 
 DIAS_SEMANA = [
     ('segunda', 'Segunda'),
@@ -2186,7 +2198,8 @@ def dashboard():
                   curva_fin_fc='[]', curva_fis_fc='[]', curva_fin_repl='null', curva_fis_repl='null',
                   hist_labels='[]', hist_qtd='[]', hist_colors='[]', hist_list=[],
                   prev_direto=0, prev_indireto=0,
-                  acoes_labels='[]', acoes_pct='[]')
+                  acoes_labels='[]', acoes_pct='[]',
+                  pluv_labels='[]', pluv_mm='[]')
 
     if not reg:
         return render_template('dashboard.html', **_vazio)
@@ -2245,6 +2258,24 @@ def dashboard():
         d   = semanas_data[s]
         avg = d['af_sum'] / d['af_n'] if d['af_n'] else 0
         curva_fis_real.append(round(avg, 2))
+
+    # ── Pluviometria Semanal (mm) ───────────────────────────────────────────
+    # Converte os estados qualitativos diários (Tempo Bom, Chuva Improdutiva, …)
+    # em mm via PLUVIOMETRIA_MM, soma os 7 dias de cada registro e, quando há mais
+    # de um registro na mesma semana, faz a média (a chuva é um fenômeno regional).
+    pluv_sem = {}   # semana -> {'soma': mm_total, 'n': qtd_registros}
+    for r in reg_ord:
+        sem = r.get('semana_referencia', '')
+        pluv = r.get('pluviometria') or {}
+        if not sem or not isinstance(pluv, dict):
+            continue
+        mm_semana = sum(PLUVIOMETRIA_MM.get((v or '').strip(), 0) for v in pluv.values())
+        acc = pluv_sem.setdefault(sem, {'soma': 0, 'n': 0})
+        acc['soma'] += mm_semana
+        acc['n']    += 1
+    pluv_labels = [format_date_br(s) for s in semanas_sorted]
+    pluv_mm     = [round(pluv_sem[s]['soma'] / pluv_sem[s]['n']) if pluv_sem.get(s, {}).get('n') else 0
+                   for s in semanas_sorted]
 
     # ── Histograma consolidado (usa o tipo gravado no registro; reclassifica só se ausente) ──
     histograma = {}
@@ -2414,7 +2445,9 @@ def dashboard():
                            prev_direto=prev_direto,
                            prev_indireto=prev_indireto,
                            acoes_labels=acoes_labels,
-                           acoes_pct=acoes_pct)
+                           acoes_pct=acoes_pct,
+                           pluv_labels=json.dumps(pluv_labels),
+                           pluv_mm=json.dumps(pluv_mm))
 
 
 def _excel_write_sheet(ws, headers, rows, col_widths, currency_cols=(), percent_cols=()):
@@ -2860,7 +2893,7 @@ def admin_limpar_dados():
     return redirect(url_for('admin_dados'))
 
 
-# ── ADMIN: CONFIGURAÇÕES TMS ─────────────────────────────────────────────────
+# ── ADMIN: DADOS TMS ─────────────────────────────────────────────────────────
 
 TMS_CONFIG_FILE = os.path.join('data', 'tms_config.json')
 
@@ -3273,7 +3306,8 @@ def admin_suprimento_sair_pacote(sid):
     return redirect(url_for('admin') + '?tab=suprimento')
 
 
-@app.route('/admin/tms', methods=['GET', 'POST'])
+@app.route('/admin/dados-tms', methods=['GET', 'POST'])
+@app.route('/admin/tms', methods=['GET', 'POST'])  # alias legado
 def admin_tms():
     if not _is_master():
         flash('Acesso restrito ao usuário Master.', 'danger')
@@ -3304,11 +3338,68 @@ def admin_tms():
         # Linhas de Base mensais (mesma lógica de Configurar Contrato)
         _parse_baseline_mensal(request.form, cfg)
         save_tms_config(cfg)
-        audit_log('editar_tms', 'tms_config', 'Configurações TMS atualizadas')
-        flash('Configurações TMS salvas com sucesso!', 'success')
+        audit_log('editar_tms', 'tms_config', 'Dados TMS atualizados')
+        flash('Dados TMS salvos com sucesso!', 'success')
         return redirect(url_for('admin_tms'))
 
     return render_template('admin_tms.html', cfg=cfg)
+
+
+def _parse_int(valor):
+    """Converte texto de formulário para inteiro >= 0 (0 se vazio/ inválido)."""
+    try:
+        n = int(float(str(valor).replace(',', '.').strip()))
+        return max(0, n)
+    except (TypeError, ValueError):
+        return 0
+
+
+@app.route('/admin/dados-tms/saude', methods=['POST'])
+def admin_tms_saude():
+    """Registra (upsert por mês) um lançamento mensal de Saúde e Segurança."""
+    if not _is_master():
+        flash('Acesso restrito ao usuário Master.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    mes_ref = request.form.get('mes_ref', '').strip()  # 'YYYY-MM'
+    if not mes_ref:
+        flash('Informe o mês/ano de referência.', 'danger')
+        return redirect(url_for('admin_tms'))
+
+    registro = {
+        'mes_ref':            mes_ref,
+        'saf':                _parse_int(request.form.get('saf')),
+        'caf':                _parse_int(request.form.get('caf')),
+        'primeiros_socorros': _parse_int(request.form.get('primeiros_socorros')),
+        'registrado_em':      datetime.now().isoformat(),
+        'registrado_por':     current_user_label(),
+    }
+
+    cfg = load_tms_config()
+    lista = [x for x in cfg.get('saude_seguranca', []) if isinstance(x, dict)]
+    # upsert: substitui o mês existente, senão adiciona
+    lista = [x for x in lista if x.get('mes_ref') != mes_ref]
+    lista.append(registro)
+    lista.sort(key=lambda x: x.get('mes_ref', ''), reverse=True)
+    cfg['saude_seguranca'] = lista
+    save_tms_config(cfg)
+    audit_log('editar_tms', 'saude_seguranca', f'Saúde e Segurança — {mes_ref}')
+    flash(f'Dados de Saúde e Segurança de {mes_ref} salvos com sucesso!', 'success')
+    return redirect(url_for('admin_tms') + '#saude-seguranca')
+
+
+@app.route('/admin/dados-tms/saude/<mes_ref>/excluir', methods=['POST'])
+def admin_tms_saude_excluir(mes_ref):
+    if not _is_master():
+        flash('Acesso restrito ao usuário Master.', 'danger')
+        return redirect(url_for('dashboard'))
+    cfg = load_tms_config()
+    lista = [x for x in cfg.get('saude_seguranca', []) if isinstance(x, dict)]
+    cfg['saude_seguranca'] = [x for x in lista if x.get('mes_ref') != mes_ref]
+    save_tms_config(cfg)
+    audit_log('editar_tms', 'saude_seguranca', f'Excluído Saúde e Segurança — {mes_ref}')
+    flash(f'Registro de {mes_ref} removido.', 'info')
+    return redirect(url_for('admin_tms') + '#saude-seguranca')
 
 
 # ── ADMIN: GESTÃO DE USUÁRIOS ───────────────────────────────────────────────
