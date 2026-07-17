@@ -225,7 +225,7 @@ body {
                         </select>
                     </td>
                     <td>
-                        <select class="mob-select doc-status" onchange="colorStatus(this);calcDocs()">
+                        <select class="mob-select doc-status" data-idx="{{ loop.index0 }}" onchange="colorStatus(this);calcDocs()">
                             <option value="" {% if not d.status %}selected{% endif %}>— selecionar —</option>
                             <option value="entregue"  {% if d.status=='entregue' %}selected{% endif %}>Entregue</option>
                             <option value="pendente"  {% if d.status=='pendente' %}selected{% endif %}>Pendente</option>
@@ -234,7 +234,7 @@ body {
                         </select>
                     </td>
                     <td>
-                        <input type="date" class="mob-date doc-prazo" value="{{ d.prazo or '' }}">
+                        <input type="date" class="mob-date doc-prazo" data-idx="{{ loop.index0 }}" value="{{ d.prazo or '' }}">
                     </td>
                     <td>
                         <div class="url-cell">
@@ -254,17 +254,17 @@ body {
                         </div>
                     </td>
                     <td class="td-bl-sep">
-                        <input type="date" class="mob-date bl-inicio" value="{{ d.inicio_bl or '' }}">
+                        <input type="date" class="mob-date bl-inicio" data-sec="doc" data-bl="inicio_bl" data-idx="{{ loop.index0 }}" value="{{ d.inicio_bl or '' }}">
                     </td>
                     <td>
-                        <input type="date" class="mob-date bl-fim" value="{{ d.fim_bl or '' }}">
+                        <input type="date" class="mob-date bl-fim" data-sec="doc" data-bl="fim_bl" data-idx="{{ loop.index0 }}" value="{{ d.fim_bl or '' }}">
                     </td>
                     <td>
-                        <input type="date" class="mob-date bl-real" value="{{ d.real or '' }}">
+                        <input type="date" class="mob-date bl-real" data-sec="doc" data-bl="real" data-idx="{{ loop.index0 }}" value="{{ d.real or '' }}">
                     </td>
                     <td>
                         <div class="bl-field">
-                            <input type="date" class="mob-date bl-forecast" value="{{ d.forecast or '' }}">
+                            <input type="date" class="mob-date bl-forecast" data-sec="doc" data-bl="forecast" data-idx="{{ loop.index0 }}" value="{{ d.forecast or '' }}">
                             <div class="bl-msg">Real > Fim BL</div>
                         </div>
                     </td>
@@ -324,7 +324,7 @@ body {
                     <td><input type="text" class="mob-input ssma-nome-input" value="{{ d.documento }}" style="min-width:180px;width:100%;"></td>
                     <td><span class="area-tag area-sso">SSO</span></td>
                     <td>
-                        <select class="mob-select ssma-status" onchange="colorStatus(this);calcSsma()">
+                        <select class="mob-select ssma-status" data-idx="{{ loop.index0 }}" onchange="colorStatus(this);calcSsma()">
                             <option value=""          {% if not d.status %}selected{% endif %}>— selecionar —</option>
                             <option value="entregue"  {% if d.status=='entregue' %}selected{% endif %}>Entregue</option>
                             <option value="revisado"  {% if d.status=='revisado' %}selected{% endif %}>Entregue revisado</option>
@@ -349,17 +349,17 @@ body {
                         </div>
                     </td>
                     <td class="td-bl-sep">
-                        <input type="date" class="mob-date bl-inicio" value="{{ d.inicio_bl or '' }}">
+                        <input type="date" class="mob-date bl-inicio" data-sec="ssma" data-bl="inicio_bl" data-idx="{{ loop.index0 }}" value="{{ d.inicio_bl or '' }}">
                     </td>
                     <td>
-                        <input type="date" class="mob-date bl-fim" value="{{ d.fim_bl or '' }}">
+                        <input type="date" class="mob-date bl-fim" data-sec="ssma" data-bl="fim_bl" data-idx="{{ loop.index0 }}" value="{{ d.fim_bl or '' }}">
                     </td>
                     <td>
-                        <input type="date" class="mob-date bl-real" value="{{ d.real or '' }}">
+                        <input type="date" class="mob-date bl-real" data-sec="ssma" data-bl="real" data-idx="{{ loop.index0 }}" value="{{ d.real or '' }}">
                     </td>
                     <td>
                         <div class="bl-field">
-                            <input type="date" class="mob-date bl-forecast" value="{{ d.forecast or '' }}">
+                            <input type="date" class="mob-date bl-forecast" data-sec="ssma" data-bl="forecast" data-idx="{{ loop.index0 }}" value="{{ d.forecast or '' }}">
                             <div class="bl-msg">Real > Fim BL</div>
                         </div>
                     </td>
@@ -424,29 +424,29 @@ body {
                         <input type="text" class="mob-input mo-etapa-input" value="{{ e.etapa }}" style="min-width:160px;">
                     </td>
                     <td class="center">
-                        <input type="number" min="0" class="mob-num mo-geral"
+                        <input type="number" min="0" class="mob-num mo-geral" data-idx="{{ loop.index0 }}"
                                value="{{ e.geral if e.geral is not none else '' }}" placeholder="—" oninput="calcMo()">
                     </td>
                     <td class="center">
-                        <input type="number" min="0" class="mob-num mo-mod"
+                        <input type="number" min="0" class="mob-num mo-mod" data-idx="{{ loop.index0 }}"
                                value="{{ e.mod if e.mod is not none else '' }}" placeholder="—" oninput="calcMo()">
                     </td>
                     <td class="center">
-                        <input type="number" min="0" class="mob-num mo-moi"
+                        <input type="number" min="0" class="mob-num mo-moi" data-idx="{{ loop.index0 }}"
                                value="{{ e.moi if e.moi is not none else '' }}" placeholder="—" oninput="calcMo()">
                     </td>
                     <td class="td-bl-sep">
-                        <input type="date" class="mob-date bl-inicio" value="{{ e.inicio_bl or '' }}">
+                        <input type="date" class="mob-date bl-inicio" data-sec="mo" data-bl="inicio_bl" data-idx="{{ loop.index0 }}" value="{{ e.inicio_bl or '' }}">
                     </td>
                     <td>
-                        <input type="date" class="mob-date bl-fim" value="{{ e.fim_bl or '' }}">
+                        <input type="date" class="mob-date bl-fim" data-sec="mo" data-bl="fim_bl" data-idx="{{ loop.index0 }}" value="{{ e.fim_bl or '' }}">
                     </td>
                     <td>
-                        <input type="date" class="mob-date bl-real" value="{{ e.real or '' }}">
+                        <input type="date" class="mob-date bl-real" data-sec="mo" data-bl="real" data-idx="{{ loop.index0 }}" value="{{ e.real or '' }}">
                     </td>
                     <td>
                         <div class="bl-field">
-                            <input type="date" class="mob-date bl-forecast" value="{{ e.forecast or '' }}">
+                            <input type="date" class="mob-date bl-forecast" data-sec="mo" data-bl="forecast" data-idx="{{ loop.index0 }}" value="{{ e.forecast or '' }}">
                             <div class="bl-msg">Real > Fim BL</div>
                         </div>
                     </td>
@@ -514,29 +514,29 @@ body {
                         <input type="text" class="mob-input eq-etapa-input" value="{{ e.etapa }}" style="min-width:160px;">
                     </td>
                     <td class="center">
-                        <input type="number" min="0" class="mob-num eq-geral"
+                        <input type="number" min="0" class="mob-num eq-geral" data-idx="{{ loop.index0 }}"
                                value="{{ e.geral if e.geral is not none else '' }}" placeholder="—" oninput="calcEq()">
                     </td>
                     <td class="center">
-                        <input type="number" min="0" class="mob-num eq-grande"
+                        <input type="number" min="0" class="mob-num eq-grande" data-idx="{{ loop.index0 }}"
                                value="{{ e.grande_porte if e.grande_porte is not none else '' }}" placeholder="—" oninput="calcEq()">
                     </td>
                     <td class="center">
-                        <input type="number" min="0" class="mob-num eq-pequeno"
+                        <input type="number" min="0" class="mob-num eq-pequeno" data-idx="{{ loop.index0 }}"
                                value="{{ e.pequeno_porte if e.pequeno_porte is not none else '' }}" placeholder="—" oninput="calcEq()">
                     </td>
                     <td class="td-bl-sep">
-                        <input type="date" class="mob-date bl-inicio" value="{{ e.inicio_bl or '' }}">
+                        <input type="date" class="mob-date bl-inicio" data-sec="eq" data-bl="inicio_bl" data-idx="{{ loop.index0 }}" value="{{ e.inicio_bl or '' }}">
                     </td>
                     <td>
-                        <input type="date" class="mob-date bl-fim" value="{{ e.fim_bl or '' }}">
+                        <input type="date" class="mob-date bl-fim" data-sec="eq" data-bl="fim_bl" data-idx="{{ loop.index0 }}" value="{{ e.fim_bl or '' }}">
                     </td>
                     <td>
-                        <input type="date" class="mob-date bl-real" value="{{ e.real or '' }}">
+                        <input type="date" class="mob-date bl-real" data-sec="eq" data-bl="real" data-idx="{{ loop.index0 }}" value="{{ e.real or '' }}">
                     </td>
                     <td>
                         <div class="bl-field">
-                            <input type="date" class="mob-date bl-forecast" value="{{ e.forecast or '' }}">
+                            <input type="date" class="mob-date bl-forecast" data-sec="eq" data-bl="forecast" data-idx="{{ loop.index0 }}" value="{{ e.forecast or '' }}">
                             <div class="bl-msg">Real > Fim BL</div>
                         </div>
                     </td>
@@ -588,7 +588,7 @@ body {
         <div class="gc" style="background:#0f1f2a;border-color:rgba(255,255,255,.06);margin-bottom:.5rem;" data-cant-item data-orig-idx="{{ cant_idx }}" data-peso="{{ it.peso }}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:{% if it.criterios %}.5rem{% else %}0{% endif %};">
                 <div style="flex:1;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
-                    <input type="text" class="mob-input cant-item-nome" value="{{ it.item }}" style="min-width:160px;flex:1;">
+                    <input type="text" class="mob-input cant-item-nome" data-idx="{{ cant_idx }}" value="{{ it.item }}" style="min-width:160px;flex:1;">
                     {% if it.peso > 0 %}<span class="peso-badge">Peso {{ (it.peso*100)|int }}%</span>{% endif %}
                 </div>
                 <div style="display:flex;align-items:center;gap:.4rem;">
@@ -658,7 +658,7 @@ body {
         <div class="gc" style="background:#0f1f2a;border-color:rgba(255,255,255,.06);" data-sub-item data-orig-idx="{{ sub_idx }}" data-peso="{{ emp.peso }}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem;">
                 <div style="flex:1;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
-                    <input type="text" class="mob-input sub-emp-nome" value="{{ emp.empresa }}" style="min-width:140px;flex:1;font-weight:600;">
+                    <input type="text" class="mob-input sub-emp-nome" data-idx="{{ sub_idx }}" value="{{ emp.empresa }}" style="min-width:140px;flex:1;font-weight:600;">
                     <span class="peso-badge">Peso {{ (emp.peso*100)|int }}%</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:.4rem;">
@@ -784,6 +784,64 @@ function calcDocs() {
     `;
 }
 
+// ══ ADICIONAR DOCUMENTO ══
+function addDocRow() {
+    const idx = MOB.documentacoes.length;
+    MOB.documentacoes.push({
+        item: idx + 1, documento: '', area: 'Gestao de Contratos', status: '',
+        prazo: null, url: null, inicio_bl: null, fim_bl: null, real: null, forecast: null
+    });
+
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-doc-row', '');
+    tr.setAttribute('data-bl-group', '');
+    tr.setAttribute('data-orig-idx', idx);
+    tr.innerHTML = `
+        <td class="item-num">${idx + 1}</td>
+        <td><input type="text" class="mob-input doc-nome-input" value="" style="min-width:180px;width:100%;"></td>
+        <td>
+            <select class="mob-select doc-area-select" style="font-size:.72rem;min-width:85px;">
+                <option value="Gestao de Contratos" selected>Gestão</option>
+                <option value="Saúde e Segurança Ocupacional">SSO</option>
+                <option value="Meio Ambiente">Meio Amb.</option>
+            </select>
+        </td>
+        <td>
+            <select class="mob-select doc-status" data-idx="${idx}" onchange="colorStatus(this);calcDocs()">
+                <option value="" selected>— selecionar —</option>
+                <option value="entregue">Entregue</option>
+                <option value="pendente">Pendente</option>
+                <option value="nao">Não entregue</option>
+                <option value="na">N/A</option>
+            </select>
+        </td>
+        <td><input type="date" class="mob-date doc-prazo" data-idx="${idx}" value=""></td>
+        <td>
+            <div class="url-cell">
+                <input type="url" class="doc-url" data-idx="${idx}" placeholder="https://..." value="" oninput="toggleDocLinks(this)">
+                <a class="btn-doc-link disabled" data-view="${idx}" title="Visualizar documento" href="#" target="_blank" rel="noopener">
+                    <i class="bi bi-eye" style="font-size:.75rem;"></i>
+                </a>
+                <a class="btn-doc-link dl disabled" data-dl="${idx}" title="Baixar documento" href="#" target="_blank" rel="noopener" download>
+                    <i class="bi bi-download" style="font-size:.75rem;"></i>
+                </a>
+            </div>
+        </td>
+        <td class="td-bl-sep"><input type="date" class="mob-date bl-inicio" data-sec="doc" data-bl="inicio_bl" data-idx="${idx}" value=""></td>
+        <td><input type="date" class="mob-date bl-fim" data-sec="doc" data-bl="fim_bl" data-idx="${idx}" value=""></td>
+        <td><input type="date" class="mob-date bl-real" data-sec="doc" data-bl="real" data-idx="${idx}" value=""></td>
+        <td>
+            <div class="bl-field">
+                <input type="date" class="mob-date bl-forecast" data-sec="doc" data-bl="forecast" data-idx="${idx}" value="">
+                <div class="bl-msg">Real > Fim BL</div>
+            </div>
+        </td>
+        <td><button onclick="this.closest('tr').remove();calcDocs();" class="btn-mob-del" title="Remover linha"><i class="bi bi-trash3"></i></button></td>
+    `;
+    document.getElementById('tbody-docs').appendChild(tr);
+    calcDocs();
+}
+
 // ══ SSMA ══
 function calcSsma() {
     const sels = document.querySelectorAll('.ssma-status');
@@ -803,6 +861,55 @@ function calcSsma() {
         ${rev ? `<span class="sum-chip info"><i class="bi bi-arrow-repeat"></i>${rev} Revisados</span>` : ''}
         ${nao ? `<span class="sum-chip danger"><i class="bi bi-x-circle-fill"></i>${nao} Não entregues</span>` : ''}
     `;
+}
+
+// ══ ADICIONAR DOCUMENTO SSMA ══
+function addSsmaRow() {
+    const idx = MOB.ssma.length;
+    MOB.ssma.push({
+        item: idx + 1, documento: '', area: 'Saúde e Segurança Ocupacional', status: '',
+        url: null, inicio_bl: null, fim_bl: null, real: null, forecast: null
+    });
+
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-bl-group', '');
+    tr.setAttribute('data-orig-idx', idx);
+    tr.innerHTML = `
+        <td class="item-num">${idx + 1}</td>
+        <td><input type="text" class="mob-input ssma-nome-input" value="" style="min-width:180px;width:100%;"></td>
+        <td><span class="area-tag area-sso">SSO</span></td>
+        <td>
+            <select class="mob-select ssma-status" data-idx="${idx}" onchange="colorStatus(this);calcSsma()">
+                <option value="" selected>— selecionar —</option>
+                <option value="entregue">Entregue</option>
+                <option value="revisado">Entregue revisado</option>
+                <option value="nao">Não entregue</option>
+            </select>
+        </td>
+        <td>
+            <div class="url-cell">
+                <input type="url" class="ssma-url" data-idx="${idx}" placeholder="https://..." value="" oninput="toggleSsmaLinks(this)">
+                <a class="btn-doc-link disabled" data-view-ssma="${idx}" title="Visualizar documento" href="#" target="_blank" rel="noopener">
+                    <i class="bi bi-eye" style="font-size:.75rem;"></i>
+                </a>
+                <a class="btn-doc-link dl disabled" data-dl-ssma="${idx}" title="Baixar documento" href="#" target="_blank" rel="noopener" download>
+                    <i class="bi bi-download" style="font-size:.75rem;"></i>
+                </a>
+            </div>
+        </td>
+        <td class="td-bl-sep"><input type="date" class="mob-date bl-inicio" data-sec="ssma" data-bl="inicio_bl" data-idx="${idx}" value=""></td>
+        <td><input type="date" class="mob-date bl-fim" data-sec="ssma" data-bl="fim_bl" data-idx="${idx}" value=""></td>
+        <td><input type="date" class="mob-date bl-real" data-sec="ssma" data-bl="real" data-idx="${idx}" value=""></td>
+        <td>
+            <div class="bl-field">
+                <input type="date" class="mob-date bl-forecast" data-sec="ssma" data-bl="forecast" data-idx="${idx}" value="">
+                <div class="bl-msg">Real > Fim BL</div>
+            </div>
+        </td>
+        <td><button onclick="this.closest('tr').remove();calcSsma();" class="btn-mob-del" title="Remover linha"><i class="bi bi-trash3"></i></button></td>
+    `;
+    document.getElementById('tbody-ssma').appendChild(tr);
+    calcSsma();
 }
 
 // ══ MO barras ══
@@ -826,6 +933,34 @@ function calcMo() {
     });
 }
 
+// ══ ADICIONAR ETAPA MO ══
+function addMoRow() {
+    const idx = MOB.mo.etapas.length;
+    MOB.mo.etapas.push({ etapa: '', geral: null, mod: null, moi: null, inicio_bl: null, fim_bl: null, real: null, forecast: null });
+
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-bl-group', '');
+    tr.setAttribute('data-orig-idx', idx);
+    tr.innerHTML = `
+        <td style="min-width:200px;"><input type="text" class="mob-input mo-etapa-input" value="" style="min-width:160px;"></td>
+        <td class="center"><input type="number" min="0" class="mob-num mo-geral" data-idx="${idx}" value="" placeholder="—" oninput="calcMo()"></td>
+        <td class="center"><input type="number" min="0" class="mob-num mo-mod" data-idx="${idx}" value="" placeholder="—" oninput="calcMo()"></td>
+        <td class="center"><input type="number" min="0" class="mob-num mo-moi" data-idx="${idx}" value="" placeholder="—" oninput="calcMo()"></td>
+        <td class="td-bl-sep"><input type="date" class="mob-date bl-inicio" data-sec="mo" data-bl="inicio_bl" data-idx="${idx}" value=""></td>
+        <td><input type="date" class="mob-date bl-fim" data-sec="mo" data-bl="fim_bl" data-idx="${idx}" value=""></td>
+        <td><input type="date" class="mob-date bl-real" data-sec="mo" data-bl="real" data-idx="${idx}" value=""></td>
+        <td>
+            <div class="bl-field">
+                <input type="date" class="mob-date bl-forecast" data-sec="mo" data-bl="forecast" data-idx="${idx}" value="">
+                <div class="bl-msg">Real > Fim BL</div>
+            </div>
+        </td>
+        <td><button onclick="this.closest('tr').remove();calcMo();" class="btn-mob-del" title="Remover linha"><i class="bi bi-trash3"></i></button></td>
+    `;
+    document.getElementById('tbody-mo').appendChild(tr);
+    calcMo();
+}
+
 // ══ EQ barras ══
 function calcEq() {
     const previsto = { geral:    parseFloat(document.querySelector('.eq-geral[data-idx="0"]')?.value)||0,
@@ -843,6 +978,34 @@ function calcEq() {
         document.getElementById(`prog-eq-${c}`).style.width = pct + '%';
         document.getElementById(`prog-eq-${c}-lbl`).textContent = `${lastRow[c]} / ${previsto[c]} (${pct}%)`;
     });
+}
+
+// ══ ADICIONAR ETAPA EQUIPAMENTOS ══
+function addEqRow() {
+    const idx = MOB.equipamentos.etapas.length;
+    MOB.equipamentos.etapas.push({ etapa: '', geral: null, grande_porte: null, pequeno_porte: null, inicio_bl: null, fim_bl: null, real: null, forecast: null });
+
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-bl-group', '');
+    tr.setAttribute('data-orig-idx', idx);
+    tr.innerHTML = `
+        <td style="min-width:200px;"><input type="text" class="mob-input eq-etapa-input" value="" style="min-width:160px;"></td>
+        <td class="center"><input type="number" min="0" class="mob-num eq-geral" data-idx="${idx}" value="" placeholder="—" oninput="calcEq()"></td>
+        <td class="center"><input type="number" min="0" class="mob-num eq-grande" data-idx="${idx}" value="" placeholder="—" oninput="calcEq()"></td>
+        <td class="center"><input type="number" min="0" class="mob-num eq-pequeno" data-idx="${idx}" value="" placeholder="—" oninput="calcEq()"></td>
+        <td class="td-bl-sep"><input type="date" class="mob-date bl-inicio" data-sec="eq" data-bl="inicio_bl" data-idx="${idx}" value=""></td>
+        <td><input type="date" class="mob-date bl-fim" data-sec="eq" data-bl="fim_bl" data-idx="${idx}" value=""></td>
+        <td><input type="date" class="mob-date bl-real" data-sec="eq" data-bl="real" data-idx="${idx}" value=""></td>
+        <td>
+            <div class="bl-field">
+                <input type="date" class="mob-date bl-forecast" data-sec="eq" data-bl="forecast" data-idx="${idx}" value="">
+                <div class="bl-msg">Real > Fim BL</div>
+            </div>
+        </td>
+        <td><button onclick="this.closest('tr').remove();calcEq();" class="btn-mob-del" title="Remover linha"><i class="bi bi-trash3"></i></button></td>
+    `;
+    document.getElementById('tbody-eq').appendChild(tr);
+    calcEq();
 }
 
 // ══ CANTEIRO ══
@@ -864,6 +1027,52 @@ function calcCanteiro() {
     document.getElementById('prog-canteiro').style.width = pct + '%';
 }
 
+// ══ ADICIONAR ITEM AO CANTEIRO ══
+function addCantItem() {
+    const idx = MOB.canteiro.length;
+    MOB.canteiro.push({ item: '', peso: 0, criterios: [], inicio_bl: null, fim_bl: null, real: null, forecast: null });
+
+    const div = document.createElement('div');
+    div.className = 'gc';
+    div.style.cssText = 'background:#0f1f2a;border-color:rgba(255,255,255,.06);margin-bottom:.5rem;';
+    div.setAttribute('data-cant-item', '');
+    div.setAttribute('data-orig-idx', idx);
+    div.setAttribute('data-peso', '0');
+    div.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+            <div style="flex:1;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                <input type="text" class="mob-input cant-item-nome" data-idx="${idx}" value="" style="min-width:160px;flex:1;">
+            </div>
+            <div style="display:flex;align-items:center;gap:.4rem;">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--mob);" class="cant-avanco-num">0%</span>
+                <button onclick="this.closest('[data-cant-item]').remove();calcCanteiro();" class="btn-mob-del" title="Remover item"><i class="bi bi-trash3"></i></button>
+            </div>
+        </div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.2);padding:.2rem 0;">Sem critérios definidos</div>
+        <div class="bl-strip-dark" data-bl-group style="margin-top:.5rem;border-radius:3px;">
+            <div class="bl-field">
+                <label class="bl-lbl">Início BL</label>
+                <input type="date" class="bl-inicio" data-sec="cant" data-bl="inicio_bl" data-idx="${idx}" value="">
+            </div>
+            <div class="bl-field">
+                <label class="bl-lbl">Fim BL</label>
+                <input type="date" class="bl-fim" data-sec="cant" data-bl="fim_bl" data-idx="${idx}" value="">
+            </div>
+            <div class="bl-field">
+                <label class="bl-lbl">Real</label>
+                <input type="date" class="bl-real" data-sec="cant" data-bl="real" data-idx="${idx}" value="">
+            </div>
+            <div class="bl-field">
+                <label class="bl-lbl">Forecast <span class="bl-req-mark">★</span></label>
+                <input type="date" class="bl-forecast" data-sec="cant" data-bl="forecast" data-idx="${idx}" value="">
+                <div class="bl-msg">Real > Fim BL</div>
+            </div>
+        </div>
+    `;
+    document.getElementById('btn-add-cant').insertAdjacentElement('beforebegin', div);
+    calcCanteiro();
+}
+
 // ══ SUBCONTRATADAS ══
 function calcSub() {
     const items = document.querySelectorAll('[data-sub-item]');
@@ -881,6 +1090,51 @@ function calcSub() {
     const pct = Math.round(totalAvanco * 100);
     document.getElementById('avanco-sub').textContent = pct + '%';
     document.getElementById('prog-sub').style.width = pct + '%';
+}
+
+// ══ ADICIONAR SUBCONTRATADA ══
+function addSubItem() {
+    const idx = MOB.subcontratadas.length;
+    MOB.subcontratadas.push({ empresa: '', peso: 0, criterios: [], inicio_bl: null, fim_bl: null, real: null, forecast: null });
+
+    const div = document.createElement('div');
+    div.className = 'gc';
+    div.style.cssText = 'background:#0f1f2a;border-color:rgba(255,255,255,.06);';
+    div.setAttribute('data-sub-item', '');
+    div.setAttribute('data-orig-idx', idx);
+    div.setAttribute('data-peso', '0');
+    div.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem;">
+            <div style="flex:1;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                <input type="text" class="mob-input sub-emp-nome" data-idx="${idx}" value="" style="min-width:140px;flex:1;font-weight:600;">
+            </div>
+            <div style="display:flex;align-items:center;gap:.4rem;">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--mob);" class="sub-avanco-num">0%</span>
+                <button onclick="this.closest('[data-sub-item]').remove();calcSub();" class="btn-mob-del" title="Remover empresa"><i class="bi bi-trash3"></i></button>
+            </div>
+        </div>
+        <div class="bl-strip-dark" data-bl-group style="margin-top:.5rem;border-radius:3px;">
+            <div class="bl-field">
+                <label class="bl-lbl">Início BL</label>
+                <input type="date" class="bl-inicio" data-sec="sub" data-bl="inicio_bl" data-idx="${idx}" value="">
+            </div>
+            <div class="bl-field">
+                <label class="bl-lbl">Fim BL</label>
+                <input type="date" class="bl-fim" data-sec="sub" data-bl="fim_bl" data-idx="${idx}" value="">
+            </div>
+            <div class="bl-field">
+                <label class="bl-lbl">Real</label>
+                <input type="date" class="bl-real" data-sec="sub" data-bl="real" data-idx="${idx}" value="">
+            </div>
+            <div class="bl-field">
+                <label class="bl-lbl">Forecast <span class="bl-req-mark">★</span></label>
+                <input type="date" class="bl-forecast" data-sec="sub" data-bl="forecast" data-idx="${idx}" value="">
+                <div class="bl-msg">Real > Fim BL</div>
+            </div>
+        </div>
+    `;
+    document.getElementById('grid-subs').appendChild(div);
+    calcSub();
 }
 
 // ══ Helper: coleta datas BL de um item pelo sec+idx ══
@@ -949,6 +1203,7 @@ async function salvar(secao) {
     } else if (secao === 'canteiro') {
         payload.canteiro = MOB.canteiro.map((it, ii) => ({
             ...it,
+            item: document.querySelector(`.cant-item-nome[data-idx="${ii}"]`)?.value.trim() || it.item,
             criterios: it.criterios.map((cr, ci) => ({
                 ...cr,
                 concluido: document.querySelector(`.cant-check[data-cant="${ii}"][data-crit="${ci}"]`)?.checked || false,
@@ -958,6 +1213,7 @@ async function salvar(secao) {
     } else if (secao === 'subcontratadas') {
         payload.subcontratadas = MOB.subcontratadas.map((emp, ei) => ({
             ...emp,
+            empresa: document.querySelector(`.sub-emp-nome[data-idx="${ei}"]`)?.value.trim() || emp.empresa,
             criterios: emp.criterios.map((cr, ci) => ({
                 ...cr,
                 concluido: document.querySelector(`.sub-check[data-sub="${ei}"][data-crit="${ci}"]`)?.checked || false,
