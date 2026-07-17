@@ -1,0 +1,1262 @@
+{% extends "base.html" %}
+{% block title %}Mobilização Config.{% endblock %}
+{% block page_icon %}<i class="bi bi-gear" style="color:#FF7043;"></i>{% endblock %}
+{% block page_title %}Mobilização Config.{% endblock %}
+{% block breadcrumb %}Configurações do Módulo{% endblock %}
+
+{% block content %}
+<style>
+body {
+    background:#0E1B24!important;
+    background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px)!important;
+    background-size:112px 112px,112px 112px!important;
+}
+.page-header{background:#0A141C!important;border-bottom:1.5px solid rgba(255,255,255,.10)!important;padding:1rem 0 .9rem!important;margin-bottom:1rem!important;}
+.page-header h1,.page-header h1 i{color:#fff!important;}
+.page-header .breadcrumb{color:rgba(255,255,255,.45)!important;}
+.app-footer{background:#0A141C!important;margin-top:1.2rem!important;}
+.btn-back-header{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.85)!important;border-color:rgba(255,255,255,.18)!important;}
+
+:root{--mob:#FF7043;--mob-l:rgba(255,112,67,.14);--mob-b:rgba(255,112,67,.5);}
+
+/* ── Tabs ── */
+.mob-tabs{display:flex;gap:0;border-bottom:2px solid rgba(255,255,255,.08);margin-bottom:1.2rem;overflow-x:auto;}
+.mob-tab{font-family:'IBM Plex Mono',monospace;font-size:.68rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.38);background:none;border:none;padding:.7rem 1.1rem;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .18s,border-color .18s;display:flex;align-items:center;gap:.4rem;}
+.mob-tab:hover{color:rgba(255,255,255,.7);}
+.mob-tab.active{color:var(--mob);border-bottom-color:var(--mob);}
+.mob-pane{display:none;}
+.mob-pane.active{display:block;}
+
+/* ── Painel ── */
+.gc{background:#13242F;border:1px solid rgba(255,255,255,.09);border-radius:4px;padding:.9rem 1rem;margin-bottom:.8rem;}
+.gc-title{font-family:'IBM Plex Mono',monospace;font-size:.95rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5);margin-bottom:.8rem;padding-bottom:.55rem;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;}
+.gc-title i{color:var(--mob);margin-right:.4rem;}
+
+/* ── Tabela base ── */
+.mob-tbl{width:100%;border-collapse:collapse;}
+.mob-tbl th{font-family:'IBM Plex Mono',monospace;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.32);padding:.48rem .7rem;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;white-space:nowrap;}
+.mob-tbl th.center{text-align:center;}
+.mob-tbl td{font-size:.82rem;color:rgba(255,255,255,.78);padding:.5rem .7rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+.mob-tbl tr:last-child td{border-bottom:none;}
+.mob-tbl tr:hover td{background:rgba(255,255,255,.02);}
+.item-num{font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.3);width:28px;text-align:right;}
+.area-tag{font-family:'IBM Plex Mono',monospace;font-size:.6rem;padding:.18rem .55rem;border-radius:3px;white-space:nowrap;}
+.area-sso{background:rgba(43,178,238,.12);color:#5cc8f2;}
+.area-gc{background:rgba(70,194,106,.12);color:#6fe895;}
+.area-ma{background:rgba(155,140,255,.12);color:#b0a4ff;}
+
+/* ── Inputs ── */
+.mob-select,.mob-input,.mob-date,.mob-num,.mob-textarea{
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+    color:#fff;border-radius:4px;font-size:.78rem;font-family:'IBM Plex Sans',sans-serif;
+    padding:.28rem .55rem;transition:border-color .15s,background .15s;
+}
+.mob-select:focus,.mob-input:focus,.mob-date:focus,.mob-num:focus,.mob-textarea:focus{
+    outline:none;border-color:var(--mob);background:rgba(255,112,67,.06);
+}
+.mob-select option{background:#0d2030;}
+.mob-num{width:72px;text-align:center;}
+.mob-date{width:130px;}
+.mob-textarea{width:100%;min-height:70px;resize:vertical;margin-top:.4rem;padding:.4rem .6rem;}
+
+/* Status badges select */
+.mob-select.s-entregue{border-color:rgba(70,194,106,.5);color:#6fe895;background:rgba(70,194,106,.07);}
+.mob-select.s-revisado{border-color:rgba(43,178,238,.5);color:#5cc8f2;background:rgba(43,178,238,.07);}
+.mob-select.s-nao{border-color:rgba(200,50,75,.4);color:#ff7a89;background:rgba(200,50,75,.07);}
+.mob-select.s-na{border-color:rgba(255,255,255,.18);color:rgba(255,255,255,.4);background:transparent;}
+
+/* ── Barra de progresso ── */
+.prog-wrap{background:rgba(255,255,255,.06);border-radius:20px;height:6px;overflow:hidden;margin-top:.3rem;}
+.prog-bar{height:100%;border-radius:20px;background:var(--mob);transition:width .4s;}
+.prog-label{font-family:'IBM Plex Mono',monospace;font-size:.62rem;color:rgba(255,255,255,.4);margin-top:.22rem;}
+
+/* ── Resumo badges ── */
+.sum-strip{display:flex;gap:.7rem;margin-bottom:.9rem;flex-wrap:wrap;}
+.sum-chip{font-family:'IBM Plex Mono',monospace;font-size:.65rem;padding:.28rem .75rem;border-radius:20px;display:flex;align-items:center;gap:.4rem;}
+.sum-chip.ok{background:rgba(70,194,106,.14);color:#6fe895;}
+.sum-chip.warn{background:rgba(232,163,61,.14);color:#f5c060;}
+.sum-chip.danger{background:rgba(200,50,75,.14);color:#ff7a89;}
+.sum-chip.info{background:rgba(43,178,238,.12);color:#5cc8f2;}
+
+/* ── Checkbox ── */
+.crit-row{display:flex;align-items:center;gap:.65rem;padding:.38rem 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.crit-row:last-child{border-bottom:none;}
+.mob-check{width:16px;height:16px;accent-color:var(--mob);cursor:pointer;flex-shrink:0;}
+.crit-desc{font-size:.82rem;color:rgba(255,255,255,.7);flex:1;}
+.crit-peso{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.28);margin-left:auto;flex-shrink:0;}
+
+/* ── Peso / avanço ── */
+.peso-badge{font-family:'IBM Plex Mono',monospace;font-size:.62rem;color:rgba(255,255,255,.3);padding:.15rem .45rem;background:rgba(255,255,255,.05);border-radius:3px;}
+.avanco-num{font-family:'IBM Plex Mono',monospace;font-size:1.05rem;font-weight:600;color:var(--mob);}
+
+/* ── Etapa header (MO / Equip) ── */
+.etapa-header td{font-family:'IBM Plex Mono',monospace;font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:.35rem .7rem;background:rgba(255,255,255,.015);border-bottom:1px solid rgba(255,255,255,.06)!important;}
+.etapa-previsto td{background:rgba(255,112,67,.04);border-left:3px solid rgba(255,112,67,.3);}
+
+/* ── Botão salvar ── */
+.btn-mob-save{font-family:'IBM Plex Mono',monospace;font-size:.66rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;background:var(--mob);border:none;color:#fff;border-radius:4px;padding:.38rem 1rem;display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;transition:background .15s;}
+.btn-mob-save:hover{background:#e55a30;}
+.btn-mob-save:disabled{background:rgba(255,112,67,.35);cursor:not-allowed;}
+.save-status{font-family:'IBM Plex Mono',monospace;font-size:.62rem;margin-left:.6rem;opacity:0;transition:opacity .3s;}
+.save-status.ok{color:#6fe895;opacity:1;}
+.save-status.err{color:#ff7a89;opacity:1;}
+
+/* ── Scroll horizontal nas tabelas grandes ── */
+.tbl-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.th-bl-sep { border-left:2px solid rgba(255,112,67,.2) !important; }
+.td-bl-sep { border-left:2px solid rgba(255,112,67,.08) !important; }
+
+/* ── URL de documento ── */
+.url-cell{display:flex;align-items:center;gap:.35rem;min-width:200px;}
+.doc-url{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);border-radius:4px;font-size:.72rem;padding:.25rem .5rem;transition:border-color .15s,background .15s;}
+.doc-url:focus{outline:none;border-color:rgba(43,178,238,.5);background:rgba(43,178,238,.04);color:#fff;}
+.doc-url::placeholder{color:rgba(255,255,255,.2);}
+.btn-doc-link{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:4px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s;flex-shrink:0;text-decoration:none;}
+.btn-doc-link:hover{background:rgba(43,178,238,.15);border-color:rgba(43,178,238,.4);color:#5cc8f2;}
+.btn-doc-link.dl:hover{background:rgba(70,194,106,.15);border-color:rgba(70,194,106,.4);color:#6fe895;}
+.btn-doc-link.disabled{opacity:.18;pointer-events:none;}
+
+/* ── Consolidado status badges ── */
+.cons-st{font-family:'IBM Plex Mono',monospace;font-size:.58rem;font-weight:600;padding:.16rem .52rem;border-radius:3px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+.cons-st-ok{background:rgba(70,194,106,.14);color:#6fe895;}
+.cons-st-danger{background:rgba(200,50,75,.14);color:#ff7a89;}
+.cons-st-warn{background:rgba(232,163,61,.14);color:#f5c060;}
+.cons-st-info{background:rgba(43,178,238,.12);color:#5cc8f2;}
+.cons-st-pend{background:rgba(255,255,255,.06);color:rgba(255,255,255,.38);}
+.cons-st-none{color:rgba(255,255,255,.2);font-size:.58rem;}
+.cons-sec-hdr td{font-family:'IBM Plex Mono',monospace;font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.32rem .7rem!important;background:rgba(255,255,255,.018)!important;border-bottom:1px solid rgba(255,255,255,.06)!important;}
+
+/* ── BL strip inside narrow cards: wrap to 2×2 ── */
+[data-cant-item] .bl-strip-dark,
+[data-sub-item]  .bl-strip-dark {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+/* ── Add/Delete rows ── */
+.btn-mob-del{background:rgba(200,50,75,.1);border:1px solid rgba(200,50,75,.22);color:#ff7a89;border-radius:4px;padding:.22rem .55rem;cursor:pointer;font-size:.75rem;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;}
+.btn-mob-del:hover{background:rgba(200,50,75,.25);border-color:rgba(200,50,75,.5);}
+.btn-mob-add{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:rgba(255,255,255,.03);border:1.5px dashed rgba(255,255,255,.14);color:rgba(255,255,255,.35);border-radius:4px;padding:.38rem 1rem;display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;transition:all .18s;margin-top:.7rem;}
+.btn-mob-add:hover{background:rgba(255,255,255,.06);border-color:var(--mob);color:var(--mob);}
+
+/* ── Import / Export bar ── */
+.ie-bar{display:flex;align-items:center;gap:.7rem;padding:.58rem .85rem;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:4px;margin-bottom:1rem;flex-wrap:wrap;}
+.ie-bar-lbl{font-family:'IBM Plex Mono',monospace;font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28);}
+.btn-ie-xl{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;background:rgba(70,194,106,.08);border:1px solid rgba(70,194,106,.3);color:#6fe895;border-radius:4px;padding:.32rem .9rem;display:inline-flex;align-items:center;gap:.35rem;cursor:pointer;text-decoration:none;transition:all .15s;}
+.btn-ie-xl:hover{background:rgba(70,194,106,.18);color:#6fe895;}
+.btn-ie-imp{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;background:rgba(43,178,238,.08);border:1px solid rgba(43,178,238,.3);color:#5cc8f2;border-radius:4px;padding:.32rem .9rem;display:inline-flex;align-items:center;gap:.35rem;cursor:pointer;transition:all .15s;}
+.btn-ie-imp:hover{background:rgba(43,178,238,.18);color:#5cc8f2;}
+.ie-status{font-family:'IBM Plex Mono',monospace;font-size:.62rem;opacity:0;transition:opacity .3s;}
+.ie-status.ok{color:#6fe895;opacity:1;}
+.ie-status.err{color:#ff7a89;opacity:1;}
+</style>
+
+<div class="container-fluid px-3">
+
+<!-- ── EXPORT / IMPORT ── -->
+<div class="ie-bar">
+    <span class="ie-bar-lbl"><i class="bi bi-file-earmark-spreadsheet" style="color:#6fe895;margin-right:.3rem;"></i>Excel</span>
+    <a href="{{ url_for('mobilizacao_exportar_excel') }}" class="btn-ie-xl">
+        <i class="bi bi-download"></i>Exportar Modelo
+    </a>
+    <button class="btn-ie-imp" onclick="document.getElementById('imp-file').click()">
+        <i class="bi bi-upload"></i>Importar Excel
+    </button>
+    <input type="file" id="imp-file" accept=".xlsx" style="display:none;" onchange="importarExcel(this)">
+    <span class="ie-status" id="ie-status"></span>
+    <a href="{{ url_for('mobilizacao_documentos') }}" class="btn-ie-imp" style="margin-left:auto;">
+        <i class="bi bi-eye"></i>Visualizar Documentação
+    </a>
+</div>
+
+<!-- ── NAV TABS ── -->
+<div class="mob-tabs">
+    <button class="mob-tab active" onclick="showTab('documentacoes',this)"><i class="bi bi-file-earmark-text"></i>Documentações</button>
+    <button class="mob-tab" onclick="showTab('ssma',this)"><i class="bi bi-shield-check"></i>Docs SSMA</button>
+    <button class="mob-tab" onclick="showTab('mo',this)"><i class="bi bi-person-workspace"></i>MO (Mão de Obra)</button>
+    <button class="mob-tab" onclick="showTab('equipamentos',this)"><i class="bi bi-truck"></i>Equipamentos</button>
+    <button class="mob-tab" onclick="showTab('canteiro',this)"><i class="bi bi-building-gear"></i>Canteiro</button>
+    <button class="mob-tab" onclick="showTab('subcontratadas',this)"><i class="bi bi-diagram-3"></i>Subcontratadas</button>
+    <button class="mob-tab" onclick="showTab('consolidado',this)"><i class="bi bi-bar-chart-steps"></i>Consolidado</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ABA 1 — DOCUMENTAÇÕES
+══════════════════════════════════════════ -->
+<div id="pane-documentacoes" class="mob-pane active">
+    <div class="gc">
+        <div class="gc-title">
+            <span><i class="bi bi-file-earmark-text"></i>Documentos de Início de Contrato</span>
+            <span>
+                <button class="btn-mob-save" onclick="salvar('documentacoes')"><i class="bi bi-floppy"></i>Salvar</button>
+                <span id="st-documentacoes" class="save-status"></span>
+            </span>
+        </div>
+
+        <!-- Resumo automático -->
+        <div class="sum-strip" id="sum-docs"></div>
+
+        <div class="tbl-scroll">
+        <table class="mob-tbl">
+            <thead>
+                <tr>
+                    <th class="item-num">#</th>
+                    <th>Documento</th>
+                    <th>Área Responsável</th>
+                    <th>Status</th>
+                    <th>Prazo</th>
+                    <th>Link / Arquivo</th>
+                    <th class="th-bl-sep th-bl">Início BL</th>
+                    <th class="th-bl">Fim BL</th>
+                    <th class="th-bl">Real</th>
+                    <th class="th-bl">Forecast <span style="color:var(--mob);font-size:.5rem;">★</span></th>
+                    <th style="width:34px;"></th>
+                </tr>
+            </thead>
+            <tbody id="tbody-docs">
+                {% for d in mob.documentacoes %}
+                <tr data-doc-row data-bl-group data-orig-idx="{{ loop.index0 }}">
+                    <td class="item-num">{{ d.item }}</td>
+                    <td><input type="text" class="mob-input doc-nome-input" value="{{ d.documento }}" style="min-width:180px;width:100%;"></td>
+                    <td>
+                        <select class="mob-select doc-area-select" style="font-size:.72rem;min-width:85px;">
+                            <option value="Gestao de Contratos" {% if d.area not in ['Saúde e Segurança Ocupacional','Saude e Seguranca Ocupacional','Meio Ambiente'] %}selected{% endif %}>Gestão</option>
+                            <option value="Saúde e Segurança Ocupacional" {% if d.area in ['Saúde e Segurança Ocupacional','Saude e Seguranca Ocupacional'] %}selected{% endif %}>SSO</option>
+                            <option value="Meio Ambiente" {% if d.area == 'Meio Ambiente' %}selected{% endif %}>Meio Amb.</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="mob-select doc-status" onchange="colorStatus(this);calcDocs()">
+                            <option value="" {% if not d.status %}selected{% endif %}>— selecionar —</option>
+                            <option value="entregue"  {% if d.status=='entregue' %}selected{% endif %}>Entregue</option>
+                            <option value="pendente"  {% if d.status=='pendente' %}selected{% endif %}>Pendente</option>
+                            <option value="nao"       {% if d.status=='nao' %}selected{% endif %}>Não entregue</option>
+                            <option value="na"        {% if d.status=='na' %}selected{% endif %}>N/A</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="date" class="mob-date doc-prazo" value="{{ d.prazo or '' }}">
+                    </td>
+                    <td>
+                        <div class="url-cell">
+                            <input type="url" class="doc-url" data-idx="{{ loop.index0 }}"
+                                   placeholder="https://..." value="{{ d.url or '' }}"
+                                   oninput="toggleDocLinks(this)">
+                            <a class="btn-doc-link{% if not d.url %} disabled{% endif %}"
+                               data-view="{{ loop.index0 }}" title="Visualizar documento"
+                               href="{{ d.url or '#' }}" target="_blank" rel="noopener">
+                                <i class="bi bi-eye" style="font-size:.75rem;"></i>
+                            </a>
+                            <a class="btn-doc-link dl{% if not d.url %} disabled{% endif %}"
+                               data-dl="{{ loop.index0 }}" title="Baixar documento"
+                               href="{{ d.url or '#' }}" target="_blank" rel="noopener" download>
+                                <i class="bi bi-download" style="font-size:.75rem;"></i>
+                            </a>
+                        </div>
+                    </td>
+                    <td class="td-bl-sep">
+                        <input type="date" class="mob-date bl-inicio" value="{{ d.inicio_bl or '' }}">
+                    </td>
+                    <td>
+                        <input type="date" class="mob-date bl-fim" value="{{ d.fim_bl or '' }}">
+                    </td>
+                    <td>
+                        <input type="date" class="mob-date bl-real" value="{{ d.real or '' }}">
+                    </td>
+                    <td>
+                        <div class="bl-field">
+                            <input type="date" class="mob-date bl-forecast" value="{{ d.forecast or '' }}">
+                            <div class="bl-msg">Real > Fim BL</div>
+                        </div>
+                    </td>
+                    <td>
+                        <button onclick="this.closest('tr').remove();calcDocs();" class="btn-mob-del" title="Remover linha"><i class="bi bi-trash3"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+        <button class="btn-mob-add" onclick="addDocRow()"><i class="bi bi-plus-lg"></i>Adicionar documento</button>
+
+        <!-- Barra de progresso geral -->
+        <div style="margin-top:.9rem;">
+            <div class="prog-wrap"><div class="prog-bar" id="prog-docs" style="width:0%"></div></div>
+            <div class="prog-label" id="prog-docs-lbl">0 / 17 documentos entregues (0%)</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ABA 2 — DOCS SSMA
+══════════════════════════════════════════ -->
+<div id="pane-ssma" class="mob-pane">
+    <div class="gc">
+        <div class="gc-title">
+            <span><i class="bi bi-shield-check"></i>Documentos SSMA</span>
+            <span>
+                <button class="btn-mob-save" onclick="salvar('ssma')"><i class="bi bi-floppy"></i>Salvar</button>
+                <span id="st-ssma" class="save-status"></span>
+            </span>
+        </div>
+
+        <div class="sum-strip" id="sum-ssma"></div>
+
+        <table class="mob-tbl">
+            <thead>
+                <tr>
+                    <th class="item-num">#</th>
+                    <th>Documento</th>
+                    <th>Área</th>
+                    <th>Status</th>
+                    <th>Link / Arquivo</th>
+                    <th class="th-bl-sep th-bl">Início BL</th>
+                    <th class="th-bl">Fim BL</th>
+                    <th class="th-bl">Real</th>
+                    <th class="th-bl">Forecast <span style="color:var(--mob);font-size:.5rem;">★</span></th>
+                    <th style="width:34px;"></th>
+                </tr>
+            </thead>
+            <tbody id="tbody-ssma">
+                {% for d in mob.ssma %}
+                <tr data-bl-group data-orig-idx="{{ loop.index0 }}">
+                    <td class="item-num">{{ d.item }}</td>
+                    <td><input type="text" class="mob-input ssma-nome-input" value="{{ d.documento }}" style="min-width:180px;width:100%;"></td>
+                    <td><span class="area-tag area-sso">SSO</span></td>
+                    <td>
+                        <select class="mob-select ssma-status" onchange="colorStatus(this);calcSsma()">
+                            <option value=""          {% if not d.status %}selected{% endif %}>— selecionar —</option>
+                            <option value="entregue"  {% if d.status=='entregue' %}selected{% endif %}>Entregue</option>
+                            <option value="revisado"  {% if d.status=='revisado' %}selected{% endif %}>Entregue revisado</option>
+                            <option value="nao"       {% if d.status=='nao' %}selected{% endif %}>Não entregue</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="url-cell">
+                            <input type="url" class="ssma-url" data-idx="{{ loop.index0 }}"
+                                   placeholder="https://..." value="{{ d.url or '' }}"
+                                   oninput="toggleSsmaLinks(this)">
+                            <a class="btn-doc-link{% if not d.url %} disabled{% endif %}"
+                               data-view-ssma="{{ loop.index0 }}" title="Visualizar documento"
+                               href="{{ d.url or '#' }}" target="_blank" rel="noopener">
+                                <i class="bi bi-eye" style="font-size:.75rem;"></i>
+                            </a>
+                            <a class="btn-doc-link dl{% if not d.url %} disabled{% endif %}"
+                               data-dl-ssma="{{ loop.index0 }}" title="Baixar documento"
+                               href="{{ d.url or '#' }}" target="_blank" rel="noopener" download>
+                                <i class="bi bi-download" style="font-size:.75rem;"></i>
+                            </a>
+                        </div>
+                    </td>
+                    <td class="td-bl-sep">
+                        <input type="date" class="mob-date bl-inicio" value="{{ d.inicio_bl or '' }}">
+                    </td>
+                    <td>
+                        <input type="date" class="mob-date bl-fim" value="{{ d.fim_bl or '' }}">
+                    </td>
+                    <td>
+                        <input type="date" class="mob-date bl-real" value="{{ d.real or '' }}">
+                    </td>
+                    <td>
+                        <div class="bl-field">
+                            <input type="date" class="mob-date bl-forecast" value="{{ d.forecast or '' }}">
+                            <div class="bl-msg">Real > Fim BL</div>
+                        </div>
+                    </td>
+                    <td>
+                        <button onclick="this.closest('tr').remove();calcSsma();" class="btn-mob-del" title="Remover linha"><i class="bi bi-trash3"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button class="btn-mob-add" onclick="addSsmaRow()"><i class="bi bi-plus-lg"></i>Adicionar documento SSMA</button>
+
+        <div style="margin-top:.9rem;">
+            <div class="prog-wrap"><div class="prog-bar" id="prog-ssma" style="width:0%"></div></div>
+            <div class="prog-label" id="prog-ssma-lbl">0 / 4 documentos entregues (0%)</div>
+        </div>
+
+        <!-- Critério de medição SSMA -->
+        <div style="margin-top:1rem;padding-top:.7rem;border-top:1px solid rgba(255,255,255,.06);">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;">Critério de medição</div>
+            <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+                <div><span class="peso-badge">Primeira entrega</span> <span style="font-size:.78rem;color:rgba(255,255,255,.5);margin-left:.3rem;">peso 60%</span></div>
+                <div><span class="peso-badge">Aceite pela Segurança</span> <span style="font-size:.78rem;color:rgba(255,255,255,.5);margin-left:.3rem;">peso 100%</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ABA 3 — MÃO DE OBRA
+══════════════════════════════════════════ -->
+<div id="pane-mo" class="mob-pane">
+    <div class="gc">
+        <div class="gc-title">
+            <span><i class="bi bi-person-workspace"></i>Mão de Obra — Etapas de Mobilização</span>
+            <span>
+                <button class="btn-mob-save" onclick="salvar('mo')"><i class="bi bi-floppy"></i>Salvar</button>
+                <span id="st-mo" class="save-status"></span>
+            </span>
+        </div>
+        <div class="tbl-scroll">
+        <table class="mob-tbl">
+            <thead>
+                <tr>
+                    <th>Etapa</th>
+                    <th class="center">Geral</th>
+                    <th class="center">MOD</th>
+                    <th class="center">MOI</th>
+                    <th class="th-bl-sep th-bl">Início BL</th>
+                    <th class="th-bl">Fim BL</th>
+                    <th class="th-bl">Real</th>
+                    <th class="th-bl">Forecast <span style="color:var(--mob);font-size:.5rem;">★</span></th>
+                    <th style="width:34px;"></th>
+                </tr>
+            </thead>
+            <tbody id="tbody-mo">
+                {% for e in mob.mo.etapas %}
+                <tr {% if loop.first %}class="etapa-previsto"{% endif %} data-bl-group data-orig-idx="{{ loop.index0 }}">
+                    <td style="min-width:200px;">
+                        {% if loop.first %}<span style="font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--mob);margin-right:.4rem;">▶ META</span>{% endif %}
+                        <input type="text" class="mob-input mo-etapa-input" value="{{ e.etapa }}" style="min-width:160px;">
+                    </td>
+                    <td class="center">
+                        <input type="number" min="0" class="mob-num mo-geral"
+                               value="{{ e.geral if e.geral is not none else '' }}" placeholder="—" oninput="calcMo()">
+                    </td>
+                    <td class="center">
+                        <input type="number" min="0" class="mob-num mo-mod"
+                               value="{{ e.mod if e.mod is not none else '' }}" placeholder="—" oninput="calcMo()">
+                    </td>
+                    <td class="center">
+                        <input type="number" min="0" class="mob-num mo-moi"
+                               value="{{ e.moi if e.moi is not none else '' }}" placeholder="—" oninput="calcMo()">
+                    </td>
+                    <td class="td-bl-sep">
+                        <input type="date" class="mob-date bl-inicio" value="{{ e.inicio_bl or '' }}">
+                    </td>
+                    <td>
+                        <input type="date" class="mob-date bl-fim" value="{{ e.fim_bl or '' }}">
+                    </td>
+                    <td>
+                        <input type="date" class="mob-date bl-real" value="{{ e.real or '' }}">
+                    </td>
+                    <td>
+                        <div class="bl-field">
+                            <input type="date" class="mob-date bl-forecast" value="{{ e.forecast or '' }}">
+                            <div class="bl-msg">Real > Fim BL</div>
+                        </div>
+                    </td>
+                    <td>
+                        <button onclick="this.closest('tr').remove();calcMo();" class="btn-mob-del" title="Remover linha"><i class="bi bi-trash3"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+        <button class="btn-mob-add" onclick="addMoRow()"><i class="bi bi-plus-lg"></i>Adicionar etapa MO</button>
+
+        <!-- Barras de progresso MO -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;margin-top:.9rem;">
+            {% for col, label in [('geral','Geral'),('mod','MOD'),('moi','MOI')] %}
+            <div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem;">{{ label }}</div>
+                <div class="prog-wrap"><div class="prog-bar" id="prog-mo-{{ col }}" style="width:0%"></div></div>
+                <div class="prog-label" id="prog-mo-{{ col }}-lbl">0 / 0</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="margin-top:.9rem;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">Comentários</div>
+            <textarea class="mob-textarea" id="mo-comentarios" placeholder="Observações sobre a mobilização de mão de obra...">{{ mob.mo.comentarios or '' }}</textarea>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ABA 4 — EQUIPAMENTOS
+══════════════════════════════════════════ -->
+<div id="pane-equipamentos" class="mob-pane">
+    <div class="gc">
+        <div class="gc-title">
+            <span><i class="bi bi-truck"></i>Equipamentos — Etapas de Mobilização</span>
+            <span>
+                <button class="btn-mob-save" onclick="salvar('equipamentos')"><i class="bi bi-floppy"></i>Salvar</button>
+                <span id="st-equipamentos" class="save-status"></span>
+            </span>
+        </div>
+        <div class="tbl-scroll">
+        <table class="mob-tbl">
+            <thead>
+                <tr>
+                    <th>Etapa</th>
+                    <th class="center">Geral</th>
+                    <th class="center">Grande Porte</th>
+                    <th class="center">Pequeno Porte</th>
+                    <th class="th-bl-sep th-bl">Início BL</th>
+                    <th class="th-bl">Fim BL</th>
+                    <th class="th-bl">Real</th>
+                    <th class="th-bl">Forecast <span style="color:var(--mob);font-size:.5rem;">★</span></th>
+                    <th style="width:34px;"></th>
+                </tr>
+            </thead>
+            <tbody id="tbody-eq">
+                {% for e in mob.equipamentos.etapas %}
+                <tr {% if loop.first %}class="etapa-previsto"{% endif %} data-bl-group data-orig-idx="{{ loop.index0 }}">
+                    <td style="min-width:200px;">
+                        {% if loop.first %}<span style="font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--mob);margin-right:.4rem;">▶ META</span>{% endif %}
+                        <input type="text" class="mob-input eq-etapa-input" value="{{ e.etapa }}" style="min-width:160px;">
+                    </td>
+                    <td class="center">
+                        <input type="number" min="0" class="mob-num eq-geral"
+                               value="{{ e.geral if e.geral is not none else '' }}" placeholder="—" oninput="calcEq()">
+                    </td>
+                    <td class="center">
+                        <input type="number" min="0" class="mob-num eq-grande"
+                               value="{{ e.grande_porte if e.grande_porte is not none else '' }}" placeholder="—" oninput="calcEq()">
+                    </td>
+                    <td class="center">
+                        <input type="number" min="0" class="mob-num eq-pequeno"
+                               value="{{ e.pequeno_porte if e.pequeno_porte is not none else '' }}" placeholder="—" oninput="calcEq()">
+                    </td>
+                    <td class="td-bl-sep">
+                        <input type="date" class="mob-date bl-inicio" value="{{ e.inicio_bl or '' }}">
+                    </td>
+                    <td>
+                        <input type="date" class="mob-date bl-fim" value="{{ e.fim_bl or '' }}">
+                    </td>
+                    <td>
+                        <input type="date" class="mob-date bl-real" value="{{ e.real or '' }}">
+                    </td>
+                    <td>
+                        <div class="bl-field">
+                            <input type="date" class="mob-date bl-forecast" value="{{ e.forecast or '' }}">
+                            <div class="bl-msg">Real > Fim BL</div>
+                        </div>
+                    </td>
+                    <td>
+                        <button onclick="this.closest('tr').remove();calcEq();" class="btn-mob-del" title="Remover linha"><i class="bi bi-trash3"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+        <button class="btn-mob-add" onclick="addEqRow()"><i class="bi bi-plus-lg"></i>Adicionar etapa Equipamentos</button>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;margin-top:.9rem;">
+            {% for col, label in [('geral','Geral'),('grande','Grande Porte'),('pequeno','Peq. Porte')] %}
+            <div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem;">{{ label }}</div>
+                <div class="prog-wrap"><div class="prog-bar" id="prog-eq-{{ col }}" style="width:0%"></div></div>
+                <div class="prog-label" id="prog-eq-{{ col }}-lbl">0 / 0</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="margin-top:.9rem;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">Comentários</div>
+            <textarea class="mob-textarea" id="eq-comentarios" placeholder="Observações sobre a mobilização de equipamentos...">{{ mob.equipamentos.comentarios or '' }}</textarea>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ABA 5 — CANTEIRO
+══════════════════════════════════════════ -->
+<div id="pane-canteiro" class="mob-pane">
+    <div class="gc">
+        <div class="gc-title">
+            <span><i class="bi bi-building-gear"></i>Canteiro — Itens e Critérios</span>
+            <span style="display:flex;align-items:center;gap:.9rem;">
+                <span><span class="avanco-num" id="avanco-canteiro">0%</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.28);">avanço</span></span>
+                <button class="btn-mob-save" onclick="salvar('canteiro')"><i class="bi bi-floppy"></i>Salvar</button>
+                <span id="st-canteiro" class="save-status"></span>
+            </span>
+        </div>
+
+        <div class="prog-wrap" style="margin-bottom:.8rem;"><div class="prog-bar" id="prog-canteiro" style="width:0%"></div></div>
+
+        {% for it in mob.canteiro %}{% set cant_idx = loop.index0 %}
+        <div class="gc" style="background:#0f1f2a;border-color:rgba(255,255,255,.06);margin-bottom:.5rem;" data-cant-item data-orig-idx="{{ cant_idx }}" data-peso="{{ it.peso }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:{% if it.criterios %}.5rem{% else %}0{% endif %};">
+                <div style="flex:1;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                    <input type="text" class="mob-input cant-item-nome" value="{{ it.item }}" style="min-width:160px;flex:1;">
+                    {% if it.peso > 0 %}<span class="peso-badge">Peso {{ (it.peso*100)|int }}%</span>{% endif %}
+                </div>
+                <div style="display:flex;align-items:center;gap:.4rem;">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--mob);" class="cant-avanco-num">0%</span>
+                    <button onclick="this.closest('[data-cant-item]').remove();calcCanteiro();" class="btn-mob-del" title="Remover item"><i class="bi bi-trash3"></i></button>
+                </div>
+            </div>
+            {% if it.criterios %}
+            <div>
+                {% for cr in it.criterios %}
+                <div class="crit-row">
+                    <input type="checkbox" class="mob-check cant-check" data-cant="{{ cant_idx }}" data-crit="{{ loop.index0 }}"
+                           {% if cr.concluido %}checked{% endif %} onchange="calcCanteiro()">
+                    <span class="crit-desc">{{ cr.descricao }}</span>
+                    <span class="crit-peso">{{ (cr.peso*100)|round(0)|int }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="font-size:.75rem;color:rgba(255,255,255,.2);padding:.2rem 0;">Sem critérios definidos</div>
+            {% endif %}
+            <!-- BL Dates -->
+            <div class="bl-strip-dark" data-bl-group style="margin-top:.5rem;border-radius:3px;">
+                <div class="bl-field">
+                    <label class="bl-lbl">Início BL</label>
+                    <input type="date" class="bl-inicio" data-sec="cant" data-bl="inicio_bl" data-idx="{{ cant_idx }}" value="{{ it.inicio_bl or '' }}">
+                </div>
+                <div class="bl-field">
+                    <label class="bl-lbl">Fim BL</label>
+                    <input type="date" class="bl-fim" data-sec="cant" data-bl="fim_bl" data-idx="{{ cant_idx }}" value="{{ it.fim_bl or '' }}">
+                </div>
+                <div class="bl-field">
+                    <label class="bl-lbl">Real</label>
+                    <input type="date" class="bl-real" data-sec="cant" data-bl="real" data-idx="{{ cant_idx }}" value="{{ it.real or '' }}">
+                </div>
+                <div class="bl-field">
+                    <label class="bl-lbl">Forecast <span class="bl-req-mark">★</span></label>
+                    <input type="date" class="bl-forecast" data-sec="cant" data-bl="forecast" data-idx="{{ cant_idx }}" value="{{ it.forecast or '' }}">
+                    <div class="bl-msg">Real > Fim BL</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <button class="btn-mob-add" id="btn-add-cant" onclick="addCantItem()"><i class="bi bi-plus-lg"></i>Adicionar item ao canteiro</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ABA 6 — SUBCONTRATADAS
+══════════════════════════════════════════ -->
+<div id="pane-subcontratadas" class="mob-pane">
+    <div class="gc">
+        <div class="gc-title">
+            <span><i class="bi bi-diagram-3"></i>Subcontratadas — Etapas e Critérios</span>
+            <span style="display:flex;align-items:center;gap:.9rem;">
+                <span><span class="avanco-num" id="avanco-sub">0%</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.28);">avanço</span></span>
+                <button class="btn-mob-save" onclick="salvar('subcontratadas')"><i class="bi bi-floppy"></i>Salvar</button>
+                <span id="st-subcontratadas" class="save-status"></span>
+            </span>
+        </div>
+
+        <div class="prog-wrap" style="margin-bottom:.8rem;"><div class="prog-bar" id="prog-sub" style="width:0%"></div></div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:.6rem;" id="grid-subs">
+        {% for emp in mob.subcontratadas %}{% set sub_idx = loop.index0 %}
+        <div class="gc" style="background:#0f1f2a;border-color:rgba(255,255,255,.06);" data-sub-item data-orig-idx="{{ sub_idx }}" data-peso="{{ emp.peso }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem;">
+                <div style="flex:1;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                    <input type="text" class="mob-input sub-emp-nome" value="{{ emp.empresa }}" style="min-width:140px;flex:1;font-weight:600;">
+                    <span class="peso-badge">Peso {{ (emp.peso*100)|int }}%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:.4rem;">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--mob);" class="sub-avanco-num">0%</span>
+                    <button onclick="this.closest('[data-sub-item]').remove();calcSub();" class="btn-mob-del" title="Remover empresa"><i class="bi bi-trash3"></i></button>
+                </div>
+            </div>
+            {% for cr in emp.criterios %}
+            <div class="crit-row">
+                <input type="checkbox" class="mob-check sub-check" data-sub="{{ sub_idx }}" data-crit="{{ loop.index0 }}"
+                       {% if cr.concluido %}checked{% endif %} onchange="calcSub()">
+                <span class="crit-desc">{{ cr.descricao }}</span>
+                <span class="crit-peso">{{ (cr.peso*100)|round(0)|int }}%</span>
+            </div>
+            {% endfor %}
+            <!-- BL Dates -->
+            <div class="bl-strip-dark" data-bl-group style="margin-top:.5rem;border-radius:3px;">
+                <div class="bl-field">
+                    <label class="bl-lbl">Início BL</label>
+                    <input type="date" class="bl-inicio" data-sec="sub" data-bl="inicio_bl" data-idx="{{ sub_idx }}" value="{{ emp.inicio_bl or '' }}">
+                </div>
+                <div class="bl-field">
+                    <label class="bl-lbl">Fim BL</label>
+                    <input type="date" class="bl-fim" data-sec="sub" data-bl="fim_bl" data-idx="{{ sub_idx }}" value="{{ emp.fim_bl or '' }}">
+                </div>
+                <div class="bl-field">
+                    <label class="bl-lbl">Real</label>
+                    <input type="date" class="bl-real" data-sec="sub" data-bl="real" data-idx="{{ sub_idx }}" value="{{ emp.real or '' }}">
+                </div>
+                <div class="bl-field">
+                    <label class="bl-lbl">Forecast <span class="bl-req-mark">★</span></label>
+                    <input type="date" class="bl-forecast" data-sec="sub" data-bl="forecast" data-idx="{{ sub_idx }}" value="{{ emp.forecast or '' }}">
+                    <div class="bl-msg">Real > Fim BL</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+
+        <button class="btn-mob-add" id="btn-add-sub" onclick="addSubItem()"><i class="bi bi-plus-lg"></i>Adicionar subcontratada</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ABA 7 — CONSOLIDADO
+══════════════════════════════════════════ -->
+<div id="pane-consolidado" class="mob-pane">
+
+    <!-- KPIs -->
+    <div class="sum-strip" id="cons-kpis" style="margin-bottom:.9rem;"></div>
+
+    <!-- Tabela consolidada -->
+    <div class="gc">
+        <div class="gc-title">
+            <span><i class="bi bi-table"></i>Itens e Datas BL — Todas as Seções</span>
+        </div>
+        <div class="tbl-scroll">
+            <table class="mob-tbl">
+                <thead>
+                    <tr>
+                        <th>Seção</th>
+                        <th>Item</th>
+                        <th class="th-bl-sep" style="min-width:110px;">Início BL</th>
+                        <th style="min-width:110px;">Fim BL</th>
+                        <th style="min-width:110px;">Real</th>
+                        <th style="min-width:110px;">Forecast</th>
+                        <th style="min-width:100px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="cons-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ══ DADOS (espelho do backend) ══
+const MOB = {{ mob | tojson }};
+
+// ══ TAB ══
+function showTab(id, btn) {
+    document.querySelectorAll('.mob-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('pane-' + id).classList.add('active');
+    btn.classList.add('active');
+    if (id === 'consolidado') buildConsolidado();
+}
+
+// ══ STATUS COLORING ══
+function colorStatus(sel) {
+    sel.className = 'mob-select' + (sel.classList.contains('doc-status') ? ' doc-status' : (sel.classList.contains('ssma-status') ? ' ssma-status' : ''));
+    const v = sel.value;
+    if (v === 'entregue' || v === 'revisado') sel.classList.add('s-entregue');
+    else if (v === 'pendente')                sel.classList.add('s-warn');
+    else if (v === 'nao')                     sel.classList.add('s-nao');
+    else if (v === 'na')                      sel.classList.add('s-na');
+}
+
+// ══ DOCUMENTAÇÕES ══
+function calcDocs() {
+    const sels = document.querySelectorAll('.doc-status');
+    let ent = 0, pend = 0, nao = 0, na = 0;
+    sels.forEach(s => {
+        if (s.value === 'entregue') ent++;
+        else if (s.value === 'pendente') pend++;
+        else if (s.value === 'nao') nao++;
+        else if (s.value === 'na') na++;
+    });
+    const total = sels.length;
+    const pct = total > 0 ? Math.round(ent / total * 100) : 0;
+    document.getElementById('prog-docs').style.width = pct + '%';
+    document.getElementById('prog-docs-lbl').textContent = `${ent} / ${total} documentos entregues (${pct}%)`;
+    const strip = document.getElementById('sum-docs');
+    strip.innerHTML = `
+        <span class="sum-chip ok"><i class="bi bi-check-circle-fill"></i>${ent} Entregues</span>
+        ${pend ? `<span class="sum-chip warn"><i class="bi bi-clock"></i>${pend} Pendentes</span>` : ''}
+        ${nao ? `<span class="sum-chip danger"><i class="bi bi-x-circle-fill"></i>${nao} Não entregues</span>` : ''}
+        ${na ? `<span class="sum-chip info"><i class="bi bi-dash-circle"></i>${na} N/A</span>` : ''}
+    `;
+}
+
+// ══ SSMA ══
+function calcSsma() {
+    const sels = document.querySelectorAll('.ssma-status');
+    let ent = 0, rev = 0, nao = 0;
+    sels.forEach(s => {
+        if (s.value === 'entregue') ent++;
+        else if (s.value === 'revisado') rev++;
+        else if (s.value === 'nao') nao++;
+    });
+    const total = sels.length;
+    const pct = total > 0 ? Math.round((ent + rev) / total * 100) : 0;
+    document.getElementById('prog-ssma').style.width = pct + '%';
+    document.getElementById('prog-ssma-lbl').textContent = `${ent + rev} / ${total} documentos entregues (${pct}%)`;
+    const strip = document.getElementById('sum-ssma');
+    strip.innerHTML = `
+        <span class="sum-chip ok"><i class="bi bi-check-circle-fill"></i>${ent} Entregues</span>
+        ${rev ? `<span class="sum-chip info"><i class="bi bi-arrow-repeat"></i>${rev} Revisados</span>` : ''}
+        ${nao ? `<span class="sum-chip danger"><i class="bi bi-x-circle-fill"></i>${nao} Não entregues</span>` : ''}
+    `;
+}
+
+// ══ MO barras ══
+function calcMo() {
+    const cols = ['geral','mod','moi'];
+    const previsto = { geral: parseFloat(document.querySelector('.mo-geral[data-idx="0"]')?.value)||0,
+                       mod:   parseFloat(document.querySelector('.mo-mod[data-idx="0"]')?.value)||0,
+                       moi:   parseFloat(document.querySelector('.mo-moi[data-idx="0"]')?.value)||0 };
+    // last filled row = mais avançado
+    const lastRow = {};
+    cols.forEach(c => {
+        const inputs = document.querySelectorAll(`.mo-${c === 'geral' ? 'geral' : c === 'mod' ? 'mod' : 'moi'}`);
+        let last = 0;
+        inputs.forEach((inp, i) => { if (i > 0 && inp.value !== '') last = parseFloat(inp.value)||0; });
+        lastRow[c] = last;
+    });
+    ['geral','mod','moi'].forEach(c => {
+        const pct = previsto[c] > 0 ? Math.min(100, Math.round(lastRow[c] / previsto[c] * 100)) : 0;
+        document.getElementById(`prog-mo-${c}`).style.width = pct + '%';
+        document.getElementById(`prog-mo-${c}-lbl`).textContent = `${lastRow[c]} / ${previsto[c]} (${pct}%)`;
+    });
+}
+
+// ══ EQ barras ══
+function calcEq() {
+    const previsto = { geral:    parseFloat(document.querySelector('.eq-geral[data-idx="0"]')?.value)||0,
+                       grande:   parseFloat(document.querySelector('.eq-grande[data-idx="0"]')?.value)||0,
+                       pequeno:  parseFloat(document.querySelector('.eq-pequeno[data-idx="0"]')?.value)||0 };
+    const lastRow = {};
+    [['geral','eq-geral'],['grande','eq-grande'],['pequeno','eq-pequeno']].forEach(([c,cls]) => {
+        const inputs = document.querySelectorAll(`.${cls}`);
+        let last = 0;
+        inputs.forEach((inp, i) => { if (i > 0 && inp.value !== '') last = parseFloat(inp.value)||0; });
+        lastRow[c] = last;
+    });
+    ['geral','grande','pequeno'].forEach(c => {
+        const pct = previsto[c] > 0 ? Math.min(100, Math.round(lastRow[c] / previsto[c] * 100)) : 0;
+        document.getElementById(`prog-eq-${c}`).style.width = pct + '%';
+        document.getElementById(`prog-eq-${c}-lbl`).textContent = `${lastRow[c]} / ${previsto[c]} (${pct}%)`;
+    });
+}
+
+// ══ CANTEIRO ══
+function calcCanteiro() {
+    const items = document.querySelectorAll('[data-cant-item]');
+    let totalAvanco = 0;
+    items.forEach(item => {
+        const peso = parseFloat(item.dataset.peso) || 0;
+        const checks = item.querySelectorAll('.cant-check');
+        const crits = MOB.canteiro[parseInt(item.dataset.idx)]?.criterios || [];
+        let avItem = 0;
+        checks.forEach((ch, i) => { if (ch.checked) avItem += (crits[i]?.peso || 0); });
+        avItem = Math.min(1, avItem);
+        totalAvanco += peso * avItem;
+        item.querySelector('.cant-avanco-num').textContent = Math.round(avItem * 100) + '%';
+    });
+    const pct = Math.round(totalAvanco * 100);
+    document.getElementById('avanco-canteiro').textContent = pct + '%';
+    document.getElementById('prog-canteiro').style.width = pct + '%';
+}
+
+// ══ SUBCONTRATADAS ══
+function calcSub() {
+    const items = document.querySelectorAll('[data-sub-item]');
+    let totalAvanco = 0;
+    items.forEach(item => {
+        const peso = parseFloat(item.dataset.peso) || 0;
+        const checks = item.querySelectorAll('.sub-check');
+        const emps = MOB.subcontratadas[parseInt(item.dataset.idx)]?.criterios || [];
+        let avItem = 0;
+        checks.forEach((ch, i) => { if (ch.checked) avItem += (emps[i]?.peso || 0); });
+        avItem = Math.min(1, avItem);
+        totalAvanco += peso * avItem;
+        item.querySelector('.sub-avanco-num').textContent = Math.round(avItem * 100) + '%';
+    });
+    const pct = Math.round(totalAvanco * 100);
+    document.getElementById('avanco-sub').textContent = pct + '%';
+    document.getElementById('prog-sub').style.width = pct + '%';
+}
+
+// ══ Helper: coleta datas BL de um item pelo sec+idx ══
+function _bl(sec, idx) {
+    const q = (bl) => document.querySelector(`[data-sec="${sec}"][data-bl="${bl}"][data-idx="${idx}"]`)?.value.trim() || null;
+    return { inicio_bl: q('inicio_bl'), fim_bl: q('fim_bl'), real: q('real'), forecast: q('forecast') };
+}
+
+// ══ SALVAR ══
+async function salvar(secao) {
+    // Valida todos os grupos BL do painel ativo antes de enviar
+    const pane = document.getElementById('pane-' + secao);
+    if (!validarTodasBL(pane)) {
+        const stEl = document.getElementById('st-' + secao);
+        stEl.textContent = '✗ Corrija as datas BL';
+        stEl.className = 'save-status err';
+        setTimeout(() => { stEl.className = 'save-status'; stEl.textContent=''; }, 4000);
+        return;
+    }
+
+    const btn = document.querySelector(`[onclick="salvar('${secao}')"]`);
+    const stEl = document.getElementById('st-' + secao);
+    btn.disabled = true;
+    stEl.className = 'save-status';
+    stEl.textContent = '';
+
+    let payload = { secao };
+
+    if (secao === 'documentacoes') {
+        payload.documentacoes = MOB.documentacoes.map((d, i) => ({
+            ...d,
+            status: document.querySelector(`.doc-status[data-idx="${i}"]`)?.value || null,
+            prazo:  document.querySelector(`.doc-prazo[data-idx="${i}"]`)?.value || null,
+            url:    document.querySelector(`.doc-url[data-idx="${i}"]`)?.value.trim() || null,
+            ..._bl('doc', i),
+        }));
+    } else if (secao === 'ssma') {
+        payload.ssma = MOB.ssma.map((d, i) => ({
+            ...d,
+            status: document.querySelector(`.ssma-status[data-idx="${i}"]`)?.value || null,
+            url:    document.querySelector(`.ssma-url[data-idx="${i}"]`)?.value.trim() || null,
+            ..._bl('ssma', i),
+        }));
+    } else if (secao === 'mo') {
+        payload.mo = {
+            etapas: MOB.mo.etapas.map((e, i) => ({
+                ...e,
+                geral: parseFloat(document.querySelector(`.mo-geral[data-idx="${i}"]`)?.value) || null,
+                mod:   parseFloat(document.querySelector(`.mo-mod[data-idx="${i}"]`)?.value) || null,
+                moi:   parseFloat(document.querySelector(`.mo-moi[data-idx="${i}"]`)?.value) || null,
+                ..._bl('mo', i),
+            })),
+            comentarios: document.getElementById('mo-comentarios')?.value || '',
+        };
+    } else if (secao === 'equipamentos') {
+        payload.equipamentos = {
+            etapas: MOB.equipamentos.etapas.map((e, i) => ({
+                ...e,
+                geral:         parseFloat(document.querySelector(`.eq-geral[data-idx="${i}"]`)?.value) || null,
+                grande_porte:  parseFloat(document.querySelector(`.eq-grande[data-idx="${i}"]`)?.value) || null,
+                pequeno_porte: parseFloat(document.querySelector(`.eq-pequeno[data-idx="${i}"]`)?.value) || null,
+                ..._bl('eq', i),
+            })),
+            comentarios: document.getElementById('eq-comentarios')?.value || '',
+        };
+    } else if (secao === 'canteiro') {
+        payload.canteiro = MOB.canteiro.map((it, ii) => ({
+            ...it,
+            criterios: it.criterios.map((cr, ci) => ({
+                ...cr,
+                concluido: document.querySelector(`.cant-check[data-cant="${ii}"][data-crit="${ci}"]`)?.checked || false,
+            })),
+            ..._bl('cant', ii),
+        }));
+    } else if (secao === 'subcontratadas') {
+        payload.subcontratadas = MOB.subcontratadas.map((emp, ei) => ({
+            ...emp,
+            criterios: emp.criterios.map((cr, ci) => ({
+                ...cr,
+                concluido: document.querySelector(`.sub-check[data-sub="${ei}"][data-crit="${ci}"]`)?.checked || false,
+            })),
+            ..._bl('sub', ei),
+        }));
+    }
+
+    try {
+        const res = await fetch('/mobilizacao/config/salvar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.ok) {
+            stEl.textContent = '✓ Salvo';
+            stEl.className = 'save-status ok';
+            // atualiza espelho local
+            if (payload[secao] !== undefined) MOB[secao] = payload[secao];
+        } else {
+            throw new Error(data.erro || 'Erro');
+        }
+    } catch(e) {
+        stEl.textContent = '✗ Erro';
+        stEl.className = 'save-status err';
+    } finally {
+        btn.disabled = false;
+        setTimeout(() => { stEl.className = 'save-status'; stEl.textContent=''; }, 3500);
+    }
+}
+
+// ══ URL LINK TOGGLES ══
+function toggleDocLinks(input) {
+    const idx = input.dataset.idx;
+    const url = input.value.trim();
+    const viewBtn = document.querySelector(`[data-view="${idx}"]`);
+    const dlBtn   = document.querySelector(`[data-dl="${idx}"]`);
+    if (!viewBtn || !dlBtn) return;
+    if (url) {
+        viewBtn.href = url; viewBtn.classList.remove('disabled');
+        dlBtn.href   = url; dlBtn.classList.remove('disabled');
+    } else {
+        viewBtn.href = '#'; viewBtn.classList.add('disabled');
+        dlBtn.href   = '#'; dlBtn.classList.add('disabled');
+    }
+}
+
+function toggleSsmaLinks(input) {
+    const idx = input.dataset.idx;
+    const url = input.value.trim();
+    const viewBtn = document.querySelector(`[data-view-ssma="${idx}"]`);
+    const dlBtn   = document.querySelector(`[data-dl-ssma="${idx}"]`);
+    if (!viewBtn || !dlBtn) return;
+    if (url) {
+        viewBtn.href = url; viewBtn.classList.remove('disabled');
+        dlBtn.href   = url; dlBtn.classList.remove('disabled');
+    } else {
+        viewBtn.href = '#'; viewBtn.classList.add('disabled');
+        dlBtn.href   = '#'; dlBtn.classList.add('disabled');
+    }
+}
+
+// ══ INIT ══
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.doc-status,.ssma-status').forEach(colorStatus);
+    calcDocs(); calcSsma(); calcMo(); calcEq(); calcCanteiro(); calcSub();
+    document.querySelectorAll('.mo-geral,.mo-mod,.mo-moi').forEach(i => i.addEventListener('input', calcMo));
+    document.querySelectorAll('.eq-geral,.eq-grande,.eq-pequeno').forEach(i => i.addEventListener('input', calcEq));
+});
+
+// ════════════════════════════════════════════════
+// ABA 7 — CONSOLIDADO
+// ════════════════════════════════════════════════
+
+const _SEC_COLORS = {
+    'Documentações': '#5cc8f2', 'Docs SSMA': '#b0a4ff',
+    'MO': '#6fe895', 'Equipamentos': '#f5c060',
+    'Canteiro': '#FF7043', 'Subcontratadas': '#9be8d8',
+};
+
+function _fmtDate(iso) {
+    if (!iso) return '<span style="color:rgba(255,255,255,.18);">—</span>';
+    const [y,m,d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+}
+
+function _blSt(fim_bl, real, forecast) {
+    const today = new Date().toISOString().slice(0, 10);
+    if (real && fim_bl && real <= fim_bl) return { label:'No prazo',  cls:'ok'     };
+    if (real && fim_bl && real > fim_bl)  return { label:'Atrasado',  cls:'danger' };
+    if (!real && fim_bl && today > fim_bl) return { label:'Vencido',  cls:'warn'   };
+    if (!real && forecast)                 return { label:'Forecast',  cls:'info'   };
+    if (fim_bl)                            return { label:'Pendente',  cls:'pend'   };
+    return { label: 'Sem BL', cls: 'none' };
+}
+
+function _collectItems() {
+    const rows = [];
+    const push = (sec, idx, nome, secao) => rows.push({
+        secao, nome,
+        ...(_bl(sec, idx))
+    });
+    (MOB.documentacoes||[]).forEach((d,i) => push('doc',  i, d.documento, 'Documentações'));
+    (MOB.ssma          ||[]).forEach((d,i) => push('ssma', i, d.documento, 'Docs SSMA'));
+    ((MOB.mo||{}).etapas||[]).forEach((e,i) => push('mo',  i, e.etapa,    'MO'));
+    ((MOB.equipamentos||{}).etapas||[]).forEach((e,i) => push('eq', i, e.etapa, 'Equipamentos'));
+    (MOB.canteiro      ||[]).forEach((it,i) => push('cant',i, it.item,     'Canteiro'));
+    (MOB.subcontratadas||[]).forEach((e,i)  => push('sub', i, e.empresa,   'Subcontratadas'));
+    return rows;
+}
+
+function _renderTable(items) {
+    const tbody = document.getElementById('cons-tbody');
+    if (!tbody) return;
+    let html = '', lastSec = null;
+    items.forEach(it => {
+        if (it.secao !== lastSec) {
+            const col = _SEC_COLORS[it.secao] || 'rgba(255,255,255,.4)';
+            html += `<tr class="cons-sec-hdr"><td colspan="7" style="color:${col};">${it.secao}</td></tr>`;
+            lastSec = it.secao;
+        }
+        const st = _blSt(it.fim_bl, it.real, it.forecast);
+        html += `<tr>
+            <td></td>
+            <td style="color:rgba(255,255,255,.82);font-size:.8rem;">${it.nome}</td>
+            <td class="td-bl-sep" style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.42);">${_fmtDate(it.inicio_bl)}</td>
+            <td style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.58);">${_fmtDate(it.fim_bl)}</td>
+            <td style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:#6fe895;">${_fmtDate(it.real)}</td>
+            <td style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:rgba(255,112,67,.8);">${_fmtDate(it.forecast)}</td>
+            <td><span class="cons-st cons-st-${st.cls}">${st.label}</span></td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function _renderKPIs(items) {
+    const today = new Date().toISOString().slice(0, 10);
+    const total    = items.length;
+    const comBL    = items.filter(it => it.fim_bl).length;
+    const concl    = items.filter(it => it.real && it.fim_bl && it.real <= it.fim_bl).length;
+    const atras    = items.filter(it =>
+        (it.real && it.fim_bl && it.real > it.fim_bl) ||
+        (!it.real && it.fim_bl && today > it.fim_bl)).length;
+    const el = document.getElementById('cons-kpis');
+    if (!el) return;
+    el.innerHTML = `
+        <span class="sum-chip info"><i class="bi bi-list-ul"></i>${total} Itens</span>
+        <span class="sum-chip info"><i class="bi bi-calendar-check"></i>${comBL} Com BL</span>
+        <span class="sum-chip ok"><i class="bi bi-check-circle-fill"></i>${concl} Concluídos</span>
+        ${atras ? `<span class="sum-chip danger"><i class="bi bi-exclamation-circle-fill"></i>${atras} Atrasados/Vencidos</span>` : ''}
+    `;
+}
+
+function _renderCurvaS(_items) { /* Curva S movida para o Dashboard (mobilizacao.html) */ }
+function _renderCurvaS_unused(items) {
+    const withBL = [];
+    const wrap   = null;
+    const empty  = null;
+
+    if (!withBL.length) {
+        if (wrap)  wrap.style.display  = 'none';
+        if (empty) empty.style.display = 'block';
+        return;
+    }
+    if (wrap)  wrap.style.display  = 'block';
+    if (empty) empty.style.display = 'none';
+
+    const total = withBL.length;
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Collect all date endpoints
+    const allDates = [today];
+    withBL.forEach(it => {
+        if (it.inicio_bl) allDates.push(it.inicio_bl);
+        if (it.fim_bl)    allDates.push(it.fim_bl);
+        if (it.real)      allDates.push(it.real);
+        if (it.forecast)  allDates.push(it.forecast);
+    });
+    allDates.sort();
+
+    // Weekly steps from (min - 1w) to (max + 2w)
+    const minD = new Date(allDates[0]); minD.setDate(minD.getDate() - 7);
+    const maxD = new Date(allDates[allDates.length-1]); maxD.setDate(maxD.getDate() + 14);
+    const steps = [];
+    for (let d = new Date(minD); d <= maxD; d.setDate(d.getDate() + 7))
+        steps.push(new Date(d).toISOString().slice(0, 10));
+
+    // BL line: % items with fim_bl <= step
+    const blLine = steps.map(s =>
+        Math.round(withBL.filter(it => it.fim_bl <= s).length / total * 100));
+
+    // Real line: % items with real <= step (only up to today)
+    const realItems = withBL.filter(it => it.real);
+    const realLine  = steps.map(s =>
+        s <= today
+            ? Math.round(realItems.filter(it => it.real <= s).length / total * 100)
+            : null);
+
+    // Forecast line: real if done, else forecast, else fim_bl
+    const fcLine = steps.map(s =>
+        Math.round(withBL.filter(it => (it.real || it.forecast || it.fim_bl) <= s).length / total * 100));
+
+    const labels = steps.map(s => { const [,m,d] = s.split('-'); return `${d}/${m}`; });
+
+    const canvas = document.getElementById('curva-s-chart');
+    if (!canvas) return;
+    if (typeof Chart !== 'undefined') {
+        const ex = Chart.getChart ? Chart.getChart(canvas) : null;
+        if (ex) ex.destroy();
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'BL — Planejado',
+                        data: blLine,
+                        borderColor: 'rgba(43,178,238,.9)',
+                        borderWidth: 2,
+                        borderDash: [7, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.35,
+                    },
+                    {
+                        label: 'Real',
+                        data: realLine,
+                        borderColor: '#6fe895',
+                        borderWidth: 2.5,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#6fe895',
+                        fill: false,
+                        tension: 0.3,
+                        spanGaps: false,
+                    },
+                    {
+                        label: 'Forecast',
+                        data: fcLine,
+                        borderColor: 'rgba(255,112,67,.8)',
+                        borderWidth: 1.8,
+                        borderDash: [3, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.35,
+                    },
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'rgba(255,255,255,.55)',
+                            font: { family: 'IBM Plex Mono', size: 11 },
+                            usePointStyle: true,
+                            padding: 18,
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(8,18,28,.95)',
+                        titleColor: 'rgba(255,255,255,.45)',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255,255,255,.1)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw !== null ? ctx.raw + '%' : '—'}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color:'rgba(255,255,255,.35)', font:{ family:'IBM Plex Mono', size:9 }, maxTicksLimit:16, maxRotation:45 },
+                        grid:  { color:'rgba(255,255,255,.04)' }
+                    },
+                    y: {
+                        min: 0, max: 100,
+                        ticks: { color:'rgba(255,255,255,.35)', font:{ family:'IBM Plex Mono', size:10 }, callback: v => v + '%' },
+                        grid:  { color:'rgba(255,255,255,.05)' }
+                    }
+                }
+            }
+        });
+    }
+}
+
+function buildConsolidado() {
+    const items = _collectItems();
+    _renderKPIs(items);
+    _renderTable(items);
+    _renderCurvaS(items);
+}
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}

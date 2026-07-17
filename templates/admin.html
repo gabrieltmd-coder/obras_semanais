@@ -212,7 +212,7 @@
     {% for st in stages %}
     {% set n = por_status[st]|length %}
     <div class="funnel-seg" style="background:{{ stage_colors[st] }}; opacity:{% if n %}1{% else %}.2{% endif %};"
-         title="{{ stage_labels[st] }}: {{ n }}"></div>
+         data-i18n-title="sup.{{ st }}" title="{{ stage_labels[st] }}: {{ n }}"></div>
     {% endfor %}
 </div>
 
@@ -221,7 +221,7 @@
     {% for st in stages %}
     {% set n = por_status[st]|length %}
     <span style="font-size:.68rem; font-weight:700; color:{{ stage_colors[st] }}; opacity:{% if n %}1{% else %}.35{% endif %};">
-        {{ stage_labels[st] }}&nbsp;<span style="background:{{ stage_colors[st] }}; color:#fff; border-radius:99px; padding:.05rem .38rem;">{{ n }}</span>
+        <span data-i18n="sup.{{ st }}">{{ stage_labels[st] }}</span>&nbsp;<span style="background:{{ stage_colors[st] }}; color:#fff; border-radius:99px; padding:.05rem .38rem;">{{ n }}</span>
     </span>
     {% endfor %}
     {% if suprimentos %}
@@ -244,7 +244,7 @@
 
     <div class="pipeline-col">
         <div class="pipeline-header" style="background:{{ cor }}1a; border-left:3px solid {{ cor }};">
-            <span style="color:{{ cor }};">{{ stage_labels[st] }}</span>
+            <span data-i18n="sup.{{ st }}" style="color:{{ cor }};">{{ stage_labels[st] }}</span>
             <span class="pip-count" style="background:{{ cor }};">{{ por_status[st]|length }}</span>
         </div>
 
@@ -606,7 +606,7 @@
                     <input type="text" name="nome" class="form-control" required placeholder="Ex: Terraplanagem — Lote 2">
                     <label class="form-label fw-bold mt-3">Etapa inicial</label>
                     <select name="status" class="form-select">
-                        {% for st in stages %}<option value="{{ st }}">{{ stage_labels[st] }}</option>{% endfor %}
+                        {% for st in stages %}<option value="{{ st }}" data-i18n="sup.{{ st }}">{{ stage_labels[st] }}</option>{% endfor %}
                     </select>
                     <small class="text-muted d-block mt-2"><i class="bi bi-info-circle me-1"></i>Inclua processos e mova o pacote inteiro entre as etapas — todos avançam juntos.</small>
                 </div>

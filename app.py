@@ -20,6 +20,7 @@ DATA_FILE             = 'data/registros.json'
 CONTRATOS_CONFIG_FILE = 'data/contratos_config.json'
 USUARIOS_FILE         = 'data/usuarios.json'
 AUDITORIA_FILE        = 'data/auditoria.json'
+MOBILIZACAO_FILE      = 'data/mobilizacao.json'
 EXPORT_DIR            = 'exports'
 ADMIN_PASSWORD        = os.environ.get('ADMIN_PASSWORD', 'Pipoc@2407')
 TIPO_MAO_OBRA_FILE    = os.environ.get('TIPO_MAO_OBRA_FILE',
@@ -235,7 +236,7 @@ WIPE_COLS = [
     ('suprimentos', 'Suprimentos'), ('pacotes', 'Pacotes'),
     ('centros_custo', 'Centros de custo'), ('lancamentos', 'Lançamentos financeiros'),
     ('orcamentos', 'Orçamentos'),
-    ('usuarios', 'Usuários'), ('auditoria', 'Auditoria'), ('tms', 'Configurações TMS'),
+    ('usuarios', 'Usuários'), ('auditoria', 'Auditoria'), ('tms', 'Dados TMS'),
 ]
 
 
@@ -627,16 +628,48 @@ app.jinja_env.globals['valor_efetivo'] = valor_efetivo
 app.jinja_env.globals['valor_aditivos'] = valor_aditivos
 
 
+_ALL_ROLES = [
+    ('master',        'Master',              'rgba(155,89,182,.8)'),
+    ('rumo',          'RUMO',                'rgba(0,174,239,.8)'),
+    ('staff',         'Equipe interna',      'rgba(0,174,239,.6)'),
+    ('contratada_rw', 'Contratada · RW',     'rgba(70,194,106,.8)'),
+    ('contratada',    'Contratada · leitura','rgba(70,194,106,.6)'),
+    ('mobilizacao',   'Mobilização',         'rgba(255,112,67,.8)'),
+]
+
+
 @app.context_processor
 def inject_now():
+    u = current_user()
+    preview = session.get('preview_role') if u and u.get('role') in ('admin', 'master', 'rumo') else None
+    view_role = preview or (u.get('role') if u else None)
     return {
         'now': datetime.now(),
-        'current_user': current_user(),
+        'current_user': u,
         'can_write': can_write(),
         'can_create': can_create(),
         'viewer_contratada': viewer_contratada(),
         'viewer_contrato': viewer_contrato(),
+        'view_role': view_role,
+        'preview_role': preview,
+        'all_roles': _ALL_ROLES,
     }
+
+
+@app.route('/preview-role/<role>')
+def set_preview_role(role):
+    u = current_user()
+    if u and u.get('role') in ('admin', 'master', 'rumo'):
+        valid = {r[0] for r in _ALL_ROLES}
+        if role in valid:
+            session['preview_role'] = role
+    return redirect(request.referrer or url_for('capa'))
+
+
+@app.route('/preview-role/reset')
+def reset_preview_role():
+    session.pop('preview_role', None)
+    return redirect(request.referrer or url_for('capa'))
 
 
 # Endpoints acessíveis sem login (capa, autenticação e assets)
@@ -646,17 +679,25 @@ PUBLIC_ENDPOINTS = {
 }
 
 
+_MOB_ENDPOINTS = {'mobilizacao', 'mobilizacao_config', 'mobilizacao_documentos', 'static', 'logout', 'capa',
+                  'mobilizacao_exportar_excel', 'mobilizacao_importar_excel'}
+
+
 @app.before_request
 def _require_login_global():
     """Bloqueia o acesso a qualquer página (exceto a capa e fluxo de login) sem estar logado."""
     endpoint = request.endpoint
     if endpoint is None or endpoint in PUBLIC_ENDPOINTS:
         return
-    if current_user() is None:
+    u = current_user()
+    if u is None:
         if endpoint.startswith('admin'):
             return redirect(url_for('admin_login'))
         flash('Faça login para acessar o sistema.', 'warning')
         return redirect(url_for('login', next=request.path))
+    # Perfil MOBILIZAÇÃO: acesso restrito às páginas do módulo
+    if u.get('role') == 'mobilizacao' and endpoint not in _MOB_ENDPOINTS:
+        return redirect(url_for('mobilizacao'))
 
 
 def get_contratadas():
@@ -748,6 +789,18 @@ PLUVIOMETRIA_OPCOES = [
     "Incidência de Raio",
     "Sem Expediente",
 ]
+
+# Estimativa de precipitação diária (mm) por estado qualitativo — usada para
+# converter os registros de pluviometria (qualitativos) em uma série semanal (mm)
+# no gráfico "Pluviometria Semanal" do dashboard.
+PLUVIOMETRIA_MM = {
+    "Tempo Bom":          0,
+    "Chuva Produtiva":    4,
+    "Chuva Parcial":      12,
+    "Chuva Improdutiva":  28,
+    "Incidência de Raio": 20,
+    "Sem Expediente":     0,
+}
 
 DIAS_SEMANA = [
     ('segunda', 'Segunda'),
@@ -1828,6 +1881,443 @@ def construcao():
     return render_template('construcao.html')
 
 
+@app.route('/mobilizacao')
+def mobilizacao():
+    u = current_user()
+    if not u:
+        return redirect(url_for('login'))
+    mob = load_mobilizacao()
+
+    # ── Documentações ──
+    doc_counts = {'entregue': 0, 'pendente': 0, 'nao': 0, 'na': 0, 'vazio': 0}
+    for d in mob['documentacoes']:
+        s = d.get('status') or 'vazio'
+        doc_counts[s if s in doc_counts else 'vazio'] += 1
+    docs_aplicaveis = len(mob['documentacoes']) - doc_counts['na']
+    docs_pct = round(doc_counts['entregue'] / docs_aplicaveis * 100) if docs_aplicaveis else 0
+
+    # ── SSMA ──
+    ssma_counts = {'entregue': 0, 'revisado': 0, 'nao': 0, 'vazio': 0}
+    for d in mob['ssma']:
+        s = d.get('status') or 'vazio'
+        ssma_counts[s if s in ssma_counts else 'vazio'] += 1
+    ssma_pct = round((ssma_counts['entregue'] + ssma_counts['revisado']) / len(mob['ssma']) * 100) if mob['ssma'] else 0
+
+    # ── MO ──
+    mo_etapas  = mob['mo']['etapas']
+    mo_prev    = mo_etapas[0] if mo_etapas else {}
+    mo_stages  = mo_etapas[1:] if len(mo_etapas) > 1 else []
+    mo_has_data = any(e.get('geral') is not None for e in mo_etapas)
+    mo_contratados = mo_etapas[2].get('geral') if len(mo_etapas) > 2 else None
+
+    # ── Equipamentos ──
+    eq_etapas  = mob['equipamentos']['etapas']
+    eq_prev    = eq_etapas[0] if eq_etapas else {}
+    eq_stages  = eq_etapas[1:] if len(eq_etapas) > 1 else []
+    eq_has_data = any(e.get('geral') is not None for e in eq_etapas)
+
+    # ── Canteiro ──
+    canteiro_items = []
+    cant_total = 0.0
+    for it in mob['canteiro']:
+        peso = it.get('peso', 0) or 0
+        crits = it.get('criterios') or []
+        av = min(1.0, sum(cr['peso'] for cr in crits if cr.get('concluido'))) if crits else 0.0
+        canteiro_items.append({'item': it['item'], 'avanco': round(av * 100), 'peso': peso})
+        cant_total += peso * av
+    cant_total_pct = round(cant_total * 100)
+
+    # ── Subcontratadas ──
+    sub_items = []
+    sub_total = 0.0
+    for emp in mob['subcontratadas']:
+        peso = emp.get('peso', 0) or 0
+        crits = emp.get('criterios') or []
+        av = min(1.0, sum(cr['peso'] for cr in crits if cr.get('concluido')))
+        sub_items.append({'empresa': emp['empresa'], 'avanco': round(av * 100), 'peso': peso})
+        sub_total += peso * av
+    sub_total_pct = round(sub_total * 100)
+
+    return render_template('mobilizacao.html', current_user=u,
+        doc_counts=doc_counts, docs_pct=docs_pct,
+        ssma_counts=ssma_counts, ssma_pct=ssma_pct,
+        mo_prev=mo_prev, mo_stages=mo_stages, mo_has_data=mo_has_data,
+        mo_contratados=mo_contratados,
+        eq_prev=eq_prev, eq_stages=eq_stages, eq_has_data=eq_has_data,
+        canteiro_items=canteiro_items, cant_total_pct=cant_total_pct,
+        sub_items=sub_items, sub_total_pct=sub_total_pct,
+        mob=mob,
+    )
+
+
+_MOB_DEFAULT = {
+    "documentacoes": [
+        {"item": 1,  "documento": "Anotação de Responsabilidade Técnica (ART — Obras de engenharia / serviços)", "area": "Saúde e Segurança Ocupacional", "status": None, "prazo": None},
+        {"item": 2,  "documento": "Carta de Apresentação do Engenheiro Residente (Obras)", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 3,  "documento": "Garantias de Execução / Adiantamento Contratual (Seguros e Garantias)", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 4,  "documento": "Inscrição no INSS (CEI — aplicável para Obras Civis)", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 5,  "documento": "Inscrição na Prefeitura Municipal para Recolhimento de ISSQN", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 6,  "documento": "Certidão Negativa de Débito atualizada com o INSS", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 7,  "documento": "Certificado de Regularidade com o FGTS", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 8,  "documento": "Certidão Negativa de Débito com o FGTS (CRF)", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 9,  "documento": "Certidão Negativa de Débito do ISSQN com o Município", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 10, "documento": "Certidão Negativa de Débito da Receita Federal", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 11, "documento": "Certidão Negativa de Débito da Receita Estadual", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 12, "documento": "Cartão do CNPJ", "area": "Gestão de Contratos", "status": None, "prazo": None},
+        {"item": 13, "documento": "Mapeamentos de Pessoas RAC", "area": "Saúde e Segurança Ocupacional", "status": None, "prazo": None},
+        {"item": 14, "documento": "PRE (Programa de Ergonomia)", "area": "Saúde e Segurança Ocupacional", "status": None, "prazo": None},
+        {"item": 15, "documento": "CTF — Cadastro Técnico Federal", "area": "Meio Ambiente", "status": None, "prazo": None},
+        {"item": 16, "documento": "PAE (Plano de Atendimento à Emergência)", "area": "Saúde e Segurança Ocupacional", "status": None, "prazo": None},
+        {"item": 17, "documento": "APR (Análise Preliminar de Risco — Makro)", "area": "Saúde e Segurança Ocupacional", "status": None, "prazo": None},
+    ],
+    "ssma": [
+        {"item": 1, "documento": "APR HO", "area": "Saúde e Segurança Ocupacional", "status": None},
+        {"item": 2, "documento": "PCMSO", "area": "Saúde e Segurança Ocupacional", "status": None},
+        {"item": 3, "documento": "PCMAT (aplicável na construção civil)", "area": "Saúde e Segurança Ocupacional", "status": None},
+        {"item": 4, "documento": "PGR", "area": "Saúde e Segurança Ocupacional", "status": None},
+    ],
+    "mo": {
+        "etapas": [
+            {"etapa": "Previsto Contratual até término MOB", "geral": None, "mod": None, "moi": None},
+            {"etapa": "Em contratação",                     "geral": None, "mod": None, "moi": None},
+            {"etapa": "Contratados",                        "geral": None, "mod": None, "moi": None},
+            {"etapa": "Exames Prontos",                     "geral": None, "mod": None, "moi": None},
+            {"etapa": "Treinamentos (RACs) Executados",     "geral": None, "mod": None, "moi": None},
+            {"etapa": "Documentação entregue",              "geral": None, "mod": None, "moi": None},
+            {"etapa": "Integração Concluída",               "geral": None, "mod": None, "moi": None},
+            {"etapa": "Crachá Disponível",                  "geral": None, "mod": None, "moi": None},
+        ],
+        "comentarios": ""
+    },
+    "equipamentos": {
+        "etapas": [
+            {"etapa": "Previsto Contratual até término MOB", "geral": None, "grande_porte": None, "pequeno_porte": None},
+            {"etapa": "Em mobilização",                      "geral": None, "grande_porte": None, "pequeno_porte": None},
+            {"etapa": "Mobilizados (disponibilizados)",      "geral": None, "grande_porte": None, "pequeno_porte": None},
+            {"etapa": "Pré-comissionados",                   "geral": None, "grande_porte": None, "pequeno_porte": None},
+            {"etapa": "Documentação entregue",               "geral": None, "grande_porte": None, "pequeno_porte": None},
+            {"etapa": "Em Barão de Cocais",                  "geral": None, "grande_porte": None, "pequeno_porte": None},
+            {"etapa": "Comissionados",                       "geral": None, "grande_porte": None, "pequeno_porte": None},
+        ],
+        "comentarios": ""
+    },
+    "canteiro": [
+        {"item": "Layout canteiro",                                          "peso": 0.05, "criterios": [{"descricao": "Entregue", "peso": 0.5, "concluido": False}, {"descricao": "Aprovado", "peso": 0.5, "concluido": False}]},
+        {"item": "Montagem e construção do canteiro (provisório)",           "peso": 0.10, "criterios": [{"descricao": "Instalação Container", "peso": 0.33, "concluido": False}, {"descricao": "Instalação Banheiro Químico", "peso": 0.33, "concluido": False}, {"descricao": "Instalação Tenda", "peso": 0.33, "concluido": False}]},
+        {"item": "Montagem e construção do canteiro (definitivo)",           "peso": 0.00, "criterios": []},
+        {"item": "Mobilização de equipamentos para canteiro",                "peso": 0.25, "criterios": [{"descricao": "Caminhão Munck", "peso": 0.3, "concluido": False}, {"descricao": "Container", "peso": 0.4, "concluido": False}, {"descricao": "Gerador", "peso": 0.3, "concluido": False}]},
+        {"item": "Banheiro — Instalações sanitárias de canteiro",            "peso": 0.05, "criterios": [{"descricao": "Chegada no site", "peso": 0.3, "concluido": False}, {"descricao": "Operacional", "peso": 0.7, "concluido": False}]},
+        {"item": "Energia/TI — Rebaixamento e instalações elétricas",        "peso": 0.10, "criterios": [{"descricao": "Início das atividades", "peso": 0.3, "concluido": False}, {"descricao": "Operacional", "peso": 0.7, "concluido": False}]},
+        {"item": "Água / Esgoto — Execução de instal. de água e esgoto",     "peso": 0.10, "criterios": [{"descricao": "Início das atividades", "peso": 0.3, "concluido": False}, {"descricao": "Operacional", "peso": 0.7, "concluido": False}]},
+        {"item": "Incêndio — Instalações de sistema de incêndio",            "peso": 0.05, "criterios": [{"descricao": "Início das atividades", "peso": 0.3, "concluido": False}, {"descricao": "Operacional", "peso": 0.7, "concluido": False}]},
+        {"item": "Fossa — Execução de fossa / tratamento de esgoto",         "peso": 0.05, "criterios": [{"descricao": "Início das atividades", "peso": 0.3, "concluido": False}, {"descricao": "Operacional", "peso": 0.7, "concluido": False}]},
+        {"item": "Refeição — Execução de refeitório",                        "peso": 0.15, "criterios": [{"descricao": "Chegada no site", "peso": 0.3, "concluido": False}, {"descricao": "Operacional", "peso": 0.7, "concluido": False}]},
+        {"item": "Aprovação",                                                "peso": 0.10, "criterios": [{"descricao": "Vistoria pela SSMA", "peso": 0.2, "concluido": False}, {"descricao": "Aprovação pela Gestão do Contrato", "peso": 0.4, "concluido": False}, {"descricao": "Aceite pela SSMA", "peso": 0.4, "concluido": False}]},
+    ],
+    "subcontratadas": [
+        {"empresa": "Container",               "peso": 0.20, "criterios": [{"descricao": "Documentação entregue — cédula de contrato para Subcontratação", "peso": 0.2, "concluido": False}, {"descricao": "Documentação — aprovação cédula de contrato", "peso": 0.4, "concluido": False}, {"descricao": "Contratação realizada / evidenciada", "peso": 0.4, "concluido": False}]},
+        {"empresa": "Banheiro Químico",        "peso": 0.10, "criterios": [{"descricao": "Documentação entregue — cédula de contrato para Subcontratação", "peso": 0.2, "concluido": False}, {"descricao": "Documentação — aprovação cédula de contrato", "peso": 0.4, "concluido": False}, {"descricao": "Contratação realizada / evidenciada", "peso": 0.4, "concluido": False}]},
+        {"empresa": "Locação Veículos",        "peso": 0.10, "criterios": [{"descricao": "Documentação entregue — cédula de contrato para Subcontratação", "peso": 0.2, "concluido": False}, {"descricao": "Documentação — aprovação cédula de contrato", "peso": 0.4, "concluido": False}, {"descricao": "Contratação realizada / evidenciada", "peso": 0.4, "concluido": False}]},
+        {"empresa": "Transporte de Mão de Obra","peso": 0.20, "criterios": [{"descricao": "Documentação entregue — cédula de contrato para Subcontratação", "peso": 0.2, "concluido": False}, {"descricao": "Documentação — aprovação cédula de contrato", "peso": 0.1, "concluido": False}, {"descricao": "Contratação realizada / evidenciada", "peso": 0.3, "concluido": False}, {"descricao": "Crachás liberados", "peso": 0.4, "concluido": False}]},
+        {"empresa": "Alimentação",             "peso": 0.20, "criterios": [{"descricao": "Documentação entregue — cédula de contrato para Subcontratação", "peso": 0.2, "concluido": False}, {"descricao": "Documentação — aprovação cédula de contrato", "peso": 0.4, "concluido": False}, {"descricao": "Contratação realizada / evidenciada", "peso": 0.4, "concluido": False}]},
+        {"empresa": "Terraplenagem",           "peso": 0.20, "criterios": [{"descricao": "Documentação entregue — cédula de contrato para Subcontratação", "peso": 0.1, "concluido": False}, {"descricao": "Documentação — aprovação cédula de contrato", "peso": 0.3, "concluido": False}, {"descricao": "Contratação realizada / evidenciada", "peso": 0.3, "concluido": False}, {"descricao": "Crachás liberados", "peso": 0.3, "concluido": False}]},
+    ],
+}
+
+
+def load_mobilizacao():
+    if os.path.exists(MOBILIZACAO_FILE):
+        try:
+            with open(MOBILIZACAO_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return json.loads(json.dumps(_MOB_DEFAULT))
+
+
+def save_mobilizacao(data):
+    with open(MOBILIZACAO_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+@app.route('/mobilizacao/config')
+def mobilizacao_config():
+    u = current_user()
+    if not u:
+        return redirect(url_for('login'))
+    mob = load_mobilizacao()
+    return render_template('mobilizacao_config.html', current_user=u, mob=mob)
+
+
+def validar_datas_bl(inicio_bl, fim_bl, real, forecast):
+    """Regra BL: SE Real > Fim BL → Forecast obrigatório.
+    Retorna (True, None) se válido ou (False, mensagem) se inválido."""
+    if real and fim_bl:
+        try:
+            from datetime import date as _d
+            if _d.fromisoformat(real) > _d.fromisoformat(fim_bl) and not (forecast or '').strip():
+                return False, 'Forecast obrigatório quando Real > Fim BL'
+        except ValueError:
+            return False, 'Data inválida no grupo BL'
+    return True, None
+
+
+@app.route('/mobilizacao/documentos')
+def mobilizacao_documentos():
+    u = current_user()
+    if not u:
+        return redirect(url_for('login'))
+    mob = load_mobilizacao()
+    docs = []
+    for d in mob.get('documentacoes', []):
+        docs.append({
+            'item':      d.get('item', ''),
+            'documento': d.get('documento', ''),
+            'area':      d.get('area', ''),
+            'tipo':      'Contrato',
+            'status':    d.get('status') or '',
+            'prazo':     d.get('prazo') or '',
+            'url':       d.get('url') or '',
+            'inicio_bl': d.get('inicio_bl') or '',
+            'fim_bl':    d.get('fim_bl') or '',
+            'real':      d.get('real') or '',
+            'forecast':  d.get('forecast') or '',
+        })
+    for d in mob.get('ssma', []):
+        docs.append({
+            'item':      d.get('item', ''),
+            'documento': d.get('documento', ''),
+            'area':      d.get('area', ''),
+            'tipo':      'SSMA',
+            'status':    d.get('status') or '',
+            'prazo':     '',
+            'url':       d.get('url') or '',
+            'inicio_bl': d.get('inicio_bl') or '',
+            'fim_bl':    d.get('fim_bl') or '',
+            'real':      d.get('real') or '',
+            'forecast':  d.get('forecast') or '',
+        })
+    return render_template('mobilizacao_documentos.html', current_user=u, docs=docs)
+
+
+@app.route('/mobilizacao/config/salvar', methods=['POST'])
+def mobilizacao_config_salvar():
+    u = current_user()
+    if not u:
+        return jsonify({'ok': False, 'erro': 'Não autenticado'}), 401
+    payload = request.get_json(force=True)
+    if not payload or 'secao' not in payload:
+        return jsonify({'ok': False, 'erro': 'Payload inválido'}), 400
+    secao = payload['secao']
+
+    # ── Validação BL: determina quais itens verificar por seção ──
+    if secao == 'documentacoes':
+        itens_bl = payload.get('documentacoes', [])
+    elif secao == 'ssma':
+        itens_bl = payload.get('ssma', [])
+    elif secao == 'mo':
+        itens_bl = payload.get('mo', {}).get('etapas', [])
+    elif secao == 'equipamentos':
+        itens_bl = payload.get('equipamentos', {}).get('etapas', [])
+    elif secao == 'canteiro':
+        itens_bl = payload.get('canteiro', [])
+    elif secao == 'subcontratadas':
+        itens_bl = payload.get('subcontratadas', [])
+    else:
+        itens_bl = []
+
+    for item in itens_bl:
+        nome = (item.get('documento') or item.get('etapa') or
+                item.get('item') or item.get('empresa') or 'item')
+        ok, err = validar_datas_bl(
+            item.get('inicio_bl'), item.get('fim_bl'),
+            item.get('real'),      item.get('forecast')
+        )
+        if not ok:
+            return jsonify({'ok': False, 'erro': f'"{nome}": {err}'}), 422
+
+    mob = load_mobilizacao()
+    if secao in mob and secao in payload:
+        mob[secao] = payload[secao]
+    save_mobilizacao(mob)
+    return jsonify({'ok': True})
+
+
+@app.route('/mobilizacao/config/exportar-excel')
+def mobilizacao_exportar_excel():
+    u = current_user()
+    if not u:
+        return redirect(url_for('login'))
+    mob = load_mobilizacao()
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment
+        from openpyxl.utils import get_column_letter
+        import io as _io
+        wb = Workbook()
+        hdr_font  = Font(bold=True, color='FFFFFFFF', name='Calibri', size=10)
+        hdr_fill  = PatternFill('solid', fgColor='FFFF7043')
+        hdr_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        def _sw(ws, hdrs, widths):
+            ws.append(hdrs)
+            for i, cell in enumerate(ws[1]):
+                cell.font = hdr_font; cell.fill = hdr_fill; cell.alignment = hdr_align
+                ws.column_dimensions[get_column_letter(i+1)].width = widths[i]
+        # Sheet 1 — Documentações
+        ws = wb.active; ws.title = 'Documentações'
+        _sw(ws, ['Item','Documento','Área','Status','Prazo','URL','Início BL','Fim BL','Real','Forecast'],
+                [6,50,22,15,12,35,12,12,12,12])
+        for d in mob.get('documentacoes', []):
+            ws.append([d.get('item'),d.get('documento'),d.get('area'),d.get('status'),
+                       d.get('prazo'),d.get('url'),d.get('inicio_bl'),d.get('fim_bl'),
+                       d.get('real'),d.get('forecast')])
+        # Sheet 2 — SSMA
+        ws2 = wb.create_sheet('SSMA')
+        _sw(ws2, ['Item','Documento','Área','Status','URL','Início BL','Fim BL','Real','Forecast'],
+                 [6,45,22,15,35,12,12,12,12])
+        for d in mob.get('ssma', []):
+            ws2.append([d.get('item'),d.get('documento'),d.get('area'),d.get('status'),
+                        d.get('url'),d.get('inicio_bl'),d.get('fim_bl'),d.get('real'),d.get('forecast')])
+        # Sheet 3 — MO
+        ws3 = wb.create_sheet('MO')
+        _sw(ws3, ['Etapa','Geral','MOD','MOI','Início BL','Fim BL','Real','Forecast'],
+                 [38,8,8,8,12,12,12,12])
+        for e in mob.get('mo', {}).get('etapas', []):
+            ws3.append([e.get('etapa'),e.get('geral'),e.get('mod'),e.get('moi'),
+                        e.get('inicio_bl'),e.get('fim_bl'),e.get('real'),e.get('forecast')])
+        # Sheet 4 — Equipamentos
+        ws4 = wb.create_sheet('Equipamentos')
+        _sw(ws4, ['Etapa','Geral','Grande Porte','Pequeno Porte','Início BL','Fim BL','Real','Forecast'],
+                 [38,8,13,13,12,12,12,12])
+        for e in mob.get('equipamentos', {}).get('etapas', []):
+            ws4.append([e.get('etapa'),e.get('geral'),e.get('grande_porte'),e.get('pequeno_porte'),
+                        e.get('inicio_bl'),e.get('fim_bl'),e.get('real'),e.get('forecast')])
+        # Sheet 5 — Canteiro
+        ws5 = wb.create_sheet('Canteiro')
+        _sw(ws5, ['Item','Peso (%)','Critérios (sep. ;)','Pesos Critérios (sep. ;)','Concluídos 0/1 (sep. ;)','Início BL','Fim BL','Real','Forecast'],
+                 [38,10,50,25,25,12,12,12,12])
+        for it in mob.get('canteiro', []):
+            crits = it.get('criterios', [])
+            ws5.append([it.get('item'), round(it.get('peso', 0)*100, 1),
+                        ';'.join(c.get('descricao', '') for c in crits),
+                        ';'.join(str(c.get('peso', 0)) for c in crits),
+                        ';'.join('1' if c.get('concluido') else '0' for c in crits),
+                        it.get('inicio_bl'), it.get('fim_bl'), it.get('real'), it.get('forecast')])
+        # Sheet 6 — Subcontratadas
+        ws6 = wb.create_sheet('Subcontratadas')
+        _sw(ws6, ['Empresa','Peso (%)','Critérios (sep. ;)','Pesos Critérios (sep. ;)','Concluídos 0/1 (sep. ;)','Início BL','Fim BL','Real','Forecast'],
+                 [28,10,50,25,25,12,12,12,12])
+        for emp in mob.get('subcontratadas', []):
+            crits = emp.get('criterios', [])
+            ws6.append([emp.get('empresa'), round(emp.get('peso', 0)*100, 1),
+                        ';'.join(c.get('descricao', '') for c in crits),
+                        ';'.join(str(c.get('peso', 0)) for c in crits),
+                        ';'.join('1' if c.get('concluido') else '0' for c in crits),
+                        emp.get('inicio_bl'), emp.get('fim_bl'), emp.get('real'), emp.get('forecast')])
+        buf = _io.BytesIO(); wb.save(buf); buf.seek(0)
+        from flask import send_file
+        return send_file(buf, as_attachment=True,
+                         download_name='mobilizacao_modelo.xlsx',
+                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        flash(f'Erro ao gerar Excel: {e}', 'danger')
+        return redirect(url_for('mobilizacao_config'))
+
+
+@app.route('/mobilizacao/config/importar-excel', methods=['POST'])
+def mobilizacao_importar_excel():
+    u = current_user()
+    if not u:
+        return jsonify({'ok': False, 'erro': 'Não autenticado'}), 401
+    if 'arquivo' not in request.files:
+        return jsonify({'ok': False, 'erro': 'Nenhum arquivo enviado'}), 400
+    f = request.files['arquivo']
+    if not f.filename.lower().endswith('.xlsx'):
+        return jsonify({'ok': False, 'erro': 'Formato inválido — envie .xlsx'}), 400
+    try:
+        from openpyxl import load_workbook
+        import io as _io
+        wb = load_workbook(_io.BytesIO(f.read()), data_only=True)
+        mob = load_mobilizacao()
+        def sv(v):
+            if v is None: return None
+            s = str(v).strip(); return s or None
+        def dt(v):
+            if v is None: return None
+            if hasattr(v, 'strftime'): return v.strftime('%Y-%m-%d')
+            s = str(v).strip(); return s or None
+        def ni(v):
+            try: return int(float(v)) if v is not None else None
+            except: return None
+        def nf(v):
+            try: return float(v) if v is not None else None
+            except: return None
+        if 'Documentações' in wb.sheetnames:
+            docs = []
+            for i, row in enumerate(wb['Documentações'].iter_rows(min_row=2, values_only=True)):
+                if not row[1]: continue
+                docs.append({'item': ni(row[0]) or i+1, 'documento': sv(row[1]) or '',
+                    'area': sv(row[2]) or 'Gestao de Contratos', 'status': sv(row[3]),
+                    'prazo': dt(row[4]), 'url': sv(row[5]),
+                    'inicio_bl': dt(row[6]), 'fim_bl': dt(row[7]), 'real': dt(row[8]), 'forecast': dt(row[9])})
+            if docs: mob['documentacoes'] = docs
+        if 'SSMA' in wb.sheetnames:
+            ssma = []
+            for i, row in enumerate(wb['SSMA'].iter_rows(min_row=2, values_only=True)):
+                if not row[1]: continue
+                ssma.append({'item': ni(row[0]) or i+1, 'documento': sv(row[1]) or '',
+                    'area': sv(row[2]) or 'Saude e Seguranca Ocupacional', 'status': sv(row[3]),
+                    'url': sv(row[4]),
+                    'inicio_bl': dt(row[5]), 'fim_bl': dt(row[6]), 'real': dt(row[7]), 'forecast': dt(row[8])})
+            if ssma: mob['ssma'] = ssma
+        if 'MO' in wb.sheetnames:
+            etapas = []
+            for row in wb['MO'].iter_rows(min_row=2, values_only=True):
+                if not row[0]: continue
+                etapas.append({'etapa': sv(row[0]) or '', 'geral': ni(row[1]), 'mod': ni(row[2]), 'moi': ni(row[3]),
+                    'inicio_bl': dt(row[4]), 'fim_bl': dt(row[5]), 'real': dt(row[6]), 'forecast': dt(row[7])})
+            if etapas: mob['mo']['etapas'] = etapas
+        if 'Equipamentos' in wb.sheetnames:
+            etapas = []
+            for row in wb['Equipamentos'].iter_rows(min_row=2, values_only=True):
+                if not row[0]: continue
+                etapas.append({'etapa': sv(row[0]) or '', 'geral': ni(row[1]), 'grande_porte': ni(row[2]), 'pequeno_porte': ni(row[3]),
+                    'inicio_bl': dt(row[4]), 'fim_bl': dt(row[5]), 'real': dt(row[6]), 'forecast': dt(row[7])})
+            if etapas: mob['equipamentos']['etapas'] = etapas
+        if 'Canteiro' in wb.sheetnames:
+            cant = []
+            for row in wb['Canteiro'].iter_rows(min_row=2, values_only=True):
+                if not row[0]: continue
+                pp = nf(row[1]) or 0
+                descs = [x.strip() for x in (sv(row[2]) or '').split(';') if x.strip()]
+                pesos = [x.strip() for x in (sv(row[3]) or '').split(';') if x.strip()]
+                concs = [x.strip() for x in (sv(row[4]) or '').split(';') if x.strip()]
+                crit = [{'descricao': d, 'peso': float(pesos[i]) if i < len(pesos) else 0,
+                         'concluido': concs[i] == '1' if i < len(concs) else False}
+                        for i, d in enumerate(descs)]
+                cant.append({'item': sv(row[0]) or '', 'peso': round(pp/100, 4), 'criterios': crit,
+                    'inicio_bl': dt(row[5]), 'fim_bl': dt(row[6]), 'real': dt(row[7]), 'forecast': dt(row[8])})
+            if cant: mob['canteiro'] = cant
+        if 'Subcontratadas' in wb.sheetnames:
+            subs = []
+            for row in wb['Subcontratadas'].iter_rows(min_row=2, values_only=True):
+                if not row[0]: continue
+                pp = nf(row[1]) or 0
+                descs = [x.strip() for x in (sv(row[2]) or '').split(';') if x.strip()]
+                pesos = [x.strip() for x in (sv(row[3]) or '').split(';') if x.strip()]
+                concs = [x.strip() for x in (sv(row[4]) or '').split(';') if x.strip()]
+                crit = [{'descricao': d, 'peso': float(pesos[i]) if i < len(pesos) else 0,
+                         'concluido': concs[i] == '1' if i < len(concs) else False}
+                        for i, d in enumerate(descs)]
+                subs.append({'empresa': sv(row[0]) or '', 'peso': round(pp/100, 4), 'criterios': crit,
+                    'inicio_bl': dt(row[5]), 'fim_bl': dt(row[6]), 'real': dt(row[7]), 'forecast': dt(row[8])})
+            if subs: mob['subcontratadas'] = subs
+        save_mobilizacao(mob)
+        return jsonify({'ok': True, 'msg': 'Importado com sucesso!'})
+    except Exception as e:
+        return jsonify({'ok': False, 'erro': f'Erro ao processar arquivo: {str(e)}'}), 500
+
+
 @app.route('/mas-dashboard')
 def mas_dashboard():
     return render_template('MAS_TMS_Dashboard_18Jun (1).html')
@@ -1945,6 +2435,16 @@ def novo():
                                    histograma_realizados=histograma_realizados,
                                    contratos_cfg_json=json.dumps(load_contratos_config()))
 
+        _bl_ok_n, _bl_err_n = validar_datas_bl(
+            request.form.get('inicio_bl','').strip() or None,
+            request.form.get('fim_bl','').strip() or None,
+            request.form.get('data_real','').strip() or None,
+            request.form.get('data_forecast','').strip() or None,
+        )
+        if not _bl_ok_n:
+            flash(f'Datas BL: {_bl_err_n}', 'danger')
+            return redirect(request.url)
+
         novo_registro = {
             'id': str(uuid.uuid4()),
             'contrato': contrato,
@@ -1964,6 +2464,10 @@ def novo():
             'acoes_justificativas': acoes_justificativas,
             'equipamentos_realizados': equipamentos_realizados,
             'histograma_realizados': histograma_realizados,
+            'inicio_bl':     request.form.get('inicio_bl','').strip() or None,
+            'fim_bl':        request.form.get('fim_bl','').strip() or None,
+            'data_real':     request.form.get('data_real','').strip() or None,
+            'data_forecast': request.form.get('data_forecast','').strip() or None,
             'criado_em': datetime.now().isoformat(),
             'atualizado_em': datetime.now().isoformat(),
             'criado_por': current_user_label(),
@@ -2028,6 +2532,11 @@ def editar(id):
         avanco_fisico_str = request.form.get('avanco_fisico', '0').strip().replace(',', '.')
         pluviometria = parse_pluviometria(request.form)
 
+        inicio_bl_e    = request.form.get('inicio_bl', '').strip() or None
+        fim_bl_e       = request.form.get('fim_bl', '').strip() or None
+        data_real_e    = request.form.get('data_real', '').strip() or None
+        data_forecast_e= request.form.get('data_forecast', '').strip() or None
+
         erros = []
         if not contratada:
             erros.append('Contratada é obrigatória.')
@@ -2037,6 +2546,10 @@ def editar(id):
             erros.append('Contrato é obrigatório.')
         if not trabalhos_notaveis:
             erros.append('Trabalhos notáveis são obrigatórios.')
+
+        _bl_ok_e, _bl_err_e = validar_datas_bl(inicio_bl_e, fim_bl_e, data_real_e, data_forecast_e)
+        if not _bl_ok_e:
+            erros.append(f'Datas BL: {_bl_err_e}')
 
         try:
             valor_medido = float(valor_medido_str) if valor_medido_str else 0.0
@@ -2103,6 +2616,10 @@ def editar(id):
             'atualizado_em': datetime.now().isoformat(),
             'alterado_em': datetime.now().isoformat(),
             'alterado_por': current_user_label(),
+            'inicio_bl':     inicio_bl_e,
+            'fim_bl':        fim_bl_e,
+            'data_real':     data_real_e,
+            'data_forecast': data_forecast_e,
         })
 
         save_data(registros)
@@ -2186,7 +2703,8 @@ def dashboard():
                   curva_fin_fc='[]', curva_fis_fc='[]', curva_fin_repl='null', curva_fis_repl='null',
                   hist_labels='[]', hist_qtd='[]', hist_colors='[]', hist_list=[],
                   prev_direto=0, prev_indireto=0,
-                  acoes_labels='[]', acoes_pct='[]')
+                  acoes_labels='[]', acoes_pct='[]',
+                  pluv_labels='[]', pluv_mm='[]')
 
     if not reg:
         return render_template('dashboard.html', **_vazio)
@@ -2245,6 +2763,24 @@ def dashboard():
         d   = semanas_data[s]
         avg = d['af_sum'] / d['af_n'] if d['af_n'] else 0
         curva_fis_real.append(round(avg, 2))
+
+    # ── Pluviometria Semanal (mm) ───────────────────────────────────────────
+    # Converte os estados qualitativos diários (Tempo Bom, Chuva Improdutiva, …)
+    # em mm via PLUVIOMETRIA_MM, soma os 7 dias de cada registro e, quando há mais
+    # de um registro na mesma semana, faz a média (a chuva é um fenômeno regional).
+    pluv_sem = {}   # semana -> {'soma': mm_total, 'n': qtd_registros}
+    for r in reg_ord:
+        sem = r.get('semana_referencia', '')
+        pluv = r.get('pluviometria') or {}
+        if not sem or not isinstance(pluv, dict):
+            continue
+        mm_semana = sum(PLUVIOMETRIA_MM.get((v or '').strip(), 0) for v in pluv.values())
+        acc = pluv_sem.setdefault(sem, {'soma': 0, 'n': 0})
+        acc['soma'] += mm_semana
+        acc['n']    += 1
+    pluv_labels = [format_date_br(s) for s in semanas_sorted]
+    pluv_mm     = [round(pluv_sem[s]['soma'] / pluv_sem[s]['n']) if pluv_sem.get(s, {}).get('n') else 0
+                   for s in semanas_sorted]
 
     # ── Histograma consolidado (usa o tipo gravado no registro; reclassifica só se ausente) ──
     histograma = {}
@@ -2414,7 +2950,9 @@ def dashboard():
                            prev_direto=prev_direto,
                            prev_indireto=prev_indireto,
                            acoes_labels=acoes_labels,
-                           acoes_pct=acoes_pct)
+                           acoes_pct=acoes_pct,
+                           pluv_labels=json.dumps(pluv_labels),
+                           pluv_mm=json.dumps(pluv_mm))
 
 
 def _excel_write_sheet(ws, headers, rows, col_widths, currency_cols=(), percent_cols=()):
@@ -2860,7 +3398,7 @@ def admin_limpar_dados():
     return redirect(url_for('admin_dados'))
 
 
-# ── ADMIN: CONFIGURAÇÕES TMS ─────────────────────────────────────────────────
+# ── ADMIN: DADOS TMS ─────────────────────────────────────────────────────────
 
 TMS_CONFIG_FILE = os.path.join('data', 'tms_config.json')
 
@@ -3273,7 +3811,8 @@ def admin_suprimento_sair_pacote(sid):
     return redirect(url_for('admin') + '?tab=suprimento')
 
 
-@app.route('/admin/tms', methods=['GET', 'POST'])
+@app.route('/admin/dados-tms', methods=['GET', 'POST'])
+@app.route('/admin/tms', methods=['GET', 'POST'])  # alias legado
 def admin_tms():
     if not _is_master():
         flash('Acesso restrito ao usuário Master.', 'danger')
@@ -3304,11 +3843,68 @@ def admin_tms():
         # Linhas de Base mensais (mesma lógica de Configurar Contrato)
         _parse_baseline_mensal(request.form, cfg)
         save_tms_config(cfg)
-        audit_log('editar_tms', 'tms_config', 'Configurações TMS atualizadas')
-        flash('Configurações TMS salvas com sucesso!', 'success')
+        audit_log('editar_tms', 'tms_config', 'Dados TMS atualizados')
+        flash('Dados TMS salvos com sucesso!', 'success')
         return redirect(url_for('admin_tms'))
 
     return render_template('admin_tms.html', cfg=cfg)
+
+
+def _parse_int(valor):
+    """Converte texto de formulário para inteiro >= 0 (0 se vazio/ inválido)."""
+    try:
+        n = int(float(str(valor).replace(',', '.').strip()))
+        return max(0, n)
+    except (TypeError, ValueError):
+        return 0
+
+
+@app.route('/admin/dados-tms/saude', methods=['POST'])
+def admin_tms_saude():
+    """Registra (upsert por mês) um lançamento mensal de Saúde e Segurança."""
+    if not _is_master():
+        flash('Acesso restrito ao usuário Master.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    mes_ref = request.form.get('mes_ref', '').strip()  # 'YYYY-MM'
+    if not mes_ref:
+        flash('Informe o mês/ano de referência.', 'danger')
+        return redirect(url_for('admin_tms'))
+
+    registro = {
+        'mes_ref':            mes_ref,
+        'saf':                _parse_int(request.form.get('saf')),
+        'caf':                _parse_int(request.form.get('caf')),
+        'primeiros_socorros': _parse_int(request.form.get('primeiros_socorros')),
+        'registrado_em':      datetime.now().isoformat(),
+        'registrado_por':     current_user_label(),
+    }
+
+    cfg = load_tms_config()
+    lista = [x for x in cfg.get('saude_seguranca', []) if isinstance(x, dict)]
+    # upsert: substitui o mês existente, senão adiciona
+    lista = [x for x in lista if x.get('mes_ref') != mes_ref]
+    lista.append(registro)
+    lista.sort(key=lambda x: x.get('mes_ref', ''), reverse=True)
+    cfg['saude_seguranca'] = lista
+    save_tms_config(cfg)
+    audit_log('editar_tms', 'saude_seguranca', f'Saúde e Segurança — {mes_ref}')
+    flash(f'Dados de Saúde e Segurança de {mes_ref} salvos com sucesso!', 'success')
+    return redirect(url_for('admin_tms') + '#saude-seguranca')
+
+
+@app.route('/admin/dados-tms/saude/<mes_ref>/excluir', methods=['POST'])
+def admin_tms_saude_excluir(mes_ref):
+    if not _is_master():
+        flash('Acesso restrito ao usuário Master.', 'danger')
+        return redirect(url_for('dashboard'))
+    cfg = load_tms_config()
+    lista = [x for x in cfg.get('saude_seguranca', []) if isinstance(x, dict)]
+    cfg['saude_seguranca'] = [x for x in lista if x.get('mes_ref') != mes_ref]
+    save_tms_config(cfg)
+    audit_log('editar_tms', 'saude_seguranca', f'Excluído Saúde e Segurança — {mes_ref}')
+    flash(f'Registro de {mes_ref} removido.', 'info')
+    return redirect(url_for('admin_tms') + '#saude-seguranca')
 
 
 # ── ADMIN: GESTÃO DE USUÁRIOS ───────────────────────────────────────────────

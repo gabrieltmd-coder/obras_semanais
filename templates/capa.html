@@ -120,7 +120,7 @@
 
         /* cards de vidro */
         .cards {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.25rem;
+            display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 1.25rem;
             width: 100%; animation: fade .75s .2s ease both;
         }
         .card {
@@ -128,7 +128,7 @@
             background: rgba(255,255,255,.055);
             border: 1px solid rgba(255,255,255,.12);
             border-radius: 18px;
-            padding: 2.1rem 1.7rem 1.7rem;
+            padding: clamp(.9rem, 2vw, 1.4rem) clamp(.8rem, 1.5vw, 1.1rem) clamp(.9rem, 1.8vw, 1.2rem);
             text-decoration: none; color: var(--foam);
             backdrop-filter: blur(14px) saturate(120%);
             -webkit-backdrop-filter: blur(14px) saturate(120%);
@@ -144,11 +144,13 @@
         .card.c-rdo::before  { background: var(--green); }
         .card.c-cons::before { background: #9b8cff; }
         .card.c-mas::before  { background: #20C9B0; }
+        .card.c-mob::before  { background: #FF7043; }
 
         .card .ic {
-            width: 60px; height: 60px; border-radius: 14px;
+            width: clamp(32px, 4vw, 44px); height: clamp(32px, 4vw, 44px);
+            border-radius: 9px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.6rem; margin-bottom: 1.2rem;
+            font-size: clamp(.9rem, 1.5vw, 1.2rem); margin-bottom: .65rem;
             border: 1px solid rgba(255,255,255,.12);
         }
         .card.c-dash .ic { color: var(--cyan);  background: rgba(43,178,238,.14); }
@@ -156,16 +158,23 @@
         .card.c-rdo  .ic { color: var(--green); background: rgba(70,194,106,.14); }
         .card.c-cons .ic { color: #9b8cff; background: rgba(155,140,255,.14); }
         .card.c-mas  .ic { color: #20C9B0; background: rgba(32,201,176,.14); }
+        .card.c-mob  .ic { color: #FF7043; background: rgba(255,112,67,.14); }
 
         .card h2 {
-            font-family: 'Archivo', sans-serif; font-size: 1.32rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: .02em; margin-bottom: .55rem;
+            font-family: 'Archivo', sans-serif;
+            font-size: clamp(.68rem, 1.15vw, .88rem);
+            font-weight: 700; text-transform: uppercase; letter-spacing: .02em;
+            margin-bottom: .4rem; overflow-wrap: break-word; word-break: break-word;
         }
-        .card p { font-size: .86rem; line-height: 1.6; color: rgba(232,243,251,.58); min-height: 3.6em; }
+        .card p {
+            font-size: clamp(.68rem, .9vw, .76rem);
+            line-height: 1.55; color: rgba(232,243,251,.58);
+        }
         .card .go {
-            margin-top: 1.4rem; display: inline-flex; align-items: center; gap: .5rem;
-            font-family: 'IBM Plex Mono', monospace; font-size: .72rem;
-            letter-spacing: .1em; text-transform: uppercase; color: rgba(232,243,251,.7);
+            margin-top: .9rem; display: inline-flex; align-items: center; gap: .4rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: clamp(.55rem, .75vw, .64rem);
+            letter-spacing: .08em; text-transform: uppercase; color: rgba(232,243,251,.7);
             transition: gap .2s, color .2s;
         }
         .card:hover {
@@ -180,6 +189,7 @@
         .card.c-rdo:hover  .go i { color: var(--green); }
         .card.c-cons:hover .go i { color: #9b8cff; }
         .card.c-mas:hover  .go i { color: #20C9B0; }
+        .card.c-mob:hover  .go i { color: #FF7043; }
 
         .card.locked { cursor: not-allowed; }
         .card.locked .ic, .card.locked h2, .card.locked p { opacity: .55; }
@@ -220,7 +230,7 @@
         @keyframes fade { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
         @media (max-width: 760px) {
-            .cards { grid-template-columns: 1fr; }
+            .cards { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: 1fr; }
             .card p { min-height: 0; }
             .top img { height: 54px; }
             .foot { flex-direction: column; gap: .9rem; }
@@ -286,6 +296,13 @@
                 <span class="ic"><i class="bi bi-bar-chart-line"></i></span>
                 <h2>MAS Dashboard</h2>
                 <p>Painel gerencial MAS TMS — indicadores consolidados de desempenho operacional.</p>
+                <span class="go">{% if current_user %}Abrir painel <i class="bi bi-arrow-right"></i>{% else %}Acesso restrito <i class="bi bi-lock-fill"></i>{% endif %}</span>
+            </a>
+
+            <a {% if current_user %}href="{{ url_for('mobilizacao') }}"{% endif %} class="card c-mob{% if not current_user %} locked{% endif %}">
+                <span class="ic"><i class="bi bi-people-fill"></i></span>
+                <h2>Mobilização</h2>
+                <p>Controle de mobilização e desmobilização de pessoal e equipamentos por contrato.</p>
                 <span class="go">{% if current_user %}Abrir painel <i class="bi bi-arrow-right"></i>{% else %}Acesso restrito <i class="bi bi-lock-fill"></i>{% endif %}</span>
             </a>
         </nav>

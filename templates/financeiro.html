@@ -43,7 +43,7 @@ body {
 
 .gc { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.9rem 1rem; }
 .gc-title {
-    font-family:'IBM Plex Mono',monospace; font-size:.62rem; font-weight:500; text-transform:uppercase;
+    font-family:'IBM Plex Mono',monospace; font-size:1.24rem; font-weight:500; text-transform:uppercase;
     letter-spacing:.12em; color:rgba(255,255,255,.5);
     margin-bottom:.7rem; padding-bottom:.55rem; border-bottom:1px solid rgba(255,255,255,.07);
     display:flex; align-items:center; justify-content:space-between;
@@ -425,6 +425,12 @@ const CC_COMP   = {{ cc_comprometido|safe }};
 const CC_MED    = {{ cc_medido|safe }};
 const EVM       = {{ evm|tojson if evm else 'null' }};
 
+// Variáveis para instâncias dos gráficos com labels traduzíveis
+let _chartFinanceiro = null;
+let _chartCaixa = null;
+let _chartCC = null;
+let _chartEVM = null;
+
 // ── Funil financeiro ──
 new Chart(document.getElementById('chartFunil'), {
     type: 'bar',
@@ -441,7 +447,7 @@ new Chart(document.getElementById('chartFunil'), {
 });
 
 // ── Curva S ──
-if (LABELS.length) new Chart(document.getElementById('chartFinanceiro'), {
+if (LABELS.length) _chartFinanceiro = new Chart(document.getElementById('chartFinanceiro'), {
     type: 'line',
     data: { labels: LABELS, datasets: [
         { label:'Medido acumulado', data:FIN_ACUM, borderColor:'#F0B34D',
@@ -469,7 +475,7 @@ if (BAR_L.length) new Chart(document.getElementById('chartBarContratada'), {
 
 // ── Fluxo de caixa ──
 if (CF_L.length) {
-    new Chart(document.getElementById('chartCaixa'), {
+    _chartCaixa = new Chart(document.getElementById('chartCaixa'), {
         data: { labels: CF_L, datasets: [
             { type:'bar', label:'Pago', data:CF_PAGO, backgroundColor:'#46C26A', stack:'s', borderRadius:3 },
             { type:'bar', label:'Previsto', data:CF_PREV, backgroundColor:'#F0B34D', stack:'s', borderRadius:3 },
@@ -509,7 +515,7 @@ document.getElementById('classeResumo').innerHTML =
     `<b style="color:#b8adff;">OPEX</b> medido ${fmtK(opex.medido)} · pago ${fmtK(opex.pago)}`;
 
 // ── Por centro de custo ──
-if (CC_L.length) new Chart(document.getElementById('chartCC'), {
+if (CC_L.length) _chartCC = new Chart(document.getElementById('chartCC'), {
     type: 'bar',
     data: { labels: CC_L, datasets: [
         { label:'Orçado', data:CC_ORC, backgroundColor:'rgba(255,255,255,.28)', borderRadius:3 },
@@ -524,7 +530,7 @@ if (CC_L.length) new Chart(document.getElementById('chartCC'), {
 });
 
 // ── EVM ──
-if (EVM) new Chart(document.getElementById('chartEVM'), {
+if (EVM) _chartEVM = new Chart(document.getElementById('chartEVM'), {
     type: 'bar',
     data: { labels:['PV — Planejado','EV — Agregado','AC — Custo Real'], datasets:[{
         data:[EVM.pv, EVM.ev, EVM.ac],
@@ -535,6 +541,51 @@ if (EVM) new Chart(document.getElementById('chartEVM'), {
         scales: { x:{ ticks:{...TICK, callback:fmtK}, grid:GRID },
                   y:{ ticks:{...TICK, font:{size:11}}, grid:{display:false} } } }
 });
+
+// ── Internacionalização dos labels dos gráficos ──
+function _updateFinChartLangs() {
+    const isEN = document.documentElement.lang === 'en';
+
+    // Curva S Financeira
+    if (_chartFinanceiro) {
+        _chartFinanceiro.data.datasets[0].label = isEN ? 'Accumulated Measured' : 'Medido acumulado';
+        _chartFinanceiro.data.datasets[1].label = isEN ? 'Baseline' : 'Linha de base';
+        _chartFinanceiro.update('none');
+    }
+
+    // Fluxo de Caixa
+    if (_chartCaixa) {
+        _chartCaixa.data.datasets[0].label = isEN ? 'Paid' : 'Pago';
+        _chartCaixa.data.datasets[1].label = isEN ? 'Planned' : 'Previsto';
+        _chartCaixa.data.datasets[2].label = isEN ? 'Projected' : 'Projetado';
+        _chartCaixa.data.datasets[3].label = isEN ? 'Accumulated' : 'Acumulado';
+        _chartCaixa.update('none');
+    }
+
+    // Por Centro de Custo
+    if (_chartCC) {
+        _chartCC.data.datasets[0].label = isEN ? 'Budgeted' : 'Orçado';
+        _chartCC.data.datasets[1].label = isEN ? 'Committed' : 'Comprometido';
+        _chartCC.data.datasets[2].label = isEN ? 'Measured' : 'Medido';
+        _chartCC.update('none');
+    }
+
+    // EVM — usa labels no eixo Y (data.labels), não dataset.label
+    if (_chartEVM) {
+        _chartEVM.data.labels = isEN
+            ? ['PV — Planned', 'EV — Earned Value', 'AC — Actual Cost']
+            : ['PV — Planejado', 'EV — Agregado', 'AC — Custo Real'];
+        _chartEVM.update('none');
+    }
+}
+
+// Aplica no carregamento inicial
+_updateFinChartLangs();
+
+// Reage a mudanças de idioma via MutationObserver
+new MutationObserver(() => _updateFinChartLangs())
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
 {% endif %}
 </script>
 {% endblock %}

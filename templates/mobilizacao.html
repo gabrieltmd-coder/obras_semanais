@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Mobilização{% endblock %}
+{% block page_icon %}<i class="bi bi-people-fill"></i>{% endblock %}
+{% block page_title %}Dashboard - Mobilização{% endblock %}
+{% block breadcrumb %}Painel de Mobilização{% endblock %}
+
+{% block content %}
+<style>
+body {
+    background: #0E1B24 !important;
+    background-image:
+        linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px) !important;
+    background-size: 112px 112px !important;
+}
+.page-header { background:#0A141C!important; border-bottom:1.5px solid rgba(255,255,255,.10)!important; padding:1rem 0 .9rem!important; margin-bottom:1rem!important; }
+.page-header h1,.page-header h1 i { color:#fff!important; }
+.page-header .breadcrumb { color:rgba(255,255,255,.45)!important; }
+.app-footer { background:#0A141C!important; margin-top:1.2rem!important; }
+.btn-back-header { background:rgba(255,255,255,.05)!important; color:rgba(255,255,255,.85)!important; border-color:rgba(255,255,255,.18)!important; }
+
+:root { --mob:#FF7043; --mob-l:rgba(255,112,67,.14); }
+
+/* ── Painel ── */
+.gc { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.85rem 1rem; }
+.gc-title { font-family:'IBM Plex Mono',monospace; font-size:.78rem; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.42); margin-bottom:.7rem; padding-bottom:.5rem; border-bottom:1px solid rgba(255,255,255,.07); display:flex; align-items:center; gap:.4rem; }
+.gc-title i { color:var(--mob); }
+
+/* ── KPI ── */
+.kpi-strip { display:flex; gap:.6rem; margin-bottom:.8rem; flex-wrap:wrap; }
+.kpi-mini { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.65rem .9rem; flex:1; min-width:130px; position:relative; overflow:hidden; }
+.kpi-mini::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; }
+.kpi-mini.mob::before { background:var(--mob); }
+.kpi-mini.g::before   { background:#46C26A; }
+.kpi-mini.c::before   { background:#2BB2EE; }
+.kpi-mini.a::before   { background:#E8A33D; }
+.kpi-val { font-family:'IBM Plex Mono',monospace; font-size:1.65rem; font-weight:600; color:#fff; line-height:1; margin-bottom:.2rem; }
+.kpi-lbl { font-family:'IBM Plex Mono',monospace; font-size:.57rem; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.35); }
+.kpi-sub { font-family:'IBM Plex Mono',monospace; font-size:.6rem; color:rgba(255,255,255,.22); margin-top:.12rem; }
+
+/* ── Canvas wraps ── */
+.chart-wrap { position:relative; }
+.empty-chart { text-align:center; padding:2rem 1rem; color:rgba(255,255,255,.2); }
+.empty-chart i { font-size:1.8rem; color:var(--mob); opacity:.25; display:block; margin-bottom:.5rem; }
+.empty-chart p { font-family:'IBM Plex Mono',monospace; font-size:.65rem; letter-spacing:.08em; text-transform:uppercase; margin:0; }
+
+/* ── Link config ── */
+.btn-config { font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:600; text-transform:uppercase; letter-spacing:.07em; background:rgba(255,112,67,.12); border:1px solid rgba(255,112,67,.35); color:var(--mob); border-radius:4px; padding:.2rem .65rem; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; transition:background .15s; }
+.btn-config:hover { background:rgba(255,112,67,.22); color:#ff8a65; }
+</style>
+
+<div class="container-fluid px-3">
+
+<!-- ── KPI STRIP ── -->
+<div class="kpi-strip">
+    <div class="kpi-mini mob">
+        <div class="kpi-val">{{ docs_pct }}%</div>
+        <div class="kpi-lbl">Documentações Entregues</div>
+        <div class="kpi-sub">{{ doc_counts.entregue }} / {{ doc_counts.entregue + doc_counts.pendente + doc_counts.nao + doc_counts.vazio }} documentos</div>
+    </div>
+    <div class="kpi-mini c">
+        <div class="kpi-val">{{ ssma_pct }}%</div>
+        <div class="kpi-lbl">SSMA Entregue</div>
+        <div class="kpi-sub">{{ ssma_counts.entregue + ssma_counts.revisado }} / {{ ssma_counts.entregue + ssma_counts.revisado + ssma_counts.nao + ssma_counts.vazio }} documentos</div>
+    </div>
+    <div class="kpi-mini g">
+        <div class="kpi-val">{{ cant_total_pct }}%</div>
+        <div class="kpi-lbl">Avanço Canteiro</div>
+        <div class="kpi-sub">Índice ponderado</div>
+    </div>
+    <div class="kpi-mini a">
+        <div class="kpi-val">{{ sub_total_pct }}%</div>
+        <div class="kpi-lbl">Avanço Subcontratadas</div>
+        <div class="kpi-sub">Índice ponderado</div>
+    </div>
+</div>
+
+<!-- ── CURVA S ── -->
+<div class="row g-2 mb-2">
+    <div class="col-12">
+        <div class="gc">
+            <div class="gc-title">
+                <i class="bi bi-graph-up-arrow"></i>Curva S — Evolução da Mobilização
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:rgba(255,255,255,.25);margin-left:.5rem;">BL · Real · Forecast</span>
+                <a href="{{ url_for('mobilizacao_config') }}" class="btn-config ms-auto"><i class="bi bi-table"></i>Ver Consolidado</a>
+            </div>
+            <div id="curva-s-empty" style="display:none;text-align:center;padding:2.5rem;color:rgba(255,255,255,.25);font-family:'IBM Plex Mono',monospace;font-size:.7rem;">
+                <i class="bi bi-bar-chart" style="font-size:2rem;display:block;margin-bottom:.6rem;opacity:.35;"></i>
+                Cadastre datas BL nos itens de Config. para gerar a Curva S.
+            </div>
+            <div class="chart-wrap" style="height:340px;" id="curva-s-wrap">
+                <canvas id="curva-s-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── LINHA 1: Docs + SSMA ── -->
+<div class="row g-2 mb-2">
+    <div class="col-md-6">
+        <div class="gc">
+            <div class="gc-title">
+                <i class="bi bi-file-earmark-text"></i>Documentações
+                <a href="{{ url_for('mobilizacao_config') }}" class="btn-config ms-auto"><i class="bi bi-pencil"></i>Editar</a>
+            </div>
+            {% if doc_counts.entregue + doc_counts.pendente + doc_counts.nao + doc_counts.vazio == doc_counts.vazio %}
+            <div class="empty-chart"><i class="bi bi-file-earmark-plus"></i><p>Sem dados — acesse Config. para preencher</p></div>
+            {% else %}
+            <div class="chart-wrap" style="height:200px">
+                <canvas id="chartDocs"></canvas>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="gc">
+            <div class="gc-title">
+                <i class="bi bi-shield-check"></i>Docs SSMA
+                <a href="{{ url_for('mobilizacao_config') }}" class="btn-config ms-auto"><i class="bi bi-pencil"></i>Editar</a>
+            </div>
+            {% if ssma_counts.entregue + ssma_counts.revisado + ssma_counts.nao == 0 %}
+            <div class="empty-chart"><i class="bi bi-shield-exclamation"></i><p>Sem dados — acesse Config. para preencher</p></div>
+            {% else %}
+            <div class="chart-wrap" style="height:200px">
+                <canvas id="chartSsma"></canvas>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ── LINHA 2: MO + Equipamentos ── -->
+<div class="row g-2 mb-2">
+    <div class="col-md-6">
+        <div class="gc">
+            <div class="gc-title">
+                <i class="bi bi-person-workspace"></i>Mão de Obra — Etapas
+                <a href="{{ url_for('mobilizacao_config') }}" class="btn-config ms-auto"><i class="bi bi-pencil"></i>Editar</a>
+            </div>
+            {% if not mo_has_data %}
+            <div class="empty-chart"><i class="bi bi-people"></i><p>Sem dados — acesse Config. para preencher</p></div>
+            {% else %}
+            <div class="chart-wrap" style="height:230px">
+                <canvas id="chartMo"></canvas>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="gc">
+            <div class="gc-title">
+                <i class="bi bi-truck"></i>Equipamentos — Etapas
+                <a href="{{ url_for('mobilizacao_config') }}" class="btn-config ms-auto"><i class="bi bi-pencil"></i>Editar</a>
+            </div>
+            {% if not eq_has_data %}
+            <div class="empty-chart"><i class="bi bi-gear"></i><p>Sem dados — acesse Config. para preencher</p></div>
+            {% else %}
+            <div class="chart-wrap" style="height:230px">
+                <canvas id="chartEq"></canvas>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ── LINHA 3: Canteiro + Subcontratadas ── -->
+{% set linha3_h = [180, canteiro_items|length * 28 + 40, sub_items|length * 32 + 40]|max %}
+<div class="row g-2 mb-2">
+    <div class="col-md-6 d-flex">
+        <div class="gc" style="flex:1;">
+            <div class="gc-title">
+                <i class="bi bi-building-gear"></i>Canteiro — Avanço por Item
+                <a href="{{ url_for('mobilizacao_config') }}" class="btn-config ms-auto"><i class="bi bi-pencil"></i>Editar</a>
+            </div>
+            {% if canteiro_items %}
+            <div class="chart-wrap" style="height:{{ linha3_h }}px">
+                <canvas id="chartCanteiro"></canvas>
+            </div>
+            {% else %}
+            <div class="empty-chart"><i class="bi bi-buildings"></i><p>Sem dados</p></div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6 d-flex">
+        <div class="gc" style="flex:1;">
+            <div class="gc-title">
+                <i class="bi bi-diagram-3"></i>Subcontratadas — Avanço
+                <a href="{{ url_for('mobilizacao_config') }}" class="btn-config ms-auto"><i class="bi bi-pencil"></i>Editar</a>
+            </div>
+            {% if sub_items %}
+            <div class="chart-wrap" style="height:{{ linha3_h }}px">
+                <canvas id="chartSub"></canvas>
+            </div>
+            {% else %}
+            <div class="empty-chart"><i class="bi bi-building-add"></i><p>Sem dados</p></div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+</div><!-- /container -->
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── Paleta ──
+const MOB   = '#FF7043';
+const GREEN = '#46C26A';
+const CYAN  = '#2BB2EE';
+const AMBER = '#E8A33D';
+const RED   = '#c8324b';
+const GRAY  = 'rgba(255,255,255,.12)';
+
+const BASE_OPTS = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { backgroundColor:'#0a2342', titleFont:{family:'IBM Plex Mono',size:11}, bodyFont:{family:'IBM Plex Sans',size:12}, padding:10, cornerRadius:6 } },
+};
+
+function pct_color(v) {
+    if (v >= 80) return GREEN;
+    if (v >= 40) return AMBER;
+    return RED;
+}
+
+// ══ CHART 1 — DOCUMENTAÇÕES (donut) ══
+{% if doc_counts.entregue + doc_counts.pendente + doc_counts.nao + doc_counts.vazio > doc_counts.vazio %}
+(function() {
+    const data = [{{ doc_counts.entregue }}, {{ doc_counts.pendente }}, {{ doc_counts.nao }}, {{ doc_counts.na }}, {{ doc_counts.vazio }}];
+    const labels = ['Entregues', 'Pendentes', 'Não entregues', 'N/A', 'Não preenchido'];
+    const colors = [GREEN, AMBER, RED, 'rgba(255,255,255,.18)', 'rgba(255,255,255,.06)'];
+    const total = {{ doc_counts.entregue + doc_counts.pendente + doc_counts.nao + doc_counts.na + doc_counts.vazio }};
+    const pct = {{ docs_pct }};
+
+    new Chart(document.getElementById('chartDocs'), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#13242F', hoverOffset: 6 }] },
+        options: {
+            ...BASE_OPTS,
+            cutout: '68%',
+            plugins: {
+                legend: { display: true, position: 'right', labels: { color:'rgba(255,255,255,.6)', font:{family:'IBM Plex Sans',size:11}, padding:10, boxWidth:12, boxHeight:12 } },
+                tooltip: { ...BASE_OPTS.plugins.tooltip, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} doc(s)` } },
+            },
+            animation: { animateRotate: true, duration: 700 },
+        },
+        plugins: [{
+            id:'centerText',
+            afterDraw(chart) {
+                const {ctx, chartArea:{top,bottom,left,right}} = chart;
+                const cx = (left+right)/2, cy = (top+bottom)/2;
+                ctx.save();
+                ctx.font = 'bold 22px IBM Plex Mono, monospace';
+                ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(pct + '%', cx, cy - 6);
+                ctx.font = '10px IBM Plex Mono, monospace';
+                ctx.fillStyle = 'rgba(255,255,255,.35)';
+                ctx.fillText('ENTREGUES', cx, cy + 12);
+                ctx.restore();
+            }
+        }]
+    });
+})();
+{% endif %}
+
+// ══ CHART 2 — SSMA (donut) ══
+{% if ssma_counts.entregue + ssma_counts.revisado + ssma_counts.nao > 0 %}
+(function() {
+    const data = [{{ ssma_counts.entregue }}, {{ ssma_counts.revisado }}, {{ ssma_counts.nao }}, {{ ssma_counts.vazio }}];
+    const labels = ['Entregue', 'Entregue revisado', 'Não entregue', 'Não preenchido'];
+    const colors = [GREEN, CYAN, RED, 'rgba(255,255,255,.06)'];
+    const pct = {{ ssma_pct }};
+
+    new Chart(document.getElementById('chartSsma'), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#13242F', hoverOffset: 6 }] },
+        options: {
+            ...BASE_OPTS,
+            cutout: '68%',
+            plugins: {
+                legend: { display: true, position: 'right', labels: { color:'rgba(255,255,255,.6)', font:{family:'IBM Plex Sans',size:11}, padding:10, boxWidth:12, boxHeight:12 } },
+                tooltip: { ...BASE_OPTS.plugins.tooltip, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} doc(s)` } },
+            },
+            animation: { animateRotate: true, duration: 700 },
+        },
+        plugins: [{
+            id:'centerText2',
+            afterDraw(chart) {
+                const {ctx, chartArea:{top,bottom,left,right}} = chart;
+                const cx = (left+right)/2, cy = (top+bottom)/2;
+                ctx.save();
+                ctx.font = 'bold 22px IBM Plex Mono, monospace';
+                ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(pct + '%', cx, cy - 6);
+                ctx.font = '10px IBM Plex Mono, monospace';
+                ctx.fillStyle = 'rgba(255,255,255,.35)';
+                ctx.fillText('ENTREGUES', cx, cy + 12);
+                ctx.restore();
+            }
+        }]
+    });
+})();
+{% endif %}
+
+// ══ CHART 3 — MO (barras horizontais) ══
+{% if mo_has_data %}
+(function() {
+    const labels = [{% for e in mo_stages %}"{{ e.etapa | truncate(22, True, '…') }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    const geral  = [{% for e in mo_stages %}{{ e.geral if e.geral is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const mod    = [{% for e in mo_stages %}{{ e.mod   if e.mod   is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const moi    = [{% for e in mo_stages %}{{ e.moi   if e.moi   is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const meta   = {{ mo_prev.geral if mo_prev.geral is not none else 0 }};
+
+    new Chart(document.getElementById('chartMo'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label:'Meta (Previsto)', data: Array(labels.length).fill(meta), backgroundColor:'rgba(255,255,255,.07)', borderColor:'rgba(255,255,255,.18)', borderWidth:1, borderDash:[4,3] },
+                { label:'MOD', data: mod, backgroundColor:'rgba(43,178,238,.6)', borderRadius:2 },
+                { label:'MOI', data: moi, backgroundColor:'rgba(70,194,106,.6)', borderRadius:2 },
+            ]
+        },
+        options: {
+            ...BASE_OPTS,
+            indexAxis: 'y',
+            scales: {
+                x: { stacked: false, grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'rgba(255,255,255,.4)', font:{family:'IBM Plex Mono',size:10} } },
+                y: { grid:{ display:false }, ticks:{ color:'rgba(255,255,255,.55)', font:{family:'IBM Plex Sans',size:11} } }
+            },
+            plugins: {
+                ...BASE_OPTS.plugins,
+                legend: { display:true, position:'top', labels:{ color:'rgba(255,255,255,.5)', font:{family:'IBM Plex Sans',size:11}, boxWidth:10, padding:12 } },
+            }
+        }
+    });
+})();
+{% endif %}
+
+// ══ CHART 4 — EQUIPAMENTOS (barras horizontais) ══
+{% if eq_has_data %}
+(function() {
+    const labels = [{% for e in eq_stages %}"{{ e.etapa | truncate(22, True, '…') }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    const geral   = [{% for e in eq_stages %}{{ e.geral         if e.geral         is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const grande  = [{% for e in eq_stages %}{{ e.grande_porte  if e.grande_porte  is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const pequeno = [{% for e in eq_stages %}{{ e.pequeno_porte if e.pequeno_porte is not none else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const meta = {{ eq_prev.geral if eq_prev.geral is not none else 0 }};
+
+    new Chart(document.getElementById('chartEq'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label:'Meta (Previsto)', data: Array(labels.length).fill(meta), backgroundColor:'rgba(255,255,255,.07)', borderColor:'rgba(255,255,255,.18)', borderWidth:1 },
+                { label:'Grande Porte', data: grande, backgroundColor:'rgba(255,112,67,.7)', borderRadius:2 },
+                { label:'Pequeno Porte', data: pequeno, backgroundColor:'rgba(232,163,61,.7)', borderRadius:2 },
+            ]
+        },
+        options: {
+            ...BASE_OPTS,
+            indexAxis: 'y',
+            scales: {
+                x: { grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'rgba(255,255,255,.4)', font:{family:'IBM Plex Mono',size:10} } },
+                y: { grid:{ display:false }, ticks:{ color:'rgba(255,255,255,.55)', font:{family:'IBM Plex Sans',size:11} } }
+            },
+            plugins: {
+                ...BASE_OPTS.plugins,
+                legend: { display:true, position:'top', labels:{ color:'rgba(255,255,255,.5)', font:{family:'IBM Plex Sans',size:11}, boxWidth:10, padding:12 } },
+            }
+        }
+    });
+})();
+{% endif %}
+
+// ══ CHART 5 — CANTEIRO (% avanço por item) ══
+{% if canteiro_items %}
+(function() {
+    const labels = [{% for it in canteiro_items %}"{{ it.item | truncate(28, True, '…') }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    const values = [{% for it in canteiro_items %}{{ it.avanco }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const colors = values.map(v => v >= 80 ? 'rgba(70,194,106,.75)' : v >= 40 ? 'rgba(232,163,61,.75)' : v > 0 ? 'rgba(255,112,67,.75)' : 'rgba(255,255,255,.1)');
+
+    new Chart(document.getElementById('chartCanteiro'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label:'Meta', data: Array(labels.length).fill(100), backgroundColor:'rgba(255,255,255,.04)', borderColor:'rgba(255,255,255,.1)', borderWidth:1, borderRadius:3 },
+                { label:'Avanço (%)', data: values, backgroundColor: colors, borderRadius:3 },
+            ]
+        },
+        options: {
+            ...BASE_OPTS,
+            indexAxis: 'y',
+            scales: {
+                x: { min:0, max:100, grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'rgba(255,255,255,.35)', font:{family:'IBM Plex Mono',size:10}, callback: v => v+'%' } },
+                y: { grid:{ display:false }, ticks:{ color:'rgba(255,255,255,.55)', font:{family:'IBM Plex Sans',size:11} } }
+            },
+            plugins: {
+                ...BASE_OPTS.plugins,
+                legend: { display:false },
+                tooltip: { ...BASE_OPTS.plugins.tooltip, callbacks: { label: ctx => ctx.dataset.label === 'Avanço (%)' ? ` Avanço: ${ctx.parsed.x}%` : null } }
+            }
+        }
+    });
+})();
+{% endif %}
+
+// ══ CHART 6 — SUBCONTRATADAS (% avanço por empresa) ══
+{% if sub_items %}
+(function() {
+    const labels = [{% for s in sub_items %}"{{ s.empresa }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    const values = [{% for s in sub_items %}{{ s.avanco }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const pesos  = [{% for s in sub_items %}{{ (s.peso * 100)|int }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const colors = values.map(v => v >= 80 ? 'rgba(70,194,106,.75)' : v >= 40 ? 'rgba(232,163,61,.75)' : v > 0 ? 'rgba(255,112,67,.75)' : 'rgba(255,255,255,.1)');
+
+    new Chart(document.getElementById('chartSub'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label:'Meta', data: Array(labels.length).fill(100), backgroundColor:'rgba(255,255,255,.04)', borderColor:'rgba(255,255,255,.1)', borderWidth:1, borderRadius:3 },
+                { label:'Avanço (%)', data: values, backgroundColor: colors, borderRadius:3 },
+            ]
+        },
+        options: {
+            ...BASE_OPTS,
+            indexAxis: 'y',
+            scales: {
+                x: { min:0, max:100, grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'rgba(255,255,255,.35)', font:{family:'IBM Plex Mono',size:10}, callback: v => v+'%' } },
+                y: { grid:{ display:false }, ticks:{ color:'rgba(255,255,255,.55)', font:{family:'IBM Plex Sans',size:11} } }
+            },
+            plugins: {
+                ...BASE_OPTS.plugins,
+                legend: { display:false },
+                tooltip: { ...BASE_OPTS.plugins.tooltip, callbacks: {
+                    label: ctx => {
+                        if (ctx.dataset.label !== 'Avanço (%)') return null;
+                        return ` Avanço: ${ctx.parsed.x}% (Peso: ${pesos[ctx.dataIndex]}%)`;
+                    }
+                }}
+            }
+        }
+    });
+})();
+{% endif %}
+
+// ══ CURVA S — Evolução da Mobilização ══
+(function() {
+    const mob = {{ mob | tojson }};
+    const items = [];
+    const push = arr => (arr || []).forEach(it => {
+        if (it.fim_bl) items.push({ fim_bl: it.fim_bl, real: it.real || null, forecast: it.forecast || null });
+    });
+    push(mob.documentacoes);
+    push(mob.ssma);
+    push((mob.mo  || {}).etapas);
+    push((mob.equipamentos || {}).etapas);
+    push(mob.canteiro);
+    push(mob.subcontratadas);
+
+    const wrap  = document.getElementById('curva-s-wrap');
+    const empty = document.getElementById('curva-s-empty');
+
+    if (!items.length) {
+        wrap.style.display = 'none'; empty.style.display = 'block'; return;
+    }
+
+    const total = items.length;
+    const today = new Date().toISOString().slice(0, 10);
+    const allDates = [today, ...items.flatMap(it => [it.fim_bl, it.real, it.forecast].filter(Boolean))].sort();
+
+    const minD = new Date(allDates[0]); minD.setDate(minD.getDate() - 7);
+    const maxD = new Date(allDates[allDates.length-1]); maxD.setDate(maxD.getDate() + 14);
+    const steps = [];
+    for (let d = new Date(minD); d <= maxD; d.setDate(d.getDate() + 7))
+        steps.push(new Date(d).toISOString().slice(0, 10));
+
+    const blLine   = steps.map(s => Math.round(items.filter(it => it.fim_bl <= s).length / total * 100));
+    const realLine = steps.map(s => s <= today ? Math.round(items.filter(it => it.real && it.real <= s).length / total * 100) : null);
+    const fcLine   = steps.map(s => Math.round(items.filter(it => (it.real || it.forecast || it.fim_bl) <= s).length / total * 100));
+    const labels   = steps.map(s => { const [,m,d] = s.split('-'); return `${d}/${m}`; });
+
+    new Chart(document.getElementById('curva-s-chart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                { label:'BL — Planejado', data:blLine,   borderColor:'rgba(43,178,238,.9)',   borderWidth:2,   borderDash:[7,4], pointRadius:0, fill:false, tension:.35 },
+                { label:'Real',           data:realLine, borderColor:GREEN,                   borderWidth:2.5, pointRadius:3,    pointBackgroundColor:GREEN, fill:false, tension:.3, spanGaps:false },
+                { label:'Forecast',       data:fcLine,   borderColor:'rgba(255,112,67,.8)',   borderWidth:1.8, borderDash:[3,4], pointRadius:0, fill:false, tension:.35 },
+            ]
+        },
+        options: {
+            responsive:true, maintainAspectRatio:false,
+            interaction:{ intersect:false, mode:'index' },
+            plugins:{
+                legend:{ position:'bottom', labels:{ color:'rgba(255,255,255,.55)', font:{family:'IBM Plex Mono',size:11}, usePointStyle:true, padding:18 } },
+                tooltip:{ backgroundColor:'rgba(8,18,28,.95)', titleColor:'rgba(255,255,255,.45)', bodyColor:'#fff', borderColor:'rgba(255,255,255,.1)', borderWidth:1,
+                    callbacks:{ label: ctx => ` ${ctx.dataset.label}: ${ctx.raw !== null ? ctx.raw+'%' : '—'}` } }
+            },
+            scales:{
+                x:{ ticks:{ color:'rgba(255,255,255,.35)', font:{family:'IBM Plex Mono',size:9}, maxTicksLimit:16, maxRotation:45 }, grid:{ color:'rgba(255,255,255,.04)' } },
+                y:{ min:0, max:100, ticks:{ color:'rgba(255,255,255,.35)', font:{family:'IBM Plex Mono',size:10}, callback:v=>v+'%' }, grid:{ color:'rgba(255,255,255,.05)' } }
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

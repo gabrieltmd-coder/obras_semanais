@@ -89,6 +89,44 @@
                         </small>
                     </div>
 
+                    <!-- Datas Baseline -->
+                    <div class="col-12">
+                        <div style="border-top:1px solid var(--line-2);padding-top:.9rem;margin-top:.2rem;">
+                            <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem;">
+                                <i class="bi bi-calendar3-range me-1" style="color:var(--cyan);"></i>Datas Baseline (BL)
+                            </div>
+                            <div class="bl-strip" data-bl-group>
+                                <div class="bl-field">
+                                    <label class="bl-lbl" for="inicio_bl">Início BL</label>
+                                    <input type="date" class="form-control form-control-sm bl-inicio"
+                                           id="inicio_bl" name="inicio_bl"
+                                           value="{{ form_data.get('inicio_bl','') }}">
+                                </div>
+                                <div class="bl-field">
+                                    <label class="bl-lbl" for="fim_bl">Fim BL</label>
+                                    <input type="date" class="form-control form-control-sm bl-fim"
+                                           id="fim_bl" name="fim_bl"
+                                           value="{{ form_data.get('fim_bl','') }}">
+                                </div>
+                                <div class="bl-field">
+                                    <label class="bl-lbl" for="data_real">Real</label>
+                                    <input type="date" class="form-control form-control-sm bl-real"
+                                           id="data_real" name="data_real"
+                                           value="{{ form_data.get('data_real','') }}">
+                                </div>
+                                <div class="bl-field">
+                                    <label class="bl-lbl" for="data_forecast">
+                                        Forecast <span class="bl-req-mark">★</span>
+                                    </label>
+                                    <input type="date" class="form-control form-control-sm bl-forecast"
+                                           id="data_forecast" name="data_forecast"
+                                           value="{{ form_data.get('data_forecast','') }}">
+                                    <div class="bl-msg">Obrigatório quando Real > Fim BL</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>

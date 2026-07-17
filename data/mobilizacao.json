@@ -1,0 +1,630 @@
+{
+  "documentacoes": [
+    {
+      "area": "Saude e Seguranca Ocupacional",
+      "documento": "Anotacao de Responsabilidade Tecnica (ART - Obras de engenharia / servicos)",
+      "item": 1,
+      "prazo": "2026-01-15",
+      "status": "entregue",
+      "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsC7QKV8U9B2KaD1rRyC1lyYLMKq-4nH-IJxwxERrWXQ&s=10",
+      "inicio_bl": "2026-01-05",
+      "fim_bl": "2026-01-15",
+      "real": "2026-01-12",
+      "forecast": null
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Carta de Apresentacao do Engenheiro Residente (Obras)",
+      "item": 2,
+      "prazo": "2026-01-15",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-05",
+      "fim_bl": "2026-01-15",
+      "real": "2026-01-14",
+      "forecast": null
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Garantias de Execucao / Adiantamento Contratual (Seguros e Garantias)",
+      "item": 3,
+      "prazo": "2026-02-01",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-10",
+      "fim_bl": "2026-02-01",
+      "real": "2026-01-28",
+      "forecast": null
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Inscricao no INSS (CEI - aplicavel para Obras Civis)",
+      "item": 4,
+      "prazo": "2026-01-20",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-05",
+      "fim_bl": "2026-01-20",
+      "real": "2026-01-18",
+      "forecast": null
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Inscricao na Prefeitura Municipal para Recolhimento de ISSQN",
+      "item": 5,
+      "prazo": "2026-01-20",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-05",
+      "fim_bl": "2026-01-20",
+      "real": "2026-01-20",
+      "forecast": null
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Certidao Negativa de Debito atualizada com o INSS",
+      "item": 6,
+      "prazo": "2026-06-30",
+      "status": "pendente",
+      "url": null,
+      "inicio_bl": "2026-03-01",
+      "fim_bl": "2026-06-30",
+      "real": null,
+      "forecast": "2026-08-15"
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Certificado de Regularidade com o FGTS",
+      "item": 7,
+      "prazo": "2026-03-01",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-15",
+      "fim_bl": "2026-03-01",
+      "real": "2026-02-26",
+      "forecast": null
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Certidao Negativa de Debito com o FGTS (CRF)",
+      "item": 8,
+      "prazo": "2026-06-30",
+      "status": "pendente",
+      "url": null,
+      "inicio_bl": "2026-03-01",
+      "fim_bl": "2026-06-30",
+      "real": null,
+      "forecast": "2026-08-15"
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Certidao Negativa de Debito do ISSQN com o Municipio",
+      "item": 9,
+      "prazo": "2026-06-30",
+      "status": "pendente",
+      "url": null,
+      "inicio_bl": "2026-03-01",
+      "fim_bl": "2026-06-30",
+      "real": null,
+      "forecast": "2026-08-30"
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Certidao Negativa de Debito da Receita Federal",
+      "item": 10,
+      "prazo": "2026-04-01",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-02-01",
+      "fim_bl": "2026-04-01",
+      "real": "2026-03-20",
+      "forecast": null
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Certidao Negativa de Debito da Receita Estadual",
+      "item": 11,
+      "prazo": "2026-06-30",
+      "status": "pendente",
+      "url": null,
+      "inicio_bl": "2026-03-15",
+      "fim_bl": "2026-06-30",
+      "real": null,
+      "forecast": "2026-09-01"
+    },
+    {
+      "area": "Gestao de Contratos",
+      "documento": "Cartao do CNPJ",
+      "item": 12,
+      "prazo": "2026-01-15",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-05",
+      "fim_bl": "2026-01-15",
+      "real": "2026-01-10",
+      "forecast": null
+    },
+    {
+      "area": "Saude e Seguranca Ocupacional",
+      "documento": "Mapeamentos de Pessoas RAC",
+      "item": 13,
+      "prazo": "2026-07-31",
+      "status": "pendente",
+      "url": null,
+      "inicio_bl": "2026-04-01",
+      "fim_bl": "2026-07-31",
+      "real": null,
+      "forecast": "2026-08-15"
+    },
+    {
+      "area": "Saude e Seguranca Ocupacional",
+      "documento": "PRE (Programa de Ergonomia)",
+      "item": 14,
+      "prazo": null,
+      "status": "nao",
+      "url": null,
+      "inicio_bl": "2026-02-01",
+      "fim_bl": "2026-07-31",
+      "real": null,
+      "forecast": "2026-09-30"
+    },
+    {
+      "area": "Meio Ambiente",
+      "documento": "CTF - Cadastro Tecnico Federal",
+      "item": 15,
+      "prazo": "2026-01-15",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-05",
+      "fim_bl": "2026-01-15",
+      "real": "2026-01-08",
+      "forecast": null
+    },
+    {
+      "area": "Saude e Seguranca Ocupacional",
+      "documento": "PAE (Plano de Atendimento a Emergencia)",
+      "item": 16,
+      "prazo": "2026-07-31",
+      "status": "pendente",
+      "url": null,
+      "inicio_bl": "2026-04-01",
+      "fim_bl": "2026-07-31",
+      "real": null,
+      "forecast": "2026-08-20"
+    },
+    {
+      "area": "Saude e Seguranca Ocupacional",
+      "documento": "APR (Analise Preliminar de Risco - Makro)",
+      "item": 17,
+      "prazo": "2026-02-01",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-10",
+      "fim_bl": "2026-02-01",
+      "real": "2026-01-30",
+      "forecast": null
+    }
+  ],
+  "ssma": [
+    {
+      "item": 1,
+      "documento": "APR HO",
+      "area": "Saude e Seguranca Ocupacional",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-05",
+      "fim_bl": "2026-01-31",
+      "real": "2026-01-25",
+      "forecast": null
+    },
+    {
+      "item": 2,
+      "documento": "PCMSO",
+      "area": "Saude e Seguranca Ocupacional",
+      "status": "revisado",
+      "url": null,
+      "inicio_bl": "2026-01-15",
+      "fim_bl": "2026-02-28",
+      "real": "2026-03-10",
+      "forecast": null
+    },
+    {
+      "item": 3,
+      "documento": "PCMAT - aplicavel na construcao civil",
+      "area": "Saude e Seguranca Ocupacional",
+      "status": "nao",
+      "url": null,
+      "inicio_bl": "2026-02-01",
+      "fim_bl": "2026-04-30",
+      "real": null,
+      "forecast": "2026-08-30"
+    },
+    {
+      "item": 4,
+      "documento": "PGR",
+      "area": "Saude e Seguranca Ocupacional",
+      "status": "entregue",
+      "url": null,
+      "inicio_bl": "2026-01-20",
+      "fim_bl": "2026-03-31",
+      "real": "2026-03-15",
+      "forecast": null
+    }
+  ],
+  "mo": {
+    "etapas": [
+      {
+        "etapa": "Previsto Contratual ate termino MOB",
+        "geral": 80,
+        "mod": 60,
+        "moi": 20,
+        "inicio_bl": "2026-01-05",
+        "fim_bl": "2026-08-31",
+        "real": null,
+        "forecast": null
+      },
+      {
+        "etapa": "Em contratacao",
+        "geral": 71,
+        "mod": 61,
+        "moi": 10,
+        "inicio_bl": "2026-01-05",
+        "fim_bl": "2026-02-28",
+        "real": "2026-02-20",
+        "forecast": null
+      },
+      {
+        "etapa": "Contratados",
+        "geral": 71,
+        "mod": 61,
+        "moi": 10,
+        "inicio_bl": "2026-01-20",
+        "fim_bl": "2026-03-15",
+        "real": "2026-03-10",
+        "forecast": null
+      },
+      {
+        "etapa": "Exames Prontos",
+        "geral": 55,
+        "mod": 46,
+        "moi": 9,
+        "inicio_bl": "2026-02-01",
+        "fim_bl": "2026-03-31",
+        "real": "2026-04-05",
+        "forecast": null
+      },
+      {
+        "etapa": "Treinamentos (RACs) Executados",
+        "geral": 48,
+        "mod": 40,
+        "moi": 8,
+        "inicio_bl": "2026-02-15",
+        "fim_bl": "2026-04-15",
+        "real": "2026-04-28",
+        "forecast": null
+      },
+      {
+        "etapa": "Documentacao entregue",
+        "geral": 38,
+        "mod": 32,
+        "moi": 6,
+        "inicio_bl": "2026-03-01",
+        "fim_bl": "2026-05-01",
+        "real": "2026-05-12",
+        "forecast": null
+      },
+      {
+        "etapa": "Integracao Concluida",
+        "geral": 28,
+        "mod": 24,
+        "moi": 4,
+        "inicio_bl": "2026-03-15",
+        "fim_bl": "2026-05-31",
+        "real": null,
+        "forecast": "2026-07-25"
+      },
+      {
+        "etapa": "Cracha Disponivel",
+        "geral": 12,
+        "mod": 10,
+        "moi": 2,
+        "inicio_bl": "2026-04-01",
+        "fim_bl": "2026-06-30",
+        "real": null,
+        "forecast": "2026-08-15"
+      }
+    ],
+    "comentarios": "Mobilizacao com atrasos pontuais nas etapas de exames e treinamentos. Integracao e cracha em forecast para agosto."
+  },
+  "equipamentos": {
+    "etapas": [
+      {
+        "etapa": "Previsto Contratual ate termino MOB",
+        "geral": 15,
+        "grande_porte": 5,
+        "pequeno_porte": 10,
+        "inicio_bl": "2026-01-05",
+        "fim_bl": "2026-08-31",
+        "real": null,
+        "forecast": null
+      },
+      {
+        "etapa": "Em mobilizacao",
+        "geral": 8,
+        "grande_porte": 3,
+        "pequeno_porte": 5,
+        "inicio_bl": "2026-01-10",
+        "fim_bl": "2026-02-28",
+        "real": "2026-02-15",
+        "forecast": null
+      },
+      {
+        "etapa": "Mobilizados (disponibilizados)",
+        "geral": 6,
+        "grande_porte": 2,
+        "pequeno_porte": 4,
+        "inicio_bl": "2026-01-20",
+        "fim_bl": "2026-03-20",
+        "real": "2026-03-28",
+        "forecast": null
+      },
+      {
+        "etapa": "Pre-comissionados",
+        "geral": 4,
+        "grande_porte": 2,
+        "pequeno_porte": 2,
+        "inicio_bl": "2026-02-01",
+        "fim_bl": "2026-04-10",
+        "real": null,
+        "forecast": "2026-07-30"
+      },
+      {
+        "etapa": "Documentacao entregue",
+        "geral": 3,
+        "grande_porte": 1,
+        "pequeno_porte": 2,
+        "inicio_bl": "2026-02-15",
+        "fim_bl": "2026-04-30",
+        "real": null,
+        "forecast": "2026-08-01"
+      },
+      {
+        "etapa": "Em Barao de Cocais",
+        "geral": 2,
+        "grande_porte": 1,
+        "pequeno_porte": 1,
+        "inicio_bl": "2026-03-01",
+        "fim_bl": "2026-05-31",
+        "real": null,
+        "forecast": "2026-08-15"
+      },
+      {
+        "etapa": "Comissionados",
+        "geral": 1,
+        "grande_porte": 0,
+        "pequeno_porte": 1,
+        "inicio_bl": "2026-04-01",
+        "fim_bl": "2026-07-31",
+        "real": null,
+        "forecast": "2026-09-01"
+      }
+    ],
+    "comentarios": "Equipamentos de grande porte com atraso na pre-comissionamento. Previsao de conclusao total para setembro/2026."
+  },
+  "canteiro": [
+    {
+      "item": "Layout canteiro",
+      "peso": 0.05,
+      "criterios": [
+        {"descricao": "Entregue", "peso": 0.5, "concluido": true},
+        {"descricao": "Aprovado", "peso": 0.5, "concluido": false}
+      ],
+      "inicio_bl": "2026-01-05",
+      "fim_bl": "2026-01-31",
+      "real": "2026-01-28",
+      "forecast": null
+    },
+    {
+      "item": "Montagem e construcao do canteiro (provisorio)",
+      "peso": 0.1,
+      "criterios": [
+        {"descricao": "Instalacao Container", "peso": 0.33, "concluido": true},
+        {"descricao": "Instalacao Banheiro Quimico", "peso": 0.33, "concluido": true},
+        {"descricao": "Instalacao Tenda", "peso": 0.34, "concluido": false}
+      ],
+      "inicio_bl": "2026-01-10",
+      "fim_bl": "2026-02-28",
+      "real": "2026-03-05",
+      "forecast": null
+    },
+    {
+      "item": "Montagem e construcao do canteiro (definitivo)",
+      "peso": 0.0,
+      "criterios": [],
+      "inicio_bl": "2026-03-01",
+      "fim_bl": "2026-06-30",
+      "real": null,
+      "forecast": "2026-09-01"
+    },
+    {
+      "item": "Mobilizacao de equipamentos para canteiro",
+      "peso": 0.25,
+      "criterios": [
+        {"descricao": "Caminhao Munck", "peso": 0.3, "concluido": true},
+        {"descricao": "Container", "peso": 0.4, "concluido": true},
+        {"descricao": "Gerador", "peso": 0.3, "concluido": false}
+      ],
+      "inicio_bl": "2026-01-15",
+      "fim_bl": "2026-03-15",
+      "real": "2026-03-10",
+      "forecast": null
+    },
+    {
+      "item": "Banheiro - Instalacoes sanitarias de canteiro",
+      "peso": 0.05,
+      "criterios": [
+        {"descricao": "Chegada no site", "peso": 0.3, "concluido": true},
+        {"descricao": "Operacional", "peso": 0.7, "concluido": false}
+      ],
+      "inicio_bl": "2026-01-10",
+      "fim_bl": "2026-02-15",
+      "real": "2026-02-20",
+      "forecast": null
+    },
+    {
+      "item": "Energia/TI - Rebaixamento e instalacoes eletricas",
+      "peso": 0.1,
+      "criterios": [
+        {"descricao": "Inicio das atividades", "peso": 0.3, "concluido": true},
+        {"descricao": "Operacional", "peso": 0.7, "concluido": false}
+      ],
+      "inicio_bl": "2026-02-01",
+      "fim_bl": "2026-04-30",
+      "real": "2026-05-10",
+      "forecast": null
+    },
+    {
+      "item": "Agua / Esgoto - Execucao de instal. de agua e esgoto",
+      "peso": 0.1,
+      "criterios": [
+        {"descricao": "Inicio das atividades", "peso": 0.3, "concluido": false},
+        {"descricao": "Operacional", "peso": 0.7, "concluido": false}
+      ],
+      "inicio_bl": "2026-02-15",
+      "fim_bl": "2026-05-31",
+      "real": null,
+      "forecast": "2026-08-15"
+    },
+    {
+      "item": "Incendio - Instalacoes de sistema de incendio",
+      "peso": 0.05,
+      "criterios": [
+        {"descricao": "Inicio das atividades", "peso": 0.3, "concluido": false},
+        {"descricao": "Operacional", "peso": 0.7, "concluido": false}
+      ],
+      "inicio_bl": "2026-03-01",
+      "fim_bl": "2026-06-30",
+      "real": null,
+      "forecast": "2026-08-30"
+    },
+    {
+      "item": "Fossa - Execucao de fossa / tratamento de esgoto",
+      "peso": 0.05,
+      "criterios": [
+        {"descricao": "Inicio das atividades", "peso": 0.3, "concluido": false},
+        {"descricao": "Operacional", "peso": 0.7, "concluido": false}
+      ],
+      "inicio_bl": "2026-02-15",
+      "fim_bl": "2026-05-15",
+      "real": null,
+      "forecast": "2026-08-15"
+    },
+    {
+      "item": "Refeicao - Execucao de refeitorio",
+      "peso": 0.15,
+      "criterios": [
+        {"descricao": "Chegada no site", "peso": 0.3, "concluido": true},
+        {"descricao": "Operacional", "peso": 0.7, "concluido": false}
+      ],
+      "inicio_bl": "2026-02-01",
+      "fim_bl": "2026-04-30",
+      "real": null,
+      "forecast": "2026-08-01"
+    },
+    {
+      "item": "APROVACAO",
+      "peso": 0.1,
+      "criterios": [
+        {"descricao": "Vistoria pela SSMA", "peso": 0.2, "concluido": false},
+        {"descricao": "Aprovacao pela Gestao do Contrato", "peso": 0.4, "concluido": false},
+        {"descricao": "Aceite pela SSMA", "peso": 0.4, "concluido": false}
+      ],
+      "inicio_bl": "2026-06-01",
+      "fim_bl": "2026-08-31",
+      "real": null,
+      "forecast": "2026-09-30"
+    }
+  ],
+  "subcontratadas": [
+    {
+      "empresa": "Container",
+      "peso": 0.2,
+      "criterios": [
+        {"descricao": "Documentacao entregue - cedula de contrato para Subcontratacao", "peso": 0.2, "concluido": true},
+        {"descricao": "Documentacao aprovacao cedula de contrato", "peso": 0.4, "concluido": true},
+        {"descricao": "Contratacao realizada/evidenciada pela subcontratada", "peso": 0.4, "concluido": false}
+      ],
+      "inicio_bl": "2026-01-10",
+      "fim_bl": "2026-02-28",
+      "real": "2026-03-05",
+      "forecast": null
+    },
+    {
+      "empresa": "Banheiro Quimico",
+      "peso": 0.1,
+      "criterios": [
+        {"descricao": "Documentacao entregue - cedula de contrato para Subcontratacao", "peso": 0.2, "concluido": true},
+        {"descricao": "Documentacao aprovacao cedula de contrato", "peso": 0.4, "concluido": false},
+        {"descricao": "Contratacao realizada/evidenciada pela subcontratada", "peso": 0.4, "concluido": false}
+      ],
+      "inicio_bl": "2026-01-10",
+      "fim_bl": "2026-02-15",
+      "real": "2026-02-12",
+      "forecast": null
+    },
+    {
+      "empresa": "Locacao Veiculos",
+      "peso": 0.1,
+      "criterios": [
+        {"descricao": "Documentacao entregue - cedula de contrato para Subcontratacao", "peso": 0.2, "concluido": true},
+        {"descricao": "Documentacao aprovacao cedula de contrato", "peso": 0.4, "concluido": true},
+        {"descricao": "Contratacao realizada/evidenciada pela subcontratada", "peso": 0.4, "concluido": true}
+      ],
+      "inicio_bl": "2026-01-15",
+      "fim_bl": "2026-02-28",
+      "real": "2026-02-25",
+      "forecast": null
+    },
+    {
+      "empresa": "Transporte de Mao de Obra",
+      "peso": 0.2,
+      "criterios": [
+        {"descricao": "Documentacao entregue - cedula de contrato para Subcontratacao", "peso": 0.2, "concluido": true},
+        {"descricao": "Documentacao aprovacao cedula de contrato", "peso": 0.1, "concluido": false},
+        {"descricao": "Contratacao realizada/evidenciada pela subcontratada", "peso": 0.3, "concluido": false},
+        {"descricao": "Crachas liberados", "peso": 0.4, "concluido": false}
+      ],
+      "inicio_bl": "2026-02-01",
+      "fim_bl": "2026-04-30",
+      "real": null,
+      "forecast": "2026-08-15"
+    },
+    {
+      "empresa": "Alimentacao",
+      "peso": 0.2,
+      "criterios": [
+        {"descricao": "Documentacao entregue - cedula de contrato para Subcontratacao", "peso": 0.2, "concluido": true},
+        {"descricao": "Documentacao aprovacao cedula de contrato", "peso": 0.4, "concluido": true},
+        {"descricao": "Contratacao realizada/evidenciada pela subcontratada", "peso": 0.4, "concluido": false}
+      ],
+      "inicio_bl": "2026-02-01",
+      "fim_bl": "2026-03-31",
+      "real": null,
+      "forecast": "2026-07-30"
+    },
+    {
+      "empresa": "Terraplenagem",
+      "peso": 0.2,
+      "criterios": [
+        {"descricao": "Documentacao entregue - cedula de contrato para Subcontratacao", "peso": 0.1, "concluido": false},
+        {"descricao": "Documentacao aprovacao cedula de contrato", "peso": 0.3, "concluido": false},
+        {"descricao": "Contratacao realizada/evidenciada pela subcontratada", "peso": 0.3, "concluido": false},
+        {"descricao": "Crachas liberados", "peso": 0.3, "concluido": false}
+      ],
+      "inicio_bl": "2026-03-01",
+      "fim_bl": "2026-06-30",
+      "real": null,
+      "forecast": "2026-09-15"
+    }
+  ]
+}

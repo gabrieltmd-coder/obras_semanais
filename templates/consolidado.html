@@ -24,7 +24,7 @@ body {
 
 .gc { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.9rem 1rem; }
 .gc-title {
-    font-family:'IBM Plex Mono',monospace; font-size:.62rem; font-weight:500; text-transform:uppercase;
+    font-family:'IBM Plex Mono',monospace; font-size:1.24rem; font-weight:500; text-transform:uppercase;
     letter-spacing:.12em; color:rgba(255,255,255,.5);
     margin-bottom:.7rem; padding-bottom:.55rem; border-bottom:1px solid rgba(255,255,255,.07);
     display:flex; align-items:center; justify-content:space-between;
@@ -1012,6 +1012,8 @@ Chart.defaults.set('plugins.datalabels', {
 });
 
 // Curva S consolidada
+let _chartCurva = null, _chartCurvaFis = null, _chartMedido = null, _chartPct = null;
+
 if (document.getElementById('chartCurva') && LABELS.length) {
     const _finShow = _sparse(CURVA_ACUM);
     const dsFin = [
@@ -1024,7 +1026,7 @@ if (document.getElementById('chartCurva') && LABELS.length) {
         { label:'Replanejado', data:CURVA_REPL, borderColor:'#FF8FA3', borderWidth:1.5, borderDash:[2,3], pointRadius:0, fill:false, tension:.4 });
     dsFin.push(
         { label:'Linha de Base', data:CURVA_BASE, borderColor:'#46C26A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:.4 });
-    new Chart(document.getElementById('chartCurva'), {
+    _chartCurva = new Chart(document.getElementById('chartCurva'), {
         type:'line',
         data:{ labels:LABELS, datasets:dsFin },
         options:{ responsive:true, maintainAspectRatio:false, animation:{duration:600},
@@ -1053,7 +1055,7 @@ if (document.getElementById('chartCurvaFis') && LABELS.length) {
         { label:'Replanejado', data:CURVA_FIS_REPL, borderColor:'#FF8FA3', borderWidth:1.5, borderDash:[2,3], pointRadius:0, fill:false, tension:.4 });
     dsFis.push(
         { label:'Linha de Base', data:CURVA_FIS_BASE, borderColor:'#46C26A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:.4 });
-    new Chart(document.getElementById('chartCurvaFis'), {
+    _chartCurvaFis = new Chart(document.getElementById('chartCurvaFis'), {
         type:'line',
         data:{ labels:LABELS, datasets:dsFis },
         options:{ responsive:true, maintainAspectRatio:false, animation:{duration:600},
@@ -1076,7 +1078,7 @@ const _chartH = n => Math.max(180, n * _barH + 24);
 // Medição por contratada (barra horizontal)
 if (document.getElementById('chartMedido') && BAR_LABELS.length) {
     document.getElementById('chartMedidoWrap').style.height = _chartH(BAR_LABELS.length) + 'px';
-    new Chart(document.getElementById('chartMedido'), {
+    _chartMedido = new Chart(document.getElementById('chartMedido'), {
         type:'bar',
         data:{ labels:BAR_LABELS, datasets:[{ label:'Medição (R$)', data:BAR_MEDIDO, backgroundColor:CORES, borderRadius:4, borderSkipped:false }]},
         options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:{duration:600}, layout:{padding:{right:55}},
@@ -1093,7 +1095,7 @@ if (document.getElementById('chartMedido') && BAR_LABELS.length) {
 // % Executado por contratada (barra horizontal)
 if (document.getElementById('chartPct') && BAR_LABELS.length) {
     document.getElementById('chartPctWrap').style.height = _chartH(BAR_LABELS.length) + 'px';
-    new Chart(document.getElementById('chartPct'), {
+    _chartPct = new Chart(document.getElementById('chartPct'), {
         type:'bar',
         data:{ labels:BAR_LABELS, datasets:[{ label:'% Executado', data:BAR_PCT,
             backgroundColor: BAR_PCT.map(p => p>=80?'rgba(70,194,106,.9)':(p>=40?'rgba(240,179,77,.9)':'rgba(43,178,238,.9)')),
@@ -1120,13 +1122,20 @@ const SUP_POR_ETAPA    = {{ sup_por_etapa_data|safe }};
 const SUP_STAGE_LABELS = {{ sup_stage_labels|safe }};
 const SUP_STAGE_CORES  = {{ sup_stage_cores|safe }};
 
+// Traduções EN dos estágios (sem depender de i18n.js)
+const _SUP_EN = { prospeccao:'Prospecting', qualificacao:'Qualification', proposta:'Proposal', negociacao:'Negotiation', contrato:'Contract' };
+const _SUP_STRINGS_EN = { etapa:'Stage', dias:'Days in this stage', contratada:'Contractor', vigencia:'Period', responsavel:'Responsible', sem_procs:'No processes in this stage.' };
+const _isEN = () => document.documentElement.lang === 'en';
+const _supLabel = k => _isEN() ? (_SUP_EN[k] || SUP_STAGE_LABELS[k] || k) : (SUP_STAGE_LABELS[k] || k);
+const _s = key => _isEN() ? (_SUP_STRINGS_EN[key] || key) : ({ etapa:'Etapa', dias:'Dias nessa etapa', contratada:'Contratada', vigencia:'Vigência', responsavel:'Responsável', sem_procs:'Nenhum processo nesta etapa.' }[key] || key);
+
 let _supEtapaChart = null;
 
 if (document.getElementById('chartSupEtapa') && SUP_ETAPA_VALS.reduce((a,b)=>a+b,0) > 0) {
     _supEtapaChart = new Chart(document.getElementById('chartSupEtapa'), {
         type: 'bar',
         data: {
-            labels: SUP_ETAPA_LABELS,
+            labels: SUP_ETAPA_KEYS.map(_supLabel),
             datasets: [{
                 label: 'Processos',
                 data: SUP_ETAPA_VALS,
@@ -1145,7 +1154,7 @@ if (document.getElementById('chartSupEtapa') && SUP_ETAPA_VALS.reduce((a,b)=>a+b
             onHover: (evt, els) => { if (evt.native) evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
             plugins: {
                 legend: { display: false },
-                tooltip: { callbacks: { label: ctx => '  ' + ctx.parsed.x + ' processo(s) — clique p/ detalhes' } },
+                tooltip: { callbacks: { label: ctx => '  ' + ctx.parsed.x + ' ' + (_isEN() ? 'process(es)' : 'processo(s)') } },
                 datalabels: {
                     anchor: 'end', align: 'end', clip: false,
                     color: '#fff', font: { size: 11, weight: 700, family: "'IBM Plex Mono',monospace" },
@@ -1183,7 +1192,7 @@ function _corDias(d){
 function mostrarCardEtapa(idx) {
     const key = SUP_ETAPA_KEYS[idx];
     const procs = (SUP_POR_ETAPA[key] || []).slice();
-    const stLabel = SUP_STAGE_LABELS[key] || key;
+    const stLabel = _supLabel(key);
     const cor = SUP_STAGE_CORES[key] || '#2BB2EE';
 
     // Destaca a barra selecionada no funil
@@ -1194,13 +1203,13 @@ function mostrarCardEtapa(idx) {
         _supEtapaChart.update('none');
     }
 
-    document.getElementById('card-etapa-titulo').textContent = 'Etapa: ' + stLabel;
+    document.getElementById('card-etapa-titulo').textContent = _s('etapa') + ': ' + stLabel;
     document.getElementById('cic-counter').textContent =
         procs.length + ' processo' + (procs.length === 1 ? '' : 's');
 
     const grid = document.getElementById('grid-processos-pipeline');
     if (!procs.length) {
-        grid.innerHTML = '<div class="proc-empty-msg">Nenhum processo nesta etapa.</div>';
+        grid.innerHTML = '<div class="proc-empty-msg">' + _s('sem_procs') + '</div>';
     } else {
         // Todos os processos da etapa, lado a lado (sem paginação)
         grid.innerHTML = procs.map(p => {
@@ -1212,11 +1221,11 @@ function mostrarCardEtapa(idx) {
                 <h4>${_esc(p.descricao) || '—'}</h4>
                 ${p.objeto ? `<div class="pm-obj">${_esc(p.objeto)}</div>` : ''}
                 <div class="pm-val">${_fmtBRLsup(p.valor_estimado)}</div>
-                <div class="pm-row"><span class="pm-k">Dias nessa etapa</span>
+                <div class="pm-row"><span class="pm-k">${_s('dias')}</span>
                     <span class="pm-dias" style="background:${cd}22; color:${cd}; border:1px solid ${cd}66;">${diasTxt}</span></div>
-                <div class="pm-row"><span class="pm-k">Contratada</span><span class="pm-v">${_esc(p.contratada) || '—'}</span></div>
-                <div class="pm-row"><span class="pm-k">Vigência</span><span class="pm-v">${vig}</span></div>
-                <div class="pm-row"><span class="pm-k">Responsável</span><span class="pm-v">${_esc(p.responsavel) || '—'}</span></div>
+                <div class="pm-row"><span class="pm-k">${_s('contratada')}</span><span class="pm-v">${_esc(p.contratada) || '—'}</span></div>
+                <div class="pm-row"><span class="pm-k">${_s('vigencia')}</span><span class="pm-v">${vig}</span></div>
+                <div class="pm-row"><span class="pm-k">${_s('responsavel')}</span><span class="pm-v">${_esc(p.responsavel) || '—'}</span></div>
             </div>`;
         }).join('');
     }
@@ -1268,5 +1277,30 @@ if (document.getElementById('chartSupArea') && SUP_AREA_VALS.reduce((a,b)=>a+b,0
         }
     });
 }
+
+function _updateConsChartLangs() {
+    const isEN = _isEN();
+    const EN = {
+        'Realizado (R$)':'Realized (R$)', 'Realizado (%)':'Realized (%)',
+        'Forecast (R$)':'Forecast (R$)', 'Forecast (%)':'Forecast (%)',
+        'Replanejado':'Replanned', 'Linha de Base':'Baseline',
+        'Medição (R$)':'Measurement (R$)', '% Executado':'% Executed'
+    };
+    const PT = Object.fromEntries(Object.entries(EN).map(([k,v])=>[v,k]));
+    [_chartCurva, _chartCurvaFis, _chartMedido, _chartPct].forEach(ch => {
+        if (!ch) return;
+        ch.data.datasets.forEach(ds => { ds.label = (isEN ? EN[ds.label] : PT[ds.label]) || ds.label; });
+        ch.update('none');
+    });
+}
+_updateConsChartLangs();
+
+new MutationObserver(() => {
+    if (_supEtapaChart) {
+        _supEtapaChart.data.labels = SUP_ETAPA_KEYS.map(_supLabel);
+        _supEtapaChart.update('none');
+    }
+    _updateConsChartLangs();
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 </script>
 {% endblock %}

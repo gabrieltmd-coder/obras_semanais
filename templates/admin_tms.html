@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Configurações TMS{% endblock %}
+{% block title %}Dados TMS{% endblock %}
 {% block page_icon %}<i class="bi bi-gear-wide-connected"></i>{% endblock %}
-{% block page_title %}Configurações TMS{% endblock %}
-{% block breadcrumb %}Programa Mãe — configurações globais{% endblock %}
+{% block page_title %}<span data-i18n="tms.page_title">Dados TMS</span>{% endblock %}
+{% block breadcrumb %}<span data-i18n="tms.breadcrumb">Dados TMS — Programa Mãe</span>{% endblock %}
 
 {% block content %}
 <style>
@@ -244,6 +244,94 @@
         <a href="{{ url_for('admin') }}" class="btn btn-secondary-rumo">Cancelar</a>
     </div>
 </form>
+
+<!-- ══════════════ SAÚDE E SEGURANÇA ══════════════ -->
+<div class="card-rumo mb-4" id="saude-seguranca">
+    <div class="card-header" style="display:flex;align-items:center;gap:.5rem;">
+        <i class="bi bi-heart-pulse-fill" style="color:var(--danger);"></i>
+        <span data-i18n="ss.titulo">Saúde e Segurança</span>
+    </div>
+    <div class="p-4">
+        <p style="font-size:.78rem;color:var(--tms-muted);margin-bottom:1.1rem;" data-i18n="ss.descricao">
+            Indicadores mensais de segurança do trabalho. Selecione o mês de referência e informe os
+            números do período. Salvar um mês já registrado atualiza os valores.
+        </p>
+
+        <!-- FORMULÁRIO MENSAL (form separado do principal) -->
+        <form method="post" action="{{ url_for('admin_tms_saude') }}" class="mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3 col-6">
+                    <label class="form-label" data-i18n="ss.mes_ref">Mês/Ano de referência</label>
+                    <input type="month" name="mes_ref" class="form-control" required>
+                </div>
+                <div class="col-md-2 col-6">
+                    <label class="form-label" data-i18n="ss.saf">SAF</label>
+                    <input type="number" name="saf" class="form-control" min="0" step="1" value="0" required
+                           title="Severidade de Acidentes com Afastamento">
+                    <small style="font-size:.62rem;color:var(--tms-muted);" data-i18n="ss.saf_full">Severidade de Acidentes c/ Afastamento</small>
+                </div>
+                <div class="col-md-2 col-6">
+                    <label class="form-label" data-i18n="ss.caf">CAF</label>
+                    <input type="number" name="caf" class="form-control" min="0" step="1" value="0" required
+                           title="Casos de Acidentes com Afastamento">
+                    <small style="font-size:.62rem;color:var(--tms-muted);" data-i18n="ss.caf_full">Casos de Acidentes c/ Afastamento</small>
+                </div>
+                <div class="col-md-2 col-6">
+                    <label class="form-label" data-i18n="ss.ps">Primeiros Socorros</label>
+                    <input type="number" name="primeiros_socorros" class="form-control" min="0" step="1" value="0" required>
+                </div>
+                <div class="col-md-3 col-12">
+                    <button type="submit" class="btn btn-primary-rumo w-100">
+                        <i class="bi bi-floppy me-1"></i><span data-i18n="ss.salvar">Salvar</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- TABELA POR MÊS -->
+        {% set ss_lista = cfg.get('saude_seguranca', []) %}
+        {% if ss_lista %}
+        <div style="overflow-x:auto;border:1px solid var(--tms-border);border-radius:8px;">
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+                <thead>
+                    <tr style="background:var(--tms-bg);">
+                        <th style="padding:.5rem .7rem;font-size:.65rem;text-transform:uppercase;color:var(--tms-muted);font-weight:700;letter-spacing:.06em;text-align:left;" data-i18n="ss.col_mes">Mês/Ano</th>
+                        <th style="padding:.5rem .7rem;font-size:.65rem;text-transform:uppercase;color:var(--tms-muted);font-weight:700;letter-spacing:.06em;text-align:center;">SAF</th>
+                        <th style="padding:.5rem .7rem;font-size:.65rem;text-transform:uppercase;color:var(--tms-muted);font-weight:700;letter-spacing:.06em;text-align:center;">CAF</th>
+                        <th style="padding:.5rem .7rem;font-size:.65rem;text-transform:uppercase;color:var(--tms-muted);font-weight:700;letter-spacing:.06em;text-align:center;" data-i18n="ss.ps">Primeiros Socorros</th>
+                        <th style="width:44px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ss_lista %}
+                    <tr style="border-top:1px solid var(--tms-border);">
+                        <td style="padding:.5rem .7rem;font-weight:700;color:var(--tms-dark);font-family:'IBM Plex Mono',monospace;">
+                            <i class="bi bi-calendar-month me-1" style="color:var(--tms-cyan);"></i>{{ item.mes_ref[5:7] }}/{{ item.mes_ref[:4] }}
+                        </td>
+                        <td style="padding:.5rem .7rem;text-align:center;font-weight:700;">{{ item.saf }}</td>
+                        <td style="padding:.5rem .7rem;text-align:center;font-weight:700;">{{ item.caf }}</td>
+                        <td style="padding:.5rem .7rem;text-align:center;font-weight:700;">{{ item.primeiros_socorros }}</td>
+                        <td style="padding:.4rem;text-align:center;">
+                            <form method="post" action="{{ url_for('admin_tms_saude_excluir', mes_ref=item.mes_ref) }}"
+                                  onsubmit="return confirm('Remover o registro de {{ item.mes_ref[5:7] }}/{{ item.mes_ref[:4] }}?');" style="display:inline;">
+                                <button type="submit" class="btn btn-sm" style="color:var(--danger);border:none;background:none;padding:.15rem .35rem;" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:1.6rem;color:var(--tms-muted);font-size:.82rem;background:var(--tms-bg);border-radius:8px;border:1px dashed var(--tms-border);">
+            <i class="bi bi-heart-pulse" style="font-size:1.8rem;display:block;margin-bottom:.5rem;opacity:.35;"></i>
+            <span data-i18n="ss.vazio">Nenhum registro de Saúde e Segurança. Preencha o formulário acima para começar.</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

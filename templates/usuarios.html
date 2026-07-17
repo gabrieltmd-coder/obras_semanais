@@ -104,6 +104,7 @@
                             <option value="contratada_rw">Contratada — criar novos registros e visualizar</option>
                             <option value="staff">Equipe interna — lançamento de dados</option>
                             <option value="rumo">RUMO — acesso total (consolidado), não altera masters</option>
+                            <option value="mobilizacao">Mobilização — acesso exclusivo ao módulo de mobilização</option>
                             {% if not current_user or current_user.role != 'rumo' %}
                             <option value="master">Master — acesso total, sem restrições</option>
                             {% endif %}
@@ -161,6 +162,7 @@
                             <option value="contratada_rw">Contratada — criar novos registros e visualizar</option>
                             <option value="staff">Equipe interna — lançamento de dados</option>
                             <option value="rumo">RUMO — acesso total (consolidado), não altera masters</option>
+                            <option value="mobilizacao">Mobilização — acesso exclusivo ao módulo de mobilização</option>
                             {% if not current_user or current_user.role != 'rumo' %}
                             <option value="master">Master — acesso total, sem restrições</option>
                             {% endif %}
@@ -238,6 +240,8 @@
                         <span class="badge" style="background:rgba(155,89,182,.15); color:#8e44ad; font-size:.68rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">Master</span>
                         {% elif u.role == 'rumo' %}
                         <span class="badge" style="background:rgba(0,174,239,.15); color:#0092c8; font-size:.68rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">RUMO</span>
+                        {% elif u.role == 'mobilizacao' %}
+                        <span class="badge" style="background:rgba(255,112,67,.15); color:#c94a1a; font-size:.68rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">Mobilização</span>
                         {% elif u.role == 'staff' %}
                         <span class="badge" style="background:rgba(0,174,239,.12); color:#005f8a; font-size:.68rem; border-radius:6px; padding:.25rem .55rem; font-weight:700;">Equipe interna</span>
                         {% elif u.role == 'contratada_rw' %}
@@ -360,7 +364,7 @@ const CONTRATOS_POR_CONTRATADA = {{ contratos_por_contratada|tojson }};
 
 function toggleContratada() {
     const tipo = document.getElementById('tipoAcesso').value;
-    const semVinculo = (tipo === 'staff' || tipo === 'master' || tipo === 'rumo');
+    const semVinculo = (tipo === 'staff' || tipo === 'master' || tipo === 'rumo' || tipo === 'mobilizacao');
     document.getElementById('wrapContratada').style.display = semVinculo ? 'none' : '';
     document.getElementById('wrapContrato').style.display   = semVinculo ? 'none' : '';
 }
@@ -385,7 +389,7 @@ popularContratos();
 // ── Editar permissões ──
 function editToggleContratada() {
     const tipo = document.getElementById('editTipo').value;
-    const semVinculo = (tipo === 'staff' || tipo === 'master' || tipo === 'rumo');
+    const semVinculo = (tipo === 'staff' || tipo === 'master' || tipo === 'rumo' || tipo === 'mobilizacao');
     document.getElementById('editWrapContratada').style.display = semVinculo ? 'none' : '';
     document.getElementById('editWrapContrato').style.display   = semVinculo ? 'none' : '';
 }

@@ -153,6 +153,71 @@
         .user-menu .dropdown-item.item-danger i { color: #ff6b81; }
         .user-menu .dropdown-divider { border-color: rgba(255,255,255,.12); margin: .3rem .2rem; }
 
+        /* ── Preview chip ── */
+        .nav-preview-chip {
+            display: inline-flex; align-items: center; gap: .38rem;
+            color: rgba(255,255,255,.55); font-family: var(--mono);
+            font-size: .62rem; font-weight: 500; letter-spacing: .05em;
+            padding: .28rem .6rem; margin-left: .3rem;
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.14); border-radius: 20px; cursor: pointer;
+            transition: color .15s, background .15s, border-color .15s;
+        }
+        .nav-preview-chip:hover, .nav-preview-chip[aria-expanded="true"] {
+            color: #fff; background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.28);
+        }
+        .nav-preview-chip.active {
+            color: #ffe0b2; background: rgba(255,112,67,.18); border-color: rgba(255,112,67,.5);
+        }
+        .nav-preview-chip i { font-size: .78rem; }
+        .nav-preview-chip .chev { color: rgba(255,255,255,.4); font-size: .52rem; margin-left: .1rem; }
+
+        /* Preview dropdown menu */
+        .preview-menu.dropdown-menu {
+            background: #0a2342; border: 1px solid rgba(255,255,255,.12);
+            border-radius: 10px; padding: .35rem; min-width: 220px;
+            box-shadow: 0 12px 34px rgba(0,0,0,.45);
+        }
+        .preview-menu-header {
+            display: block; font-family: var(--mono); font-size: .58rem; font-weight: 600;
+            letter-spacing: .14em; text-transform: uppercase;
+            color: rgba(255,255,255,.3); padding: .4rem .7rem .5rem;
+        }
+        .preview-menu .dropdown-item.preview-item {
+            color: rgba(255,255,255,.8); font-size: .8rem; border-radius: 7px;
+            padding: .48rem .7rem; display: flex; align-items: center; gap: .6rem;
+        }
+        .preview-menu .dropdown-item.preview-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+        .preview-menu .dropdown-item.preview-item.selected {
+            background: rgba(255,112,67,.12); color: #ff8a65;
+        }
+        .preview-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .preview-menu .dropdown-item.preview-reset {
+            color: rgba(255,255,255,.55); font-size: .76rem; border-radius: 7px;
+            padding: .45rem .7rem; display: flex; align-items: center; gap: .55rem;
+        }
+        .preview-menu .dropdown-item.preview-reset:hover { background: rgba(255,255,255,.06); color: #fff; }
+        .preview-menu .dropdown-item.preview-reset i { color: #FF7043; font-size: .82rem; }
+        .preview-menu .dropdown-divider { border-color: rgba(255,255,255,.12); margin: .3rem .2rem; }
+
+        /* Banner de aviso de preview ativo */
+        .preview-banner {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+            background: linear-gradient(90deg, #c94a1a, #FF7043);
+            padding: .32rem 1rem; display: flex; align-items: center; justify-content: center; gap: 1rem;
+            font-family: var(--mono); font-size: .68rem; font-weight: 600;
+            letter-spacing: .08em; text-transform: uppercase; color: #fff;
+            box-shadow: 0 -4px 20px rgba(255,112,67,.35);
+        }
+        .preview-banner a {
+            color: rgba(255,255,255,.8); text-decoration: none;
+            background: rgba(0,0,0,.2); padding: .18rem .6rem; border-radius: 4px;
+            transition: background .15s;
+        }
+        .preview-banner a:hover { background: rgba(0,0,0,.4); color: #fff; }
+
         .btn-export {
             background: transparent;
             color: #fff !important;
@@ -452,8 +517,10 @@
             color: rgba(255,255,255,.4);
             font-family: var(--mono);
             font-size: .62rem; text-align: center; padding: 1rem;
-            margin-top: 3rem; letter-spacing: .14em; text-transform: uppercase;
+            margin-top: 3rem;
+            display: flex; flex-direction: column; align-items: center; gap: .6rem;
         }
+        .app-footer .footer-line { letter-spacing: .14em; text-transform: uppercase; }
 
         /* ── DASHBOARD HELPERS (light variants) ── */
         .dash-section-label {
@@ -551,6 +618,26 @@
         }
         .btn-back-header:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 
+        /* ── SELETOR DE IDIOMA (rodapé, compacto) ── */
+        .lang-toggle {
+            display: inline-flex; align-items: center; gap: 1px;
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14);
+            border-radius: 999px; padding: 1px; flex-shrink: 0;
+        }
+        .lang-btn {
+            display: inline-flex; align-items: center; gap: .28rem;
+            background: transparent; border: none; cursor: pointer;
+            border-radius: 999px; padding: .12rem .4rem;
+            color: rgba(255,255,255,.5);
+            font-family: var(--mono); font-size: .56rem; font-weight: 700; letter-spacing: .06em;
+            text-transform: none; transition: all .16s var(--ease);
+        }
+        .lang-btn svg { border-radius: 2px; display: block; opacity: .55; transition: opacity .16s; box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
+        .lang-btn:hover { color: rgba(255,255,255,.85); }
+        .lang-btn:hover svg { opacity: .85; }
+        .lang-btn.active { background: rgba(255,255,255,.92); color: var(--ink); }
+        .lang-btn.active svg { opacity: 1; }
+
         @media (max-width: 768px) {
             .navbar-rumo { padding: 0 1rem; }
             .nav-link-rumo { margin: 0 .3rem; }
@@ -576,36 +663,90 @@
     {% set auth_page = request.endpoint in ['login', 'esqueci_senha', 'redefinir_senha'] %}
     <div class="d-flex align-items-center gap-1">
         {% if current_user and not auth_page %}
-        <!-- Páginas do portal — sempre visíveis em todas as páginas -->
-        {% if current_user.role in ['admin', 'master', 'rumo'] %}
+        {% if view_role == 'mobilizacao' %}
+        <!-- Perfil MOBILIZAÇÃO: links do módulo -->
+        <a href="{{ url_for('mobilizacao') }}"
+           class="nav-link-rumo {% if request.endpoint == 'mobilizacao' %}active{% endif %}">
+            <i class="bi bi-people-fill" style="color:#FF7043;"></i>Dashboard
+        </a>
+        <a href="{{ url_for('mobilizacao_documentos') }}"
+           class="nav-link-rumo {% if request.endpoint == 'mobilizacao_documentos' %}active{% endif %}">
+            <i class="bi bi-file-earmark-text" style="color:#FF7043;"></i>Documentos
+        </a>
+        <a href="{{ url_for('mobilizacao_config') }}"
+           class="nav-link-rumo {% if request.endpoint == 'mobilizacao_config' %}active{% endif %}">
+            <i class="bi bi-gear" style="color:#FF7043;"></i>Config.
+        </a>
+        {% else %}
+        <!-- Páginas do portal — visíveis para os demais perfis -->
+        {% if view_role in ['admin', 'master', 'rumo'] %}
         <a href="{{ url_for('consolidado') }}"
            class="nav-link-rumo {% if request.endpoint == 'consolidado' %}active{% endif %}">
-            <i class="bi bi-grid-1x2"></i>Consolidado
+            <i class="bi bi-grid-1x2"></i><span data-i18n="nav.consolidado">Consolidado</span>
         </a>
         {% endif %}
         <a href="{{ url_for('dashboard') }}"
            class="nav-link-rumo {% if request.endpoint == 'dashboard' %}active{% endif %}">
-            <i class="bi bi-buildings"></i>Contratadas
+            <i class="bi bi-buildings"></i><span data-i18n="nav.contratadas">Contratadas</span>
         </a>
         <a href="{{ url_for('financeiro') }}"
            class="nav-link-rumo {% if request.endpoint == 'financeiro' %}active{% endif %}">
-            <i class="bi bi-currency-dollar"></i>Financeiro
+            <i class="bi bi-currency-dollar"></i><span data-i18n="nav.financeiro">Financeiro</span>
         </a>
         <a href="{{ url_for('index') }}"
            class="nav-link-rumo {% if request.endpoint == 'index' %}active{% endif %}">
-            <i class="bi bi-grid-3x3-gap"></i>Registros
+            <i class="bi bi-grid-3x3-gap"></i><span data-i18n="nav.registros">Registros</span>
         </a>
         <a href="{{ url_for('mas_dashboard') }}"
            class="nav-link-rumo {% if request.endpoint == 'mas_dashboard' %}active{% endif %}">
-            <i class="bi bi-kanban" style="color:#20C9B0;"></i>MAS
+            <i class="bi bi-kanban" style="color:#20C9B0;"></i><span data-i18n="nav.mas">MAS</span>
         </a>
-
-        {% if current_user.role in ['admin', 'master', 'rumo'] %}
+        {% if view_role in ['admin', 'master', 'rumo'] %}
         <a href="{{ url_for('admin') }}"
            class="nav-link-rumo {% if request.endpoint and (request.endpoint in ['admin', 'admin_contrato', 'admin_novo_contrato'] or request.endpoint.startswith('admin_suprimento')) %}active{% endif %}">
-            <i class="bi bi-folder2-open" style="color:var(--green);"></i>Contratos
+            <i class="bi bi-folder2-open" style="color:var(--green);"></i><span data-i18n="nav.contratos">Contratos</span>
         </a>
         {% endif %}
+        {% endif %}
+
+        <!-- Preview de perfil (só para admin/master/rumo reais) -->
+        {% if current_user.role in ['admin', 'master', 'rumo'] %}
+        <div class="dropdown">
+            <button class="nav-preview-chip {% if preview_role %}active{% endif %}"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                    title="Visualizar como perfil">
+                <i class="bi bi-eye{% if preview_role %}-fill{% endif %}"></i>
+                {% if preview_role %}
+                    {% for r,label,_ in all_roles %}{% if r == preview_role %}{{ label }}{% endif %}{% endfor %}
+                {% else %}
+                    Vista
+                {% endif %}
+                <i class="bi bi-chevron-down chev"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end preview-menu">
+                <li><span class="preview-menu-header">Visualizar como perfil</span></li>
+                {% for role_val, role_label, role_color in all_roles %}
+                <li>
+                    <a class="dropdown-item preview-item {% if preview_role == role_val %}selected{% endif %}"
+                       href="{{ url_for('set_preview_role', role=role_val) }}">
+                        <span class="preview-dot" style="background:{{ role_color }};"></span>
+                        {{ role_label }}
+                        {% if preview_role == role_val %}<i class="bi bi-check2 ms-auto"></i>{% endif %}
+                    </a>
+                </li>
+                {% endfor %}
+                {% if preview_role %}
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item preview-reset" href="{{ url_for('reset_preview_role') }}">
+                        <i class="bi bi-arrow-counterclockwise"></i>Resetar para meu perfil
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+
         {% endif %}
         {% if current_user %}
         <!-- Menu do usuário (dropdown ao clicar no e-mail) -->
@@ -614,22 +755,33 @@
                 <i class="bi bi-person-circle"></i>{{ current_user.nome or current_user.email }}
                 <i class="bi bi-chevron-down chev"></i>
             </button>
+            {% if view_role == 'mobilizacao' and not preview_role %}
             <ul class="dropdown-menu dropdown-menu-end user-menu">
-                {% if current_user.role in ['admin', 'master', 'rumo'] %}
-                <li><a class="dropdown-item" href="{{ url_for('admin_usuarios') }}"><i class="bi bi-people"></i>Usuários</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('admin_dados') }}"><i class="bi bi-database"></i>Dados</a></li>
-                {% endif %}
-                {% if current_user.role == 'master' %}
-                <li><a class="dropdown-item" href="{{ url_for('admin_tms') }}"><i class="bi bi-gear-wide-connected"></i>Config. TMS</a></li>
-                {% endif %}
-                {% if current_user.role in ['admin', 'master', 'rumo'] %}<li><hr class="dropdown-divider"></li>{% endif %}
                 <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right" style="color:#ff7a89;"></i>Sair</a></li>
             </ul>
+            {% elif view_role == 'mobilizacao' and preview_role %}
+            <ul class="dropdown-menu dropdown-menu-end user-menu">
+                <li><a class="dropdown-item" href="{{ url_for('reset_preview_role') }}"><i class="bi bi-arrow-counterclockwise" style="color:#FF7043;"></i>Sair da visualização</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right" style="color:#ff7a89;"></i>Sair</a></li>
+            </ul>
+            {% else %}
+            <ul class="dropdown-menu dropdown-menu-end user-menu">
+                {% if current_user.role in ['admin', 'master', 'rumo'] %}
+                <li><a class="dropdown-item" href="{{ url_for('admin_usuarios') }}"><i class="bi bi-people"></i><span data-i18n="nav.usuarios">Usuários</span></a></li>
+                <li><a class="dropdown-item" href="{{ url_for('admin_dados') }}"><i class="bi bi-database"></i><span data-i18n="nav.dados">Dados</span></a></li>
+                {% endif %}
+                {% if current_user.role == 'master' %}
+                <li><a class="dropdown-item" href="{{ url_for('admin_tms') }}"><i class="bi bi-gear-wide-connected"></i><span data-i18n="nav.dados_tms">Dados TMS</span></a></li>
+                {% endif %}
+                {% if current_user.role in ['admin', 'master', 'rumo'] %}<li><hr class="dropdown-divider"></li>{% endif %}
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right" style="color:#ff7a89;"></i><span data-i18n="nav.sair">Sair</span></a></li>
+            </ul>
+            {% endif %}
         </div>
         {% elif not auth_page %}
         <a href="{{ url_for('login') }}"
            class="nav-link-rumo {% if request.endpoint == 'login' %}active{% endif %}">
-            <i class="bi bi-person"></i>Entrar
+            <i class="bi bi-person"></i><span data-i18n="nav.entrar">Entrar</span>
         </a>
         {% endif %}
     </div>
@@ -648,7 +800,7 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             <button onclick="history.back()" class="btn-back-header" title="Voltar">
-                <i class="bi bi-arrow-left"></i><span>Voltar</span>
+                <i class="bi bi-arrow-left"></i><span data-i18n="nav.voltar">Voltar</span>
             </button>
             {% block page_actions %}{% endblock %}
         </div>
@@ -676,10 +828,313 @@
 </main>
 
 <footer class="app-footer">
-    TMS · Registro Semanal de Progresso de Obras · {{ now.year if now else '2026' }}
+    <div class="footer-line">
+        TMS · <span data-i18n="footer.tagline">Registro Semanal de Progresso de Obras</span> · {{ now.year if now else '2026' }}
+    </div>
+    <!-- SELETOR DE IDIOMA PT/EN -->
+    <div class="lang-toggle" role="group" aria-label="Idioma / Language">
+        <button type="button" class="lang-btn" data-lang="pt" title="Português (Brasil)" aria-label="Português">
+            <svg viewBox="0 0 28 20" width="16" height="11" aria-hidden="true">
+                <rect width="28" height="20" fill="#009C3B"/>
+                <polygon points="14,2.5 25.5,10 14,17.5 2.5,10" fill="#FFDF00"/>
+                <circle cx="14" cy="10" r="4.3" fill="#002776"/>
+                <path d="M9.9 9.1a4.3 4.3 0 0 0 8.2 1.9" fill="none" stroke="#fff" stroke-width="1"/>
+            </svg>
+            <span class="lang-code">PT</span>
+        </button>
+        <button type="button" class="lang-btn" data-lang="en" title="English (US)" aria-label="English">
+            <svg viewBox="0 0 28 20" width="16" height="11" aria-hidden="true">
+                <rect width="28" height="20" fill="#fff"/>
+                <g fill="#B22234">
+                    <rect width="28" height="1.54" y="0"/>
+                    <rect width="28" height="1.54" y="3.08"/>
+                    <rect width="28" height="1.54" y="6.15"/>
+                    <rect width="28" height="1.54" y="9.23"/>
+                    <rect width="28" height="1.54" y="12.31"/>
+                    <rect width="28" height="1.54" y="15.38"/>
+                    <rect width="28" height="1.54" y="18.46"/>
+                </g>
+                <rect width="12" height="10.77" fill="#3C3B6E"/>
+            </svg>
+            <span class="lang-code">EN</span>
+        </button>
+    </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ── i18n PT→EN (client-side, persistente) — traduz todo texto visível por varredura de nós ── -->
+<script>
+(function () {
+    // Dicionário Português → Inglês (chave = texto exato exibido em PT).
+    // Nomes próprios, códigos e valores de dados NÃO são traduzidos.
+    const DICT = {
+        // Navegação / global
+        'Consolidado':'Consolidated','Contratadas':'Contractors','Financeiro':'Financial',
+        'Registros':'Records','Contratos':'Contracts','Usuários':'Users','Dados':'Data',
+        'Dados TMS':'TMS Data','Sair':'Log out','Entrar':'Log in','Voltar':'Back',
+        'Voltar ao início':'Back to home','Voltar ao Dashboard':'Back to Dashboard',
+        'Voltar aos Registros':'Back to Records','Voltar a Contratos':'Back to Contracts',
+        'Voltar ao login':'Back to login','Registro Semanal de Progresso de Obras':'Weekly Construction Progress Report',
+        'Idioma / Language':'Idioma / Language',
+        // Capa (home)
+        'Terminal Multimodal de Santos':'Santos Multimodal Terminal',
+        'Monitoramento de':'Monitoring of','semanais':'weekly','obras':'works',
+        'Acompanhe efetivo, equipamentos, avanço físico e medições de cada contrato do terminal. Escolha um painel para mergulhar nos dados.':'Track workforce, equipment, physical progress and measurements for each terminal contract. Choose a panel to dive into the data.',
+        'Abrir painel':'Open panel','Acesso restrito':'Restricted access','Acesso Restrito':'Restricted Access',
+        'MAS Dashboard':'MAS Dashboard','Painéis liberados após login':'Panels unlocked after login',
+        'Área do cliente':'Client area',
+        'Visão consolidada de todas as contratadas — KPIs, curvas S, milestones e suprimento.':'Consolidated view of all contractors — KPIs, S-curves, milestones and procurement.',
+        'KPIs, curva S, histograma de efetivo e avanço físico consolidado por contrato.':'KPIs, S-curve, workforce histogram and consolidated physical progress by contract.',
+        'Medições, valor contratado e curva financeira comparada à linha de base.':'Measurements, contracted value and financial curve compared to baseline.',
+        'Painel gerencial MAS TMS — indicadores consolidados de desempenho operacional.':'MAS TMS management panel — consolidated operational performance indicators.',
+        // Cabeçalhos de página / breadcrumbs
+        'Todas as Contratadas':'All Contractors','Todas as contratadas':'All contractors',
+        'Registros Semanais':'Weekly Records','Listagem de Registros':'Records List',
+        'Editar Registro':'Edit Record','Novo Registro':'New Record','Visualizar Registro':'View Record',
+        'Configuração de Contratos':'Contract Configuration','Usuários e Acessos':'Users and Access',
+        'Área do Cliente':'Client Area','Autenticação':'Authentication','Área Administrativa':'Administrative Area',
+        'Painel Consolidado — RUMO':'Consolidated Panel — RUMO',
+        'Visão financeira consolidada de todas as contratadas':'Consolidated financial view of all contractors',
+        'Dados TMS — Programa Mãe':'TMS Data — Parent Program','Gestão Financeira de Obras':'Construction Financial Management',
+        'TMS — Monitoramento de Obras':'TMS — Construction Monitoring','TMS — Em Desenvolvimento':'TMS — Under Development',
+        'TMS — Painel Consolidado':'TMS — Consolidated Panel','TMS — Painel da Contratada':'TMS — Contractor Panel',
+        // KPIs / rótulos comuns
+        'TOTAL Contratos':'TOTAL Contracts','Valor do Contrato':'Contract Value','Total Medido':'Total Measured',
+        'Saldo a Medir':'Balance to Measure','Saldo Contratual':'Contract Balance','Saldo':'Balance',
+        'Medido':'Measured','Realizado':'Actual','Previsto':'Planned','Planejado':'Planned','Forecast':'Forecast',
+        'Semana':'Week','Medição da Semana':'Week Measurement','Medição':'Measurement','Val. Semana':'Week Val.',
+        'Val. Acumulado':'Cumul. Val.','Medido Acumulado':'Cumulative Measured','Valor Medido':'Measured Value',
+        'AF Semana':'Progress (Week)','AF Acumulado':'Progress (Cumul.)','Avanço Físico':'Physical Progress',
+        'Avanço Físico Médio':'Average Physical Progress','Avanço Fís.':'Phys. Progress','Avanço Físico da Semana':'Week Physical Progress',
+        'Histograma':'Histogram','Equipamentos':'Equipment','Equipamento':'Equipment','Efetivo':'Workforce',
+        'Função':'Role','Quantidade':'Quantity','Tipo':'Type','Descrição':'Description','Ação':'Action','Ações':'Actions',
+        'Ativo':'Active','Inativo':'Inactive','Encerrado':'Closed','Cancelado':'Cancelled','Concluído':'Completed',
+        'Início':'Start','Término':'End','Até':'To','De':'From','Data':'Date','Data / Hora':'Date / Time',
+        'Direto':'Direct','Indireto':'Indirect','Classificação':'Classification','Classe':'Class',
+        'Total':'Total','Média':'Average','Valores':'Values','Notas':'Notes','Código':'Code','Documento':'Document',
+        'Prioridade':'Priority','Criticidade':'Criticality','Responsável':'Owner','Grupo':'Group',
+        // Dashboard (Contratadas)
+        'Ações Notáveis — Evolução':'Notable Actions — Trend','Efetivo Previsto — Composição':'Planned Workforce — Composition',
+        'Curva S Física':'Physical S-Curve','Curva S Financeira':'Financial S-Curve','% Avanço':'% Progress',
+        'R$ Acumulado':'R$ Cumulative','Pluviometria Semanal':'Weekly Rainfall','Sem dados de pluviometria.':'No rainfall data.',
+        'Sem dados.':'No data.','Sem dados de histograma previsto.':'No planned histogram data.',
+        'Sem dados consolidados ainda.':'No consolidated data yet.','Configure o histograma na área Admin.':'Configure the histogram in the Admin area.',
+        'Doc OCC':'OCC Doc','PDF da Tela':'Screen PDF','Exportar':'Export','Exportar Excel':'Export Excel',
+        'Exportar CSV':'Export CSV','Importar Excel':'Import Excel','Imprimir':'Print','Baixar Modelo Excel':'Download Excel Template',
+        // Financeiro
+        'Funil Financeiro':'Financial Funnel','Medição por Contratada':'Measurement by Contractor',
+        'Desembolso Mensal':'Monthly Disbursement','Como é calculado':'How it is calculated','Por Centro de Custo':'By Cost Center',
+        'CAPEX × OPEX':'CAPEX × OPEX','CAPEX — Investimento':'CAPEX — Investment','OPEX — Operacional':'OPEX — Operational',
+        'CAPEX / OPEX':'CAPEX / OPEX','Análise EVM':'EVM Analysis','Fluxo de Caixa':'Cash Flow','Configuração Financeira':'Financial Setup',
+        'PV — Valor Planejado':'PV — Planned Value','EV — Valor Agregado':'EV — Earned Value','AC — Custo Real':'AC — Actual Cost',
+        'CPI — Desemp. de Custo':'CPI — Cost Performance','SPI — Desemp. de Prazo':'SPI — Schedule Performance','EAC — Custo Est. Final':'EAC — Est. Final Cost',
+        'Faturamento & Pagamento':'Billing & Payment','Faturamento Previsto':'Planned Billing','Faturamento Real':'Actual Billing',
+        'Pagamento Previsto':'Planned Payment','Pagamento Real':'Actual Payment','Retenções Acum.':'Cumul. Retentions',
+        'Centros de Custo':'Cost Centers','Centro de Custo':'Cost Center','Lançamentos':'Entries','Lançamentos Financeiros':'Financial Entries',
+        'Novo Lançamento':'New Entry','Orçamento Mensal por Centro de Custo':'Monthly Budget by Cost Center','Salvar Orçamento':'Save Budget',
+        'Nenhum registro financeiro encontrado para o filtro selecionado.':'No financial records found for the selected filter.',
+        // Consolidado
+        'Curva S Financeira Consolidada':'Consolidated Financial S-Curve','Curva S Física Consolidada':'Consolidated Physical S-Curve',
+        '% Executado por Contratada':'% Executed by Contractor','% Executado':'% Executed','Contratos por Área':'Contracts by Area',
+        'Medido / Contratado':'Measured / Contracted','R$ Total':'R$ Total','R$ Acumulado — todas as contratadas':'R$ Cumulative — all contractors',
+        '% Avanço — média ponderada por contrato':'% Progress — weighted average by contract','Acompanhamento de Milestones':'Milestone Tracking',
+        'Milestones do Projeto':'Project Milestones','Visão Geral':'Overview','Pipeline de Suprimento':'Procurement Pipeline','Suprimento':'Procurement',
+        'Prospecção':'Prospecting','Qualificação':'Qualification','Proposta':'Proposal','Negociação':'Negotiation',
+        'Etapa':'Stage','Dias nessa etapa':'Days in this stage','Vigência':'Period',
+        'Nenhum processo nesta etapa.':'No processes in this stage.',
+        'processo(s)':'process(es)','processo':'process','processos':'processes',
+        // Legendas de gráficos Chart.js
+        'Realizado (R$)':'Realized (R$)','Realizado (%)':'Realized (%)','Realizado':'Realized',
+        'Avanço Real (%)':'Real Progress (%)','Forecast (%)':'Forecast (%)',
+        'Replanejado':'Replanned','Linha de Base':'Baseline','Linha de base':'Baseline',
+        'Evolução (%)':'Progress (%)','Medição (R$)':'Measurement (R$)','% Executado':'% Executed',
+        'Medido acumulado':'Accumulated Measured','Pluviometria (mm)':'Rainfall (mm)',
+        'Pago':'Paid','Projetado':'Projected','Acumulado':'Accumulated',
+        'Orçado':'Budgeted','Comprometido':'Committed',
+        'PV — Planejado':'PV — Planned','EV — Agregado':'EV — Earned Value','AC — Custo Real':'AC — Actual Cost',
+        // Registros / listagem
+        'Filtrar':'Filter','Contratada':'Contractor','Contrato':'Contract','Visualizar':'View','Editar':'Edit','Excluir':'Delete',
+        'Criar o primeiro registro':'Create the first record','Nenhum registro ainda.':'No records yet.',
+        'Nenhum registro encontrado com esses filtros.':'No records found with these filters.',
+        'Nenhum registro encontrado. Tente remover os filtros.':'No records found. Try removing the filters.',
+        // Formulário de registro
+        'Identificação do Registro':'Record Identification','Semana de Referência *':'Reference Week *',
+        'Contratada *':'Contractor *','Contrato *':'Contract *','Pluviometria da Semana':'Week Rainfall',
+        'Pontos de Atenção':'Attention Points','Ações Notáveis da Semana':'Week Notable Actions',
+        'Avanço Físico Acumulado (%) *':'Cumulative Physical Progress (%) *','SALVAR REGISTRO':'SAVE RECORD','SALVAR ALTERAÇÕES':'SAVE CHANGES',
+        'Adicionar Função':'Add Role','Adicionar Ação':'Add Action','Adicionar Semana':'Add Week','Adicionar Mês':'Add Month',
+        'Adicionar Replanejado':'Add Replan','Adicionar':'Add','Incluir':'Include','Remover':'Remove','Cancelar':'Cancel','Fechar':'Close',
+        'Comentários gerais sobre a semana...':'General comments about the week...',
+        'Nenhum equipamento cadastrado para esta semana.':'No equipment registered for this week.',
+        'Nenhuma ação cadastrada para esta semana.':'No actions registered for this week.',
+        'Nenhuma função cadastrada para esta semana.':'No roles registered for this week.',
+        'Selecione...':'Select...','— Selecione —':'— Select —','Selecione o contrato...':'Select the contract...',
+        'Selecione a contratada primeiro...':'Select the contractor first...',
+        // Login / senha
+        'E-mail':'E-mail','Senha':'Password','Esqueci minha senha':'Forgot my password','Recuperar Senha':'Recover Password',
+        'Redefinição de senha':'Password reset','Definir Nova Senha':'Set New Password','Nova senha':'New password',
+        'Confirmar senha':'Confirm password','Repita a senha':'Repeat the password','Mínimo 6 caracteres':'Minimum 6 characters',
+        'Salvar nova senha':'Save new password','Enviar link':'Send link','Senha de Administrador':'Administrator Password',
+        'Senha incorreta. Tente novamente.':'Incorrect password. Try again.',
+        'Informe seu e-mail. Se estiver cadastrado, enviaremos um link para redefinir a senha.':'Enter your e-mail. If registered, we will send a link to reset your password.',
+        // Usuários
+        'Novo Usuário':'New User','Criar Novo Usuário':'Create New User','Tipo de acesso *':'Access type *',
+        'Contratada vinculada *':'Linked contractor *','Contrato vinculado *':'Linked contract *','Nome *':'Name *','E-mail *':'E-mail *',
+        'Nome':'Name','Criar e enviar acesso':'Create and send access','Editar Permissões':'Edit Permissions','Editar permissões':'Edit permissions',
+        'Salvar permissões':'Save permissions','Reenviar link de senha':'Resend password link','Nenhum usuário cadastrado.':'No users registered.',
+        'Último acesso':'Last access','Log de Atividade':'Activity Log','Nenhuma atividade registrada ainda.':'No activity recorded yet.',
+        'Equipe interna':'Internal team','Tipo de acesso':'Access type',
+        // Admin contratos
+        'Criar Novo Contrato':'Create New Contract','Criar Contrato':'Create Contract','Novo Contrato':'New Contract',
+        'Configurar Contrato':'Configure Contract','Excluir Contrato':'Delete Contract','Excluir contrato':'Delete contract',
+        'Nenhum contrato encontrado.':'No contracts found.','Status do Contrato':'Contract Status','Aditivos':'Amendments',
+        'Prazo e Valor':'Term and Value','Data de Início':'Start Date','Data de Término Prevista':'Planned End Date',
+        'Linha de Base Financeira por Mês':'Monthly Financial Baseline','Linha de Base Física por Mês':'Monthly Physical Baseline',
+        'Salvar Configurações':'Save Settings','Salvar Configuração':'Save Setting','Informações do Contrato':'Contract Information',
+        'Início do Contrato':'Contract Start','Término do Contrato':'Contract End','Valor Total Contratado':'Total Contracted Value',
+        // Dados TMS / Saúde e Segurança
+        'Identidade do Programa':'Program Identity','Nome do Programa':'Program Name','Sigla':'Acronym',
+        'Cliente / Contratante':'Client / Contracting Party','Objeto / Escopo':'Object / Scope','Objeto / Descrição':'Object / Description',
+        'Responsável Técnico':'Technical Manager','Saúde e Segurança':'Health & Safety','SAF':'SAF','CAF':'CAF',
+        'Indicadores mensais de segurança do trabalho. Selecione o mês de referência e informe os números do período. Salvar um mês já registrado atualiza os valores.':'Monthly occupational safety indicators. Select the reference month and enter the period figures. Saving an already-registered month updates its values.',
+        'Primeiros Socorros':'First Aid','Salvar':'Save','Mês/Ano de referência':'Reference month/year','Mês/Ano':'Month/Year',
+        'Severidade de Acidentes c/ Afastamento':'Lost-Time Accident Severity','Casos de Acidentes c/ Afastamento':'Lost-Time Accident Cases',
+        'Nenhum registro de Saúde e Segurança. Preencha o formulário acima para começar.':'No Health & Safety records yet. Fill in the form above to get started.',
+        'Salvar Configurações':'Save Settings','Local / Região':'Location / Region','Valor Total do Programa (R$)':'Total Program Value (R$)',
+        // Confirmações / genéricos
+        'Confirmar Exclusão':'Confirm Deletion','Esta ação não pode ser desfeita.':'This action cannot be undone.',
+        'Limpar Dados da Aplicação':'Clear Application Data'
+    };
+    const REV = {};
+    for (const k in DICT) { if (!(DICT[k] in REV)) REV[DICT[k]] = k; }
+
+    const KEY = 'tms_lang';
+    const getLang = () => (localStorage.getItem(KEY) === 'en' ? 'en' : 'pt');
+    const SKIP = { SCRIPT:1, STYLE:1, NOSCRIPT:1, TEXTAREA:1, CODE:1, PRE:1 };
+
+    function inSkip(node) {
+        let el = node.parentElement;
+        while (el) {
+            if (SKIP[el.tagName]) return true;
+            if (el.classList && el.classList.contains('lang-toggle')) return true;
+            if (el.getAttribute && el.getAttribute('data-i18n-skip') != null) return true;
+            el = el.parentElement;
+        }
+        return false;
+    }
+    const lookup = (t, toEN) => toEN ? DICT[t] : REV[t];
+
+    function translateText(root, toEN) {
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode(n) {
+                if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+                return inSkip(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+            }
+        });
+        const list = [];
+        while (w.nextNode()) list.push(w.currentNode);
+        list.forEach(n => {
+            const raw = n.nodeValue, t = raw.trim(), m = lookup(t, toEN);
+            if (m != null && m !== t) n.nodeValue = raw.replace(t, m);
+        });
+    }
+    const ATTRS = ['placeholder', 'title', 'aria-label'];
+    function translateAttrs(root, toEN) {
+        const els = root.nodeType === 1 ? [root] : [];
+        if (root.querySelectorAll) els.push(...root.querySelectorAll('*'));
+        els.forEach(el => {
+            if (el.closest && el.closest('.lang-toggle')) return;
+            ATTRS.forEach(a => {
+                if (el.hasAttribute && el.hasAttribute(a)) {
+                    const v = el.getAttribute(a).trim(), m = lookup(v, toEN);
+                    if (m != null && m !== v) el.setAttribute(a, m);
+                }
+            });
+            if (el.tagName === 'INPUT' && (el.type === 'submit' || el.type === 'button')) {
+                const v = (el.value || '').trim(), m = lookup(v, toEN);
+                if (m != null && m !== v) el.value = m;
+            }
+        });
+    }
+
+    let current = 'pt';
+    function apply(lang) {
+        const toEN = lang === 'en';
+        translateText(document.body, toEN);
+        translateAttrs(document.body, toEN);
+        document.documentElement.setAttribute('lang', toEN ? 'en' : 'pt-BR');
+        document.querySelectorAll('.lang-btn').forEach(b =>
+            b.classList.toggle('active', b.getAttribute('data-lang') === lang));
+        current = lang;
+    }
+    function setLang(lang) {
+        if (lang === current) return;
+        localStorage.setItem(KEY, lang);
+        apply(lang);
+    }
+    window.TMSi18n = {
+        setLang, getLang, apply,
+        extend(obj) { Object.assign(DICT, obj); for (const k in obj) if (!(obj[k] in REV)) REV[obj[k]] = k; }
+    };
+
+    document.querySelectorAll('.lang-btn').forEach(b =>
+        b.addEventListener('click', () => setLang(b.getAttribute('data-lang'))));
+    apply(getLang());
+
+    // Conteúdo gerado dinamicamente por JS (tabelas, milestones, etc.) → traduz ao ser inserido
+    new MutationObserver(muts => {
+        if (current !== 'en') return;
+        muts.forEach(mu => mu.addedNodes.forEach(node => {
+            if (node.nodeType === 1) { translateText(node, true); translateAttrs(node, true); }
+            else if (node.nodeType === 3 && !inSkip(node)) {
+                const raw = node.nodeValue, t = raw.trim(), m = DICT[t];
+                if (m && m !== t) node.nodeValue = raw.replace(t, m);
+            }
+        }));
+    }).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
+<!-- bl-dates.js — validador BL compartilhado (todas as páginas) -->
+<script src="{{ url_for('static', filename='js/bl-dates.js') }}"></script>
+
+<style>
+/* ═══ BL-DATES — componente reutilizável de datas de Baseline ═══ */
+.bl-field { position:relative; }
+.bl-lbl   { display:block; font-size:.52rem; font-weight:600; text-transform:uppercase; letter-spacing:.08em; margin-bottom:.18rem; }
+.bl-req-mark { display:none; color:#FF7043; }
+.bl-field.bl-required .bl-req-mark { display:inline; }
+.bl-field.bl-required input { border-color:rgba(255,112,67,.55) !important; }
+.bl-field.bl-err input { border-color:#c8324b !important; background:rgba(200,50,75,.05) !important; }
+.bl-msg { display:none; font-size:.57rem; font-weight:600; color:#c8324b; margin-top:.18rem; }
+.bl-field.bl-err .bl-msg { display:block; }
+/* light-theme strip */
+.bl-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; }
+.bl-strip .bl-lbl { color:#5B6B7B; }
+/* dark-theme strip (mobilizacao) */
+.bl-strip-dark { display:grid; grid-template-columns:repeat(4,1fr); gap:.45rem; padding:.45rem .7rem .55rem; background:rgba(255,112,67,.03); border-top:1px solid rgba(255,255,255,.05); }
+.bl-strip-dark .bl-lbl { color:rgba(255,255,255,.32); }
+.bl-strip-dark input { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); color:rgba(255,255,255,.75); border-radius:4px; font-size:.72rem; padding:.26rem .45rem; width:100%; }
+.bl-strip-dark input:focus { outline:none; border-color:rgba(255,112,67,.5); background:rgba(255,112,67,.04); }
+.bl-strip-dark.bl-required input.bl-forecast,
+.bl-strip-dark .bl-field.bl-required input { border-color:rgba(255,112,67,.55) !important; }
+.bl-strip-dark .bl-field.bl-err input { border-color:#c8324b !important; background:rgba(200,50,75,.06) !important; }
+/* header BL nas tabelas */
+.th-bl { font-size:.57rem !important; color:rgba(255,255,255,.2) !important; }
+.th-bl-group { font-size:.6rem !important; background:rgba(255,112,67,.06) !important; border-bottom:1px solid rgba(255,112,67,.15) !important; }
+</style>
+
 {% block scripts %}{% endblock %}
+
+{% if preview_role %}
+<div class="preview-banner">
+    <i class="bi bi-eye-fill"></i>
+    Visualizando como:
+    {% for r,label,_ in all_roles %}{% if r == preview_role %}<strong>{{ label }}</strong>{% endif %}{% endfor %}
+    — navegação simulada &nbsp;
+    <a href="{{ url_for('reset_preview_role') }}"><i class="bi bi-x-circle me-1"></i>Resetar</a>
+</div>
+{% endif %}
 </body>
 </html>

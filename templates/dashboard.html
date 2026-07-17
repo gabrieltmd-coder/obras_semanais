@@ -36,7 +36,7 @@ body {
 }
 .gc-title {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: .62rem; font-weight: 500; text-transform: uppercase;
+    font-size: 1.24rem; font-weight: 500; text-transform: uppercase;
     letter-spacing: .12em; color: rgba(255,255,255,.5);
     margin-bottom: .7rem; padding-bottom: .55rem;
     border-bottom: 1px solid rgba(255,255,255,.07);
@@ -339,6 +339,25 @@ body.exporting .pdf-only { display:flex !important; }
 
 </div>
 
+<!-- ROW 3: Pluviometria Semanal (largura total) -->
+<div class="row g-2 mt-2 align-items-stretch">
+    <div class="col-12 d-flex">
+        <div class="gc w-100 d-flex flex-column" style="min-height:300px;">
+            <div class="gc-title">
+                <span><i class="bi bi-cloud-rain-heavy"></i><span data-i18n="chart.pluviometria">Pluviometria Semanal</span></span>
+                <span class="gc-sub">mm</span>
+            </div>
+            {% if pluv_labels and pluv_labels != '[]' %}
+            <div style="position:relative;flex:1;min-height:250px;">
+                <canvas id="chartPluviometria"></canvas>
+            </div>
+            {% else %}
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;color:rgba(255,255,255,.3);font-size:.82rem;" data-i18n="chart.sem_dados">Sem dados de pluviometria.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 </div>{# /dash-export #}
 
 {% endif %}
@@ -430,6 +449,8 @@ const ACOES_LABELS  = {{ acoes_labels|safe }};
 const ACOES_PCT     = {{ acoes_pct|safe }};
 const PREV_DIRETO   = {{ prev_direto }};
 const PREV_INDIRETO = {{ prev_indireto }};
+const PLUV_LABELS   = {{ pluv_labels|safe }};
+const PLUV_MM       = {{ pluv_mm|safe }};
 
 const C_GREEN = '#46C26A', C_CYAN = '#2BB2EE', C_AMBER = '#F0B34D';
 const GRID  = 'rgba(255,255,255,.05)';
@@ -446,6 +467,7 @@ Chart.defaults.set('plugins.datalabels', {
 });
 
 // ── Curva S Financeira ──
+let _chartFin = null;
 if (document.getElementById('chartFinanceiro') && LABELS.length) {
     const dsFin = [{
         label: 'Realizado (R$)',
@@ -468,7 +490,7 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
         data: FIN_BASE, borderColor: C_CYAN,
         borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4,
     });
-    new Chart(document.getElementById('chartFinanceiro'), {
+    _chartFin = new Chart(document.getElementById('chartFinanceiro'), {
         type: 'line',
         data: { labels: LABELS, datasets: dsFin },
         options: {
@@ -491,6 +513,7 @@ if (document.getElementById('chartFinanceiro') && LABELS.length) {
 }
 
 // ── Curva S Física ──
+let _chartFis = null;
 if (document.getElementById('chartFisico') && LABELS.length) {
     const dsFis = [{
         label: 'Avanço Real (%)',
@@ -513,7 +536,7 @@ if (document.getElementById('chartFisico') && LABELS.length) {
         data: FIS_BASE, borderColor: C_CYAN,
         borderWidth: 1.5, borderDash:[5,4], pointRadius:0, fill:false,
     });
-    new Chart(document.getElementById('chartFisico'), {
+    _chartFis = new Chart(document.getElementById('chartFisico'), {
         type: 'line',
         data: { labels: LABELS, datasets: dsFis },
         options: {
@@ -536,8 +559,9 @@ if (document.getElementById('chartFisico') && LABELS.length) {
 }
 
 // ── Donut previsto (Direto/Indireto) ──
+let _chartDonut = null;
 if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRETO > 0)) {
-    new Chart(document.getElementById('chartPrevDonut'), {
+    _chartDonut = new Chart(document.getElementById('chartPrevDonut'), {
         type:'doughnut',
         data:{
             labels:['Direto','Indireto'],
@@ -559,6 +583,51 @@ if (document.getElementById('chartPrevDonut') && (PREV_DIRETO > 0 || PREV_INDIRE
                     },
                     textAlign:'center'
                 }
+            }
+        }
+    });
+}
+
+// ── Pluviometria Semanal (mm/semana) ──
+let _chartPluv = null;
+if (document.getElementById('chartPluviometria') && PLUV_LABELS.length) {
+    const gradPluv = (ctx) => {
+        const { chart } = ctx;
+        const { ctx: c, chartArea } = chart;
+        if (!chartArea) return 'rgba(43,178,238,.75)';
+        const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        g.addColorStop(0, 'rgba(43,178,238,.95)');
+        g.addColorStop(1, 'rgba(43,178,238,.25)');
+        return g;
+    };
+    _chartPluv = new Chart(document.getElementById('chartPluviometria'), {
+        type: 'bar',
+        data: {
+            labels: PLUV_LABELS,
+            datasets: [{
+                label: 'Pluviometria (mm)',
+                data: PLUV_MM,
+                backgroundColor: gradPluv,
+                borderColor: '#2BB2EE',
+                borderWidth: 1,
+                borderRadius: 4,
+                maxBarThickness: 46,
+            }]
+        },
+        options: {
+            responsive:true, maintainAspectRatio:false, animation:{ duration:600 },
+            plugins:{
+                legend:{ display:false },
+                tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.y} mm` }},
+                datalabels:{
+                    anchor:'end', align:'end', clip:false, color:'#8FD6FF',
+                    font:{ size:10, weight:600, family:"'IBM Plex Mono',monospace" },
+                    formatter: v => v > 0 ? v + '' : ''
+                }
+            },
+            scales:{
+                x:{ grid:{color:GRID}, ticks:TICK },
+                y:{ min:0, grid:{color:GRID}, ticks:{ ...TICK, callback: v => v + ' mm' }}
             }
         }
     });
@@ -753,9 +822,10 @@ function exportarOCC() {
 }
 
 // ── Ações Notáveis — evolução % ──
+let _chartAcoes = null;
 if (document.getElementById('chartAcoes') && ACOES_LABELS.length) {
     const acoesBg = ACOES_PCT.map(p => p >= 80 ? C_GREEN : (p >= 40 ? C_CYAN : C_AMBER));
-    new Chart(document.getElementById('chartAcoes'), {
+    _chartAcoes = new Chart(document.getElementById('chartAcoes'), {
         type:'bar',
         data:{
             labels: ACOES_LABELS,
@@ -776,5 +846,67 @@ if (document.getElementById('chartAcoes') && ACOES_LABELS.length) {
         }
     });
 }
+
+// ── i18n: atualiza labels/legendas dos charts ao trocar idioma ──
+function _updateDashChartLangs() {
+    const isEN = document.documentElement.lang === 'en';
+
+    // chartFinanceiro (Curva S Financeira)
+    if (_chartFin) {
+        _chartFin.data.datasets.forEach(ds => {
+            if (isEN) {
+                if (ds.label === 'Realizado (R$)')  ds.label = 'Realized (R$)';
+                if (ds.label === 'Replanejado')      ds.label = 'Replanned';
+                if (ds.label === 'Linha de Base')    ds.label = 'Baseline';
+            } else {
+                if (ds.label === 'Realized (R$)')   ds.label = 'Realizado (R$)';
+                if (ds.label === 'Replanned')        ds.label = 'Replanejado';
+                if (ds.label === 'Baseline')         ds.label = 'Linha de Base';
+            }
+        });
+        _chartFin.update('none');
+    }
+
+    // chartFisico (Curva S Física)
+    if (_chartFis) {
+        _chartFis.data.datasets.forEach(ds => {
+            if (isEN) {
+                if (ds.label === 'Avanço Real (%)')  ds.label = 'Real Progress (%)';
+                if (ds.label === 'Replanejado')       ds.label = 'Replanned';
+                if (ds.label === 'Linha de Base')     ds.label = 'Baseline';
+            } else {
+                if (ds.label === 'Real Progress (%)') ds.label = 'Avanço Real (%)';
+                if (ds.label === 'Replanned')          ds.label = 'Replanejado';
+                if (ds.label === 'Baseline')           ds.label = 'Linha de Base';
+            }
+        });
+        _chartFis.update('none');
+    }
+
+    // chartPrevDonut (Direto/Indireto)
+    if (_chartDonut) {
+        _chartDonut.data.labels = isEN ? ['Direct', 'Indirect'] : ['Direto', 'Indireto'];
+        _chartDonut.update('none');
+    }
+
+    // chartPluviometria
+    if (_chartPluv) {
+        _chartPluv.data.datasets[0].label = isEN ? 'Rainfall (mm)' : 'Pluviometria (mm)';
+        _chartPluv.update('none');
+    }
+
+    // chartAcoes
+    if (_chartAcoes) {
+        _chartAcoes.data.datasets[0].label = isEN ? 'Progress (%)' : 'Evolução (%)';
+        _chartAcoes.update('none');
+    }
+}
+
+// Aplica imediatamente (caso a página já carregue em EN)
+_updateDashChartLangs();
+
+// Observa mudanças no atributo lang do <html>
+new MutationObserver(() => _updateDashChartLangs())
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 </script>
 {% endblock %}

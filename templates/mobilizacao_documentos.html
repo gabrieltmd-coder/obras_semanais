@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}Documentos — Mobilização{% endblock %}
+{% block page_icon %}<i class="bi bi-file-earmark-text" style="color:#FF7043;"></i>{% endblock %}
+{% block page_title %}Documentos{% endblock %}
+{% block breadcrumb %}Relação de Documentos de Mobilização{% endblock %}
+
+{% block content %}
+<style>
+body {
+    background: #0E1B24 !important;
+    background-image:
+        linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px) !important;
+    background-size: 112px 112px !important;
+}
+.page-header { background:#0A141C!important; border-bottom:1.5px solid rgba(255,255,255,.10)!important; padding:1rem 0 .9rem!important; margin-bottom:1rem!important; }
+.page-header h1, .page-header h1 i { color:#fff!important; }
+.page-header .breadcrumb { color:rgba(255,255,255,.45)!important; }
+.app-footer { background:#0A141C!important; margin-top:1.2rem!important; }
+.btn-back-header { background:rgba(255,255,255,.05)!important; color:rgba(255,255,255,.85)!important; border-color:rgba(255,255,255,.18)!important; }
+
+:root { --mob:#FF7043; --mob-l:rgba(255,112,67,.14); }
+
+/* ── Painel ── */
+.gc { background:#13242F; border:1px solid rgba(255,255,255,.09); border-radius:4px; padding:.85rem 1rem; }
+
+/* ── Toolbar ── */
+.toolbar { display:flex; align-items:center; gap:.6rem; margin-bottom:1rem; flex-wrap:wrap; }
+.search-box { display:flex; align-items:center; gap:.4rem; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:4px; padding:.32rem .7rem; flex:1; min-width:200px; max-width:360px; }
+.search-box i { color:rgba(255,255,255,.3); font-size:.85rem; }
+.search-box input { background:none; border:none; outline:none; color:#fff; font-size:.82rem; width:100%; }
+.search-box input::placeholder { color:rgba(255,255,255,.25); }
+
+.filter-btn { font-family:'IBM Plex Mono',monospace; font-size:.62rem; font-weight:600; text-transform:uppercase; letter-spacing:.07em; border-radius:20px; padding:.28rem .85rem; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:rgba(255,255,255,.45); cursor:pointer; transition:all .15s; white-space:nowrap; }
+.filter-btn:hover { border-color:rgba(255,112,67,.4); color:rgba(255,255,255,.75); }
+.filter-btn.active { background:rgba(255,112,67,.18); border-color:rgba(255,112,67,.5); color:#FF7043; }
+
+.count-chip { font-family:'IBM Plex Mono',monospace; font-size:.6rem; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.08); border-radius:20px; padding:.2rem .65rem; color:rgba(255,255,255,.38); margin-left:auto; }
+
+/* ── Tabela ── */
+.doc-tbl { width:100%; border-collapse:collapse; }
+.doc-tbl th { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.28); padding:.5rem .8rem; border-bottom:1px solid rgba(255,255,255,.08); text-align:left; white-space:nowrap; cursor:pointer; user-select:none; }
+.doc-tbl th:hover { color:rgba(255,255,255,.55); }
+.doc-tbl th .sort-ico { margin-left:.3rem; opacity:.35; }
+.doc-tbl th.sorted .sort-ico { opacity:1; color:var(--mob); }
+.doc-tbl td { font-size:.82rem; color:rgba(255,255,255,.75); padding:.55rem .8rem; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle; }
+.doc-tbl tr:last-child td { border-bottom:none; }
+.doc-tbl tr:hover td { background:rgba(255,255,255,.025); }
+.doc-tbl tr.hidden { display:none; }
+
+.num-cell { font-family:'IBM Plex Mono',monospace; font-size:.65rem; color:rgba(255,255,255,.25); width:32px; text-align:right; }
+.doc-name { font-size:.82rem; color:rgba(255,255,255,.85); }
+.doc-name small { display:block; font-size:.68rem; color:rgba(255,255,255,.32); margin-top:.1rem; }
+
+/* ── Badges ── */
+.tipo-badge { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:600; padding:.18rem .55rem; border-radius:3px; white-space:nowrap; text-transform:uppercase; letter-spacing:.05em; }
+.tipo-contrato { background:rgba(70,194,106,.1); color:#6fe895; }
+.tipo-ssma     { background:rgba(43,178,238,.1); color:#5cc8f2; }
+
+.status-badge { font-family:'IBM Plex Mono',monospace; font-size:.58rem; font-weight:600; padding:.2rem .65rem; border-radius:20px; white-space:nowrap; display:inline-flex; align-items:center; gap:.3rem; }
+.s-entregue { background:rgba(70,194,106,.14); color:#6fe895; border:1px solid rgba(70,194,106,.2); }
+.s-revisado { background:rgba(43,178,238,.12); color:#5cc8f2; border:1px solid rgba(43,178,238,.2); }
+.s-pendente { background:rgba(232,163,61,.12); color:#f5c060;  border:1px solid rgba(232,163,61,.2); }
+.s-nao      { background:rgba(200,50,75,.12);  color:#ff7a89;  border:1px solid rgba(200,50,75,.2); }
+.s-na       { background:rgba(255,255,255,.06); color:rgba(255,255,255,.38); border:1px solid rgba(255,255,255,.1); }
+.s-vazio    { background:transparent; color:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.06); }
+
+.prazo-cell { font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:rgba(255,255,255,.38); white-space:nowrap; }
+.prazo-cell.vencido { color:#ff7a89; }
+.prazo-cell.proximo { color:#f5c060; }
+
+/* ── Botões de ação ── */
+.action-cell { display:flex; gap:.35rem; align-items:center; }
+.btn-doc { display:inline-flex; align-items:center; gap:.3rem; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:.6rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; padding:.3rem .75rem; border:1px solid; cursor:pointer; text-decoration:none; transition:all .15s; white-space:nowrap; }
+.btn-view { background:rgba(43,178,238,.1); border-color:rgba(43,178,238,.3); color:#5cc8f2; }
+.btn-view:hover { background:rgba(43,178,238,.22); border-color:rgba(43,178,238,.5); color:#88d8f5; }
+.btn-dl   { background:rgba(70,194,106,.1);  border-color:rgba(70,194,106,.3);  color:#6fe895; }
+.btn-dl:hover   { background:rgba(70,194,106,.22); border-color:rgba(70,194,106,.5); color:#9aedb6; }
+.btn-doc.disabled { opacity:.2; pointer-events:none; cursor:default; }
+.no-url-msg { font-family:'IBM Plex Mono',monospace; font-size:.58rem; color:rgba(255,255,255,.15); }
+
+/* ── Empty / no results ── */
+.empty-row td { text-align:center; padding:2.5rem 1rem; color:rgba(255,255,255,.2); font-family:'IBM Plex Mono',monospace; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; }
+.empty-row td i { font-size:1.6rem; display:block; margin-bottom:.5rem; color:var(--mob); opacity:.2; }
+
+/* ── KPI strip ── */
+.kpi-strip { display:flex; gap:.5rem; margin-bottom:.8rem; flex-wrap:wrap; }
+.kpi-pill { background:#13242F; border:1px solid rgba(255,255,255,.08); border-radius:4px; padding:.5rem .9rem; display:flex; align-items:center; gap:.55rem; }
+.kpi-pill-val { font-family:'IBM Plex Mono',monospace; font-size:1.3rem; font-weight:700; line-height:1; }
+.kpi-pill-lbl { font-family:'IBM Plex Mono',monospace; font-size:.55rem; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.3); }
+.kpi-pill.ok  .kpi-pill-val { color:#6fe895; }
+.kpi-pill.warn .kpi-pill-val { color:#f5c060; }
+.kpi-pill.danger .kpi-pill-val { color:#ff7a89; }
+.kpi-pill.info .kpi-pill-val { color:#5cc8f2; }
+.kpi-pill.total .kpi-pill-val { color:#fff; }
+</style>
+
+<div class="container-fluid px-3">
+
+<!-- ── KPIs ── -->
+{% set total   = docs | length %}
+{% set n_ent   = docs | selectattr('status','in',['entregue','revisado']) | list | length %}
+{% set n_pend  = docs | selectattr('status','equalto','pendente') | list | length %}
+{% set n_nao   = docs | selectattr('status','equalto','nao') | list | length %}
+{% set n_url   = docs | selectattr('url') | list | length %}
+
+<div class="kpi-strip">
+    <div class="kpi-pill total">
+        <div>
+            <div class="kpi-pill-val">{{ total }}</div>
+            <div class="kpi-pill-lbl">Total</div>
+        </div>
+    </div>
+    <div class="kpi-pill ok">
+        <div>
+            <div class="kpi-pill-val">{{ n_ent }}</div>
+            <div class="kpi-pill-lbl">Entregues</div>
+        </div>
+    </div>
+    <div class="kpi-pill warn">
+        <div>
+            <div class="kpi-pill-val">{{ n_pend }}</div>
+            <div class="kpi-pill-lbl">Pendentes</div>
+        </div>
+    </div>
+    <div class="kpi-pill danger">
+        <div>
+            <div class="kpi-pill-val">{{ n_nao }}</div>
+            <div class="kpi-pill-lbl">Não entregues</div>
+        </div>
+    </div>
+    <div class="kpi-pill info">
+        <div>
+            <div class="kpi-pill-val">{{ n_url }}</div>
+            <div class="kpi-pill-lbl">Com arquivo</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Tabela ── -->
+<div class="gc">
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Buscar documento..." oninput="filterTable()">
+        </div>
+        <button class="filter-btn active" data-filter="todos"      onclick="setFilter('todos',this)">Todos</button>
+        <button class="filter-btn"        data-filter="entregue"   onclick="setFilter('entregue',this)">Entregues</button>
+        <button class="filter-btn"        data-filter="pendente"   onclick="setFilter('pendente',this)">Pendentes</button>
+        <button class="filter-btn"        data-filter="nao"        onclick="setFilter('nao',this)">Não entregues</button>
+        <button class="filter-btn"        data-filter="contrato"   onclick="setFilter('contrato',this)">Contrato</button>
+        <button class="filter-btn"        data-filter="ssma"       onclick="setFilter('ssma',this)">SSMA</button>
+        <span class="count-chip" id="countChip">{{ total }} documentos</span>
+    </div>
+
+    <table class="doc-tbl" id="docTable">
+        <thead>
+            <tr>
+                <th class="num-cell" onclick="sortTable(0)"><span class="sort-ico">↕</span></th>
+                <th onclick="sortTable(1)">Documento <span class="sort-ico">↕</span></th>
+                <th onclick="sortTable(2)">Tipo <span class="sort-ico">↕</span></th>
+                <th onclick="sortTable(3)">Status <span class="sort-ico">↕</span></th>
+                <th onclick="sortTable(4)">Prazo <span class="sort-ico">↕</span></th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="docBody">
+        {% for d in docs %}
+        <tr data-status="{{ d.status or 'vazio' }}" data-tipo="{{ d.tipo | lower }}" data-search="{{ d.documento | lower }}">
+            <td class="num-cell">{{ loop.index }}</td>
+            <td>
+                <div class="doc-name">
+                    {{ d.documento }}
+                    <small>{{ d.area }}</small>
+                </div>
+            </td>
+            <td>
+                <span class="tipo-badge {% if d.tipo == 'SSMA' %}tipo-ssma{% else %}tipo-contrato{% endif %}">
+                    {{ d.tipo }}
+                </span>
+            </td>
+            <td>
+                {% if d.status == 'entregue' %}
+                <span class="status-badge s-entregue"><i class="bi bi-check-circle-fill"></i>Entregue</span>
+                {% elif d.status == 'revisado' %}
+                <span class="status-badge s-revisado"><i class="bi bi-arrow-repeat"></i>Revisado</span>
+                {% elif d.status == 'pendente' %}
+                <span class="status-badge s-pendente"><i class="bi bi-clock"></i>Pendente</span>
+                {% elif d.status == 'nao' %}
+                <span class="status-badge s-nao"><i class="bi bi-x-circle-fill"></i>Não entregue</span>
+                {% elif d.status == 'na' %}
+                <span class="status-badge s-na"><i class="bi bi-dash-circle"></i>N/A</span>
+                {% else %}
+                <span class="status-badge s-vazio">— sem status —</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if d.prazo %}
+                <span class="prazo-cell" data-prazo="{{ d.prazo }}">{{ d.prazo }}</span>
+                {% else %}
+                <span class="prazo-cell">—</span>
+                {% endif %}
+            </td>
+            <td>
+                <div class="action-cell">
+                    {% if d.url %}
+                    <a class="btn-doc btn-view" href="{{ d.url }}" target="_blank" rel="noopener" title="Visualizar documento">
+                        <i class="bi bi-eye"></i>Visualizar
+                    </a>
+                    <a class="btn-doc btn-dl" href="{{ d.url }}" target="_blank" rel="noopener" download title="Baixar documento">
+                        <i class="bi bi-download"></i>Baixar
+                    </a>
+                    {% else %}
+                    <span class="no-url-msg"><i class="bi bi-link-45deg"></i> Sem arquivo</span>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr class="empty-row" id="emptyRow" style="display:none;">
+            <td colspan="6"><i class="bi bi-search"></i>Nenhum documento encontrado</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+<script>
+let activeFilter = 'todos';
+let sortCol = -1;
+let sortAsc = true;
+
+// ── Colorir prazos ──
+document.querySelectorAll('.prazo-cell[data-prazo]').forEach(el => {
+    const d = new Date(el.dataset.prazo);
+    const hoje = new Date();
+    const diff = (d - hoje) / 864e5;
+    if (diff < 0)  el.classList.add('vencido');
+    else if (diff < 14) el.classList.add('proximo');
+    // formatar pt-BR
+    el.textContent = d.toLocaleDateString('pt-BR');
+});
+
+// ── Filtro por status/tipo ──
+function setFilter(f, btn) {
+    activeFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterTable();
+}
+
+function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('#docBody tr[data-status]');
+    let visible = 0;
+    rows.forEach(tr => {
+        const status = tr.dataset.status;
+        const tipo   = tr.dataset.tipo;
+        const text   = tr.dataset.search;
+        const matchFilter = activeFilter === 'todos' ||
+                            activeFilter === status   ||
+                            activeFilter === tipo;
+        const matchSearch = !q || text.includes(q) ||
+                            tr.querySelector('.tipo-badge')?.textContent.toLowerCase().includes(q) ||
+                            tr.querySelector('.status-badge')?.textContent.toLowerCase().includes(q);
+        const show = matchFilter && matchSearch;
+        tr.classList.toggle('hidden', !show);
+        if (show) visible++;
+    });
+    document.getElementById('emptyRow').style.display = visible === 0 ? '' : 'none';
+    document.getElementById('countChip').textContent = visible + ' documento' + (visible !== 1 ? 's' : '');
+}
+
+// ── Ordenação por coluna ──
+function sortTable(col) {
+    const tbody = document.getElementById('docBody');
+    const rows  = Array.from(tbody.querySelectorAll('tr[data-status]'));
+    if (sortCol === col) sortAsc = !sortAsc;
+    else { sortCol = col; sortAsc = true; }
+
+    document.querySelectorAll('.doc-tbl th').forEach((th, i) => {
+        th.classList.toggle('sorted', i === col);
+        const ico = th.querySelector('.sort-ico');
+        if (ico) ico.textContent = i === col ? (sortAsc ? '↑' : '↓') : '↕';
+    });
+
+    rows.sort((a, b) => {
+        const getCellText = (tr, c) => (tr.cells[c]?.innerText || '').trim().toLowerCase();
+        const va = getCellText(a, col);
+        const vb = getCellText(b, col);
+        return sortAsc ? va.localeCompare(vb, 'pt-BR') : vb.localeCompare(va, 'pt-BR');
+    });
+    rows.forEach(r => tbody.appendChild(r));
+    tbody.appendChild(document.getElementById('emptyRow'));
+}
+</script>
+{% endblock %}
