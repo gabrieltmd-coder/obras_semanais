@@ -757,7 +757,15 @@
             </button>
             {% if view_role == 'mobilizacao' and not preview_role %}
             <ul class="dropdown-menu dropdown-menu-end user-menu">
-                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right" style="color:#ff7a89;"></i>Sair</a></li>
+                {% if current_user.role in ['admin', 'master', 'rumo'] %}
+                <li><a class="dropdown-item" href="{{ url_for('admin_usuarios') }}"><i class="bi bi-people"></i><span data-i18n="nav.usuarios">Usuários</span></a></li>
+                <li><a class="dropdown-item" href="{{ url_for('admin_dados') }}"><i class="bi bi-database"></i><span data-i18n="nav.dados">Dados</span></a></li>
+                {% endif %}
+                {% if current_user.role == 'master' %}
+                <li><a class="dropdown-item" href="{{ url_for('admin_tms') }}"><i class="bi bi-gear-wide-connected"></i><span data-i18n="nav.dados_tms">Dados TMS</span></a></li>
+                {% endif %}
+                {% if current_user.role in ['admin', 'master', 'rumo'] %}<li><hr class="dropdown-divider"></li>{% endif %}
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right" style="color:#ff7a89;"></i><span data-i18n="nav.sair">Sair</span></a></li>
             </ul>
             {% elif view_role == 'mobilizacao' and preview_role %}
             <ul class="dropdown-menu dropdown-menu-end user-menu">
